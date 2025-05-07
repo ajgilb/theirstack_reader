@@ -31,7 +31,8 @@ try {
         maxPagesPerQuery = 5,
         location = '',
         saveToDataset = true,
-        pushToDatabase = true,
+        // Read pushToDatabase from input but we'll force it to true below
+        pushToDatabase: inputPushToDatabase = true,
         databaseUrl = '',
         databaseTable = 'culinary_jobs_google',
         deduplicateJobs = true,
@@ -45,6 +46,9 @@ try {
     // Force Hunter.io integration to be enabled
     const forceHunterData = true;
 
+    // Force database integration to be enabled
+    const forcePushToDatabase = true;
+
     console.log('Google Jobs API Actor configuration:');
     console.log(`- Queries: ${queries.join(', ')}`);
     console.log(`- Max pages per query: ${maxPagesPerQuery}`);
@@ -54,11 +58,10 @@ try {
     console.log(`- Exclude recruiters: ${excludeRecruiters}`);
     console.log(`- Include Hunter.io data: ${forceHunterData} (forced to true)`);
     console.log(`- Save to dataset: ${saveToDataset}`);
-    console.log(`- Push to database: ${pushToDatabase}`);
-    if (pushToDatabase) {
-        console.log(`- Database table: ${databaseTable}`);
-        console.log(`- Deduplicate jobs: ${deduplicateJobs}`);
-    }
+    console.log(`- Push to database: ${forcePushToDatabase} (forced to true)`);
+    // Always show database info since forcePushToDatabase is always true
+    console.log(`- Database table: ${databaseTable}`);
+    console.log(`- Deduplicate jobs: ${deduplicateJobs}`);
 
     let totalJobsFound = 0;
     let totalJobsProcessed = 0;
@@ -160,8 +163,8 @@ try {
 
         console.log(`\n=== End of Job Data for Query: "${query}" ===`);
 
-        // Database integration
-        if (pushToDatabase) {
+        // Database integration - always enabled
+        if (forcePushToDatabase) {
             console.log(`Pushing ${processedJobs.length} jobs to database...`);
 
             // Set the DATABASE_URL environment variable if provided
