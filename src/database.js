@@ -68,15 +68,15 @@ async function initDatabase() {
 async function createTables() {
     const client = await pool.connect();
     try {
-        // Create the jobs table
+        // Create the jobs table with the same schema as culinary_jobs
         await client.query(`
             CREATE TABLE IF NOT EXISTS culinary_jobs_google (
                 id SERIAL PRIMARY KEY,
                 title VARCHAR(255) NOT NULL,
                 company VARCHAR(255) NOT NULL,
                 location VARCHAR(255),
-                posted_at VARCHAR(255),
-                schedule VARCHAR(255),
+                date_posted VARCHAR(255),
+                job_type VARCHAR(255),
                 description TEXT,
                 salary_min NUMERIC,
                 salary_max NUMERIC,
@@ -150,10 +150,10 @@ async function insertJobsIntoDatabase(jobs) {
 
         for (const job of jobs) {
             try {
-                // Insert job data
+                // Insert job data with the correct column names
                 const jobResult = await client.query(`
                     INSERT INTO culinary_jobs_google (
-                        title, company, location, posted_at, schedule, description,
+                        title, company, location, date_posted, job_type, description,
                         salary_min, salary_max, salary_currency, salary_period,
                         skills, experience_level, apply_link, source, scraped_at,
                         company_website, company_domain
@@ -162,8 +162,8 @@ async function insertJobsIntoDatabase(jobs) {
                         title = EXCLUDED.title,
                         company = EXCLUDED.company,
                         location = EXCLUDED.location,
-                        posted_at = EXCLUDED.posted_at,
-                        schedule = EXCLUDED.schedule,
+                        date_posted = EXCLUDED.date_posted,
+                        job_type = EXCLUDED.job_type,
                         description = EXCLUDED.description,
                         salary_min = EXCLUDED.salary_min,
                         salary_max = EXCLUDED.salary_max,
@@ -181,8 +181,8 @@ async function insertJobsIntoDatabase(jobs) {
                     job.title,
                     job.company,
                     job.location,
-                    job.posted_at,
-                    job.schedule,
+                    job.posted_at, // Map posted_at to date_posted
+                    job.schedule, // Map schedule to job_type
                     job.description,
                     job.salary_min,
                     job.salary_max,
