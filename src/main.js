@@ -161,11 +161,13 @@ try {
         console.log(`\n=== End of Job Data for Query: "${query}" ===`);
 
         // Database integration
-        if (pushToDatabase && databaseUrl) {
+        if (pushToDatabase) {
             console.log(`Pushing ${processedJobs.length} jobs to database...`);
 
-            // Set the DATABASE_URL environment variable
-            process.env.DATABASE_URL = databaseUrl;
+            // Set the DATABASE_URL environment variable if provided
+            if (databaseUrl) {
+                process.env.DATABASE_URL = databaseUrl;
+            }
 
             // Initialize the database connection
             const dbInitialized = await initDatabase();
@@ -173,9 +175,9 @@ try {
             if (dbInitialized) {
                 // Insert jobs into the database
                 const insertedCount = await insertJobsIntoDatabase(processedJobs);
-                console.log(`Successfully inserted ${insertedCount} jobs into the database.`);
+                console.log(`Successfully inserted ${insertedCount} jobs into the database (${databaseTable}).`);
             } else {
-                console.error(`Failed to initialize database connection. Check your DATABASE_URL.`);
+                console.error(`Failed to initialize database connection. Using default Supabase connection.`);
             }
         }
 

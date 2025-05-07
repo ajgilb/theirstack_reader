@@ -1,13 +1,13 @@
 /**
  * Database integration for Google Jobs API Actor
- * Handles connections to PostgreSQL/Supabase and data insertion
+ * Handles connections to Supabase PostgreSQL database and data insertion
  */
 
 import pg from 'pg';
 const { Pool } = pg;
 
-// Database configuration
-const connectionString = process.env.DATABASE_URL || '';
+// Database configuration - using the same connection string as Culinary Agents scraper
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres.mbaqiwhkngfxxmlkionj:Relham12%3F@aws-0-us-west-1.pooler.supabase.com:6543/postgres';
 let pool = null;
 
 /**
@@ -21,6 +21,7 @@ async function initDatabase() {
     }
 
     try {
+        // Initialize the connection pool
         pool = new Pool({
             connectionString,
             ssl: {
@@ -28,14 +29,15 @@ async function initDatabase() {
             }
         });
 
+        // Add error handler for the pool
+        pool.on('error', (err) => {
+            console.error('Unexpected error on idle client', err);
+        });
+
         // Test the connection
         const result = await pool.query('SELECT NOW()');
-        console.info('Successfully connected to database:', result.rows[0].now);
-        
-        // Create tables if they don't exist
-        await createTables();
-        console.info('Database tables initialized successfully');
-        
+        console.info('Successfully connected to Supabase PostgreSQL database:', result.rows[0].now);
+
         return true;
     } catch (error) {
         console.error('Failed to connect to database:', error);
@@ -72,7 +74,7 @@ async function createTables() {
                 company_domain VARCHAR(255),
                 date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                
+
                 CONSTRAINT unique_job_apply_link UNIQUE (apply_link)
             );
 
@@ -95,7 +97,7 @@ async function createTables() {
                 company VARCHAR(255),
                 domain VARCHAR(255),
                 date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                
+
                 CONSTRAINT unique_google_contact_email UNIQUE (job_id, email)
             );
 
@@ -179,7 +181,7 @@ async function insertJobsIntoDatabase(jobs) {
                 ]);
 
                 const jobId = jobResult.rows[0].id;
-                
+
                 // Insert email contacts if available
                 if (job.emails && job.emails.length > 0) {
                     for (const email of job.emails) {
@@ -218,7 +220,7 @@ async function insertJobsIntoDatabase(jobs) {
 
         await client.query('COMMIT');
         console.info(`Database transaction committed. Inserted ${insertedCount} jobs.`);
-        
+
         return insertedCount;
     } catch (error) {
         await client.query('ROLLBACK');
