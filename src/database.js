@@ -68,7 +68,7 @@ async function initDatabase() {
 async function createTables() {
     const client = await pool.connect();
     try {
-        // Create the jobs table with the same schema as culinary_jobs
+        // Create the jobs table with the exact same schema as culinary_jobs
         await client.query(`
             CREATE TABLE IF NOT EXISTS culinary_jobs_google (
                 id SERIAL PRIMARY KEY,
@@ -78,21 +78,17 @@ async function createTables() {
                 date_posted VARCHAR(255),
                 job_type VARCHAR(255),
                 description TEXT,
-                salary_min NUMERIC,
-                salary_max NUMERIC,
-                salary_currency VARCHAR(10),
-                salary_period VARCHAR(20),
+                salary VARCHAR(255),
                 skills TEXT[],
                 experience_level VARCHAR(50),
-                apply_link TEXT,
+                url TEXT,
                 source VARCHAR(255),
                 scraped_at TIMESTAMP WITH TIME ZONE,
-                company_website TEXT,
-                company_domain VARCHAR(255),
+                company_url TEXT,
                 date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
-                CONSTRAINT unique_job_apply_link UNIQUE (apply_link)
+                CONSTRAINT unique_job_url UNIQUE (url)
             );
 
             -- Add indexes for performance
@@ -101,7 +97,7 @@ async function createTables() {
             CREATE INDEX IF NOT EXISTS idx_google_date_added ON culinary_jobs_google(date_added);
         `);
 
-        // Create the contacts table
+        // Create the contacts table with the exact same schema as culinary_contacts
         await client.query(`
             CREATE TABLE IF NOT EXISTS culinary_contacts_google (
                 id SERIAL PRIMARY KEY,
@@ -112,7 +108,7 @@ async function createTables() {
                 position VARCHAR(255),
                 confidence INTEGER,
                 company VARCHAR(255),
-                domain VARCHAR(255),
+                company_url VARCHAR(255),
                 date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 
                 CONSTRAINT unique_google_contact_email UNIQUE (job_id, email)
@@ -150,31 +146,38 @@ async function insertJobsIntoDatabase(jobs) {
 
         for (const job of jobs) {
             try {
-                // Insert job data with the correct column names
+                // Format salary as a string combining min and max
+                let salaryStr = '';
+                if (job.salary_min && job.salary_max) {
+                    salaryStr = `${job.salary_min} - ${job.salary_max}`;
+                    if (job.salary_currency) {
+                        salaryStr = `${job.salary_currency} ${salaryStr}`;
+                    }
+                    if (job.salary_period) {
+                        salaryStr = `${salaryStr} ${job.salary_period}`;
+                    }
+                }
+
+                // Insert job data with the exact schema matching culinary_jobs
                 const jobResult = await client.query(`
                     INSERT INTO culinary_jobs_google (
                         title, company, location, date_posted, job_type, description,
-                        salary_min, salary_max, salary_currency, salary_period,
-                        skills, experience_level, apply_link, source, scraped_at,
-                        company_website, company_domain
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-                    ON CONFLICT (apply_link) DO UPDATE SET
+                        salary, skills, experience_level, url, source, scraped_at,
+                        company_url
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                    ON CONFLICT (url) DO UPDATE SET
                         title = EXCLUDED.title,
                         company = EXCLUDED.company,
                         location = EXCLUDED.location,
                         date_posted = EXCLUDED.date_posted,
                         job_type = EXCLUDED.job_type,
                         description = EXCLUDED.description,
-                        salary_min = EXCLUDED.salary_min,
-                        salary_max = EXCLUDED.salary_max,
-                        salary_currency = EXCLUDED.salary_currency,
-                        salary_period = EXCLUDED.salary_period,
+                        salary = EXCLUDED.salary,
                         skills = EXCLUDED.skills,
                         experience_level = EXCLUDED.experience_level,
                         source = EXCLUDED.source,
                         scraped_at = EXCLUDED.scraped_at,
-                        company_website = EXCLUDED.company_website,
-                        company_domain = EXCLUDED.company_domain,
+                        company_url = EXCLUDED.company_url,
                         last_updated = CURRENT_TIMESTAMP
                     RETURNING id
                 `, [
@@ -184,17 +187,13 @@ async function insertJobsIntoDatabase(jobs) {
                     job.posted_at, // Map posted_at to date_posted
                     job.schedule, // Map schedule to job_type
                     job.description,
-                    job.salary_min,
-                    job.salary_max,
-                    job.salary_currency,
-                    job.salary_period,
+                    salaryStr, // Combined salary string
                     job.skills,
                     job.experience_level,
-                    job.apply_link,
+                    job.apply_link, // Map apply_link to url
                     job.source,
                     job.scraped_at,
-                    job.company_website,
-                    job.company_domain
+                    job.company_domain || job.company_website // Use domain or website as company_url
                 ]);
 
                 const jobId = jobResult.rows[0].id;
@@ -204,7 +203,7 @@ async function insertJobsIntoDatabase(jobs) {
                     for (const email of job.emails) {
                         await client.query(`
                             INSERT INTO culinary_contacts_google (
-                                job_id, email, first_name, last_name, position, confidence, company, domain
+                                job_id, email, first_name, last_name, position, confidence, company, company_url
                             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                             ON CONFLICT (job_id, email) DO UPDATE SET
                                 first_name = EXCLUDED.first_name,
@@ -212,7 +211,7 @@ async function insertJobsIntoDatabase(jobs) {
                                 position = EXCLUDED.position,
                                 confidence = EXCLUDED.confidence,
                                 company = EXCLUDED.company,
-                                domain = EXCLUDED.domain
+                                company_url = EXCLUDED.company_url
                         `, [
                             jobId,
                             email.email,
@@ -221,7 +220,7 @@ async function insertJobsIntoDatabase(jobs) {
                             email.position,
                             email.confidence,
                             job.company,
-                            job.company_domain
+                            job.company_domain || job.company_website // Use domain or website as company_url
                         ]);
                     }
                     console.info(`Inserted ${job.emails.length} email contacts for job ID ${jobId}`);
