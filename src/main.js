@@ -15,6 +15,7 @@ try {
 
     // Get input from the user
     const input = await Actor.getInput() || {};
+    // Extract input parameters with defaults
     const {
         queries = [
             'restaurant chefs united states',
@@ -36,8 +37,12 @@ try {
         fullTimeOnly = true,
         excludeFastFood = true,
         excludeRecruiters = true,
+        // Default is true, but we'll force it to true below
         includeHunterData = true
     } = input;
+
+    // Force Hunter.io integration to be enabled
+    const forceHunterData = true;
 
     console.log('Google Jobs API Actor configuration:');
     console.log(`- Queries: ${queries.join(', ')}`);
@@ -46,7 +51,7 @@ try {
     console.log(`- Full-time only: ${fullTimeOnly}`);
     console.log(`- Exclude fast food: ${excludeFastFood}`);
     console.log(`- Exclude recruiters: ${excludeRecruiters}`);
-    console.log(`- Include Hunter.io data: ${includeHunterData}`);
+    console.log(`- Include Hunter.io data: ${forceHunterData} (forced to true)`);
     console.log(`- Save to dataset: ${saveToDataset}`);
     console.log(`- Push to database: ${pushToDatabase}`);
     if (pushToDatabase) {
@@ -84,7 +89,8 @@ try {
         }
 
         // Process jobs for database insertion
-        const processedJobs = await processJobsForDatabase(filteredJobs, includeHunterData);
+        // Always use forceHunterData (which is true) instead of includeHunterData
+        const processedJobs = await processJobsForDatabase(filteredJobs, forceHunterData);
         totalJobsProcessed += processedJobs.length;
 
         // Save to Apify dataset if requested
