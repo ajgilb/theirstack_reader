@@ -6,6 +6,7 @@
 
 import { getWebsiteUrlFromSearchAPI, getDomainFromUrl } from './search_api.js';
 import { findEmailsWithHunter, findEmailsByCompanyName } from './hunter_api.js';
+import { EXCLUDED_RESTAURANT_CHAINS } from './excluded_chains.js';
 
 /**
  * Searches for job listings using the Google Jobs API
@@ -188,14 +189,14 @@ function shouldExcludeCompany(company) {
 
     const lowerCompany = company.toLowerCase();
 
-    // Check excluded companies list
+    // Check excluded companies list (recruiters, etc.)
     for (const excluded of EXCLUDED_COMPANIES) {
         if (lowerCompany.includes(excluded)) {
             return { isExcluded: true, reason: 'excluded_company', match: excluded };
         }
     }
 
-    // Check fast food restaurants list
+    // Check fast food restaurants list (original list)
     for (const fastFood of FAST_FOOD_RESTAURANTS) {
         // Use more precise matching for fast food
         // Either exact match, or surrounded by word boundaries
@@ -204,6 +205,21 @@ function shouldExcludeCompany(company) {
             lowerCompany.startsWith(`${fastFood} `) ||
             lowerCompany.endsWith(` ${fastFood}`)) {
             return { isExcluded: true, reason: 'fast_food', match: fastFood };
+        }
+    }
+
+    // Check comprehensive restaurant chains list
+    for (const chain of EXCLUDED_RESTAURANT_CHAINS) {
+        const lowerChain = chain.toLowerCase();
+        // Use more precise matching for restaurant chains
+        // Either exact match, or surrounded by word boundaries
+        if (lowerCompany === lowerChain ||
+            lowerCompany.includes(` ${lowerChain} `) ||
+            lowerCompany.startsWith(`${lowerChain} `) ||
+            lowerCompany.endsWith(` ${lowerChain}`) ||
+            // Also check if company name contains the chain name (for franchises)
+            lowerCompany.includes(lowerChain)) {
+            return { isExcluded: true, reason: 'restaurant_chain', match: chain };
         }
     }
 
@@ -222,6 +238,7 @@ async function processJobsForDatabase(jobs, includeHunterData = false) {
     let excludedCount = 0;
     let excludedByCompany = 0;
     let excludedByFastFood = 0;
+    let excludedByRestaurantChain = 0;
 
     // Process each job sequentially to avoid rate limiting
     const processedJobs = [];
@@ -236,6 +253,9 @@ async function processJobsForDatabase(jobs, includeHunterData = false) {
             } else if (exclusionCheck.reason === 'fast_food') {
                 console.info(`Excluding job at fast food restaurant: "${job.title}" at "${job.company}" (matched: ${exclusionCheck.match})`);
                 excludedByFastFood++;
+            } else if (exclusionCheck.reason === 'restaurant_chain') {
+                console.info(`Excluding job at restaurant chain: "${job.title}" at "${job.company}" (matched: ${exclusionCheck.match})`);
+                excludedByRestaurantChain++;
             }
             excludedCount++;
             continue;
@@ -361,7 +381,7 @@ async function processJobsForDatabase(jobs, includeHunterData = false) {
         processedJobs.push(processedJob);
     }
 
-    console.info(`Filtering results: ${excludedCount} jobs excluded (${excludedByCompany} by company list, ${excludedByFastFood} by fast food list)`);
+    console.info(`Filtering results: ${excludedCount} jobs excluded (${excludedByCompany} by recruiter list, ${excludedByFastFood} by fast food list, ${excludedByRestaurantChain} by restaurant chain list)`);
     console.info(`Returning ${processedJobs.length} jobs after filtering`);
 
     return processedJobs;
