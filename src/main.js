@@ -6,6 +6,7 @@
  */
 import { Actor } from 'apify';
 import { searchAllJobs, processJobsForDatabase } from './google_jobs_api.js';
+import { initDatabase, insertJobsIntoDatabase } from './database.js';
 
 // Initialize the Apify Actor
 await Actor.init();
@@ -30,9 +31,9 @@ try {
         maxPagesPerQuery = 5,
         location = '',
         saveToDataset = true,
-        pushToDatabase = false,
-        databaseUrl = null,
-        databaseTable = 'jobs',
+        pushToDatabase = true,
+        databaseUrl = '',
+        databaseTable = 'culinary_jobs_google',
         deduplicateJobs = true,
         fullTimeOnly = true,
         excludeFastFood = true,
@@ -159,9 +160,23 @@ try {
 
         console.log(`\n=== End of Job Data for Query: "${query}" ===`);
 
-        // Database integration is disabled for now
+        // Database integration
         if (pushToDatabase && databaseUrl) {
-            console.log(`Database integration is disabled. Would have pushed ${processedJobs.length} jobs to database.`);
+            console.log(`Pushing ${processedJobs.length} jobs to database...`);
+
+            // Set the DATABASE_URL environment variable
+            process.env.DATABASE_URL = databaseUrl;
+
+            // Initialize the database connection
+            const dbInitialized = await initDatabase();
+
+            if (dbInitialized) {
+                // Insert jobs into the database
+                const insertedCount = await insertJobsIntoDatabase(processedJobs);
+                console.log(`Successfully inserted ${insertedCount} jobs into the database.`);
+            } else {
+                console.error(`Failed to initialize database connection. Check your DATABASE_URL.`);
+            }
         }
 
         // Add a delay between queries to avoid rate limits

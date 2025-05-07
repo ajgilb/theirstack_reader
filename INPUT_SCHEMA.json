@@ -43,27 +43,27 @@
     "pushToDatabase": {
       "title": "Push to Database",
       "type": "boolean",
-      "description": "Whether to push results to a database (currently disabled)",
-      "default": false
+      "description": "Whether to push results to a PostgreSQL database (requires DATABASE_URL)",
+      "default": true
     },
     "databaseUrl": {
       "title": "Database URL",
       "type": "string",
-      "description": "URL of the database to push results to (currently not used)",
-      "default": null,
+      "description": "PostgreSQL connection string (e.g., postgresql://username:password@host:port/database)",
+      "default": "",
       "editor": "textfield"
     },
     "databaseTable": {
       "title": "Database Table",
       "type": "string",
-      "description": "Name of the database table to push results to (currently not used)",
-      "default": "jobs",
+      "description": "Name of the database table to push results to (defaults to culinary_jobs_google)",
+      "default": "culinary_jobs_google",
       "editor": "textfield"
     },
     "deduplicateJobs": {
       "title": "Deduplicate Jobs",
       "type": "boolean",
-      "description": "Whether to deduplicate jobs when pushing to database (currently not used)",
+      "description": "Whether to deduplicate jobs when pushing to database (based on apply_link)",
       "default": true
     },
     "fullTimeOnly": {
