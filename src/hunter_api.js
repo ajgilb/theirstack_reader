@@ -52,8 +52,8 @@ async function findEmailsWithHunter(domain, companyName) {
     try {
         console.info(`HUNTER API: Searching for emails on domain "${domain}" (${companyName})`);
 
-        // Build the API URL
-        const searchUrl = `${DOMAIN_SEARCH_API_URL}?domain=${encodeURIComponent(domain)}&api_key=${HUNTER_API_KEY}`;
+        // Build the API URL with limit parameter to get more emails (max 100)
+        const searchUrl = `${DOMAIN_SEARCH_API_URL}?domain=${encodeURIComponent(domain)}&limit=100&api_key=${HUNTER_API_KEY}`;
 
         // Set up fetch with timeout
         const controller = new AbortController();

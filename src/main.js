@@ -144,8 +144,8 @@ try {
             // Display emails if available
             if (job.emails && job.emails.length > 0) {
                 console.log(`Emails Found: ${job.emails.length}`);
-                // Display top 3 emails
-                job.emails.slice(0, 3).forEach((email, idx) => {
+                // Display up to 20 emails
+                job.emails.slice(0, 20).forEach((email, idx) => {
                     console.log(`  Email #${idx+1}: ${email.email} (${email.firstName || ''} ${email.lastName || ''})${email.position ? ` - ${email.position}` : ''}`);
                 });
             }

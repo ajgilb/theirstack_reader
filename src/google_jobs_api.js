@@ -299,8 +299,8 @@ async function processJobsForDatabase(jobs, includeHunterData = false) {
                             processedJob.emails = emails;
                             console.info(`Found ${emails.length} email addresses for ${job.company} using domain search`);
 
-                            // Log the first few emails for debugging
-                            emails.slice(0, 3).forEach((email, idx) => {
+                            // Log up to 10 emails for debugging
+                            emails.slice(0, 10).forEach((email, idx) => {
                                 console.info(`  Email #${idx+1}: ${email.email} (${email.firstName || ''} ${email.lastName || ''})${email.position ? ` - ${email.position}` : ''}`);
                             });
                         } else {
