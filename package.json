@@ -5,6 +5,7 @@
   "type": "module",
   "dependencies": {
     "apify": "^3.1.8",
+    "crawlee": "^3.5.2",
     "node-fetch": "^3.3.2",
     "dotenv": "^16.3.1"
   },
