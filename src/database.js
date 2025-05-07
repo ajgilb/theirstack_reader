@@ -6,8 +6,17 @@
 import pg from 'pg';
 const { Pool } = pg;
 
-// Database configuration - using the same connection string as Culinary Agents scraper
-const connectionString = process.env.DATABASE_URL || 'postgresql://postgres.mbaqiwhkngfxxmlkionj:Relham12%3F@aws-0-us-west-1.pooler.supabase.com:6543/postgres';
+// Database configuration - using individual Supabase environment variables
+const supabaseUser = process.env.SUPABASE_USER || 'postgres.mbaqiwhkngfxxmlkionj';
+const supabasePassword = process.env.SUPABASE_PASSWORD || 'Relham12?';
+const supabaseHost = process.env.SUPABASE_HOST || 'aws-0-us-west-1.pooler.supabase.com';
+const supabasePort = process.env.SUPABASE_PORT || '6543';
+const supabaseDatabase = process.env.SUPABASE_DATABASE || 'postgres';
+
+// Build connection string from environment variables or use DATABASE_URL if provided
+const connectionString = process.env.DATABASE_URL ||
+    `postgresql://${supabaseUser}:${encodeURIComponent(supabasePassword)}@${supabaseHost}:${supabasePort}/${supabaseDatabase}`;
+
 let pool = null;
 
 /**
@@ -16,11 +25,19 @@ let pool = null;
  */
 async function initDatabase() {
     if (!connectionString) {
-        console.error('DATABASE_URL environment variable not set');
+        console.error('No database connection string available');
         return false;
     }
 
     try {
+        // Log which environment variables are being used
+        console.info('Using Supabase configuration:');
+        console.info(`- Host: ${supabaseHost}`);
+        console.info(`- Port: ${supabasePort}`);
+        console.info(`- Database: ${supabaseDatabase}`);
+        console.info(`- User: ${supabaseUser}`);
+        // Don't log the password for security reasons
+
         // Initialize the connection pool
         pool = new Pool({
             connectionString,
