@@ -49,6 +49,9 @@ try {
     // Force database integration to be enabled
     const forcePushToDatabase = true;
 
+    // Test mode - set to true to process only the first job for testing
+    const testMode = true;
+
     console.log('Google Jobs API Actor configuration:');
     console.log(`- Queries: ${queries.join(', ')}`);
     console.log(`- Max pages per query: ${maxPagesPerQuery}`);
@@ -62,17 +65,24 @@ try {
     // Always show database info since forcePushToDatabase is always true
     console.log(`- Database table: ${databaseTable}`);
     console.log(`- Deduplicate jobs: ${deduplicateJobs}`);
+    console.log(`- Test mode: ${testMode} (only process first job if true)`);
 
     let totalJobsFound = 0;
     let totalJobsProcessed = 0;
     let totalJobsSaved = 0;
 
+    // In test mode, only process the first query
+    const queriesToProcess = testMode ? queries.slice(0, 1) : queries;
+    console.log(`Processing ${queriesToProcess.length} queries${testMode ? ' (test mode - only first query)' : ''}`);
+
     // Process each query
-    for (const query of queries) {
-        console.log(`Searching for jobs with query: "${query}"`);
+    for (const query of queriesToProcess) {
+        // In test mode, only process one page
+        const pagesToProcess = testMode ? 1 : maxPagesPerQuery;
+        console.log(`Searching for jobs with query: "${query}" (${testMode ? 'test mode - only 1 page' : `up to ${pagesToProcess} pages`})`);
 
         // Search for jobs
-        const jobs = await searchAllJobs(query, location, maxPagesPerQuery);
+        const jobs = await searchAllJobs(query, location, pagesToProcess);
 
         if (jobs.length === 0) {
             console.log(`No jobs found for query: "${query}"`);
@@ -92,9 +102,13 @@ try {
             console.log(`Filtered to ${filteredJobs.length} full-time positions out of ${jobs.length} total jobs`);
         }
 
+        // In test mode, only process the first job
+        const jobsToProcess = testMode ? filteredJobs.slice(0, 1) : filteredJobs;
+        console.log(`Processing ${jobsToProcess.length} jobs${testMode ? ' (test mode - only first job)' : ''}`);
+
         // Process jobs for database insertion
         // Always use forceHunterData (which is true) instead of includeHunterData
-        const processedJobs = await processJobsForDatabase(filteredJobs, forceHunterData);
+        const processedJobs = await processJobsForDatabase(jobsToProcess, forceHunterData);
         totalJobsProcessed += processedJobs.length;
 
         // Save to Apify dataset if requested

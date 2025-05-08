@@ -224,7 +224,7 @@ async function insertJobsIntoDatabase(jobs) {
                 // Get the current timestamp for date fields
                 const now = new Date().toISOString();
 
-                // Try to create the table if it doesn't exist with the EXACT schema from the database
+                // Get detailed information about the existing schema before trying to insert
                 try {
                     // First check if the table exists
                     const tableCheck = await client.query(`
@@ -236,9 +236,81 @@ async function insertJobsIntoDatabase(jobs) {
                     `);
 
                     const tableExists = tableCheck.rows[0].exists;
+                    console.info(`Table culinary_jobs_google exists: ${tableExists}`);
 
-                    if (!tableExists) {
+                    if (tableExists) {
+                        // Get the column information
+                        const columnInfo = await client.query(`
+                            SELECT column_name, data_type, character_maximum_length, is_nullable
+                            FROM information_schema.columns
+                            WHERE table_schema = 'public'
+                            AND table_name = 'culinary_jobs_google'
+                            ORDER BY ordinal_position;
+                        `);
+
+                        console.info('SCHEMA DETAILS - Actual columns in culinary_jobs_google:');
+                        columnInfo.rows.forEach(col => {
+                            console.info(`- ${col.column_name}: ${col.data_type}${col.character_maximum_length ? `(${col.character_maximum_length})` : ''} ${col.is_nullable === 'YES' ? 'NULL' : 'NOT NULL'}`);
+                        });
+
+                        // Get primary key
+                        const pkInfo = await client.query(`
+                            SELECT a.attname
+                            FROM pg_index i
+                            JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+                            WHERE i.indrelid = 'culinary_jobs_google'::regclass
+                            AND i.indisprimary;
+                        `);
+
+                        console.info('Primary key of culinary_jobs_google:');
+                        pkInfo.rows.forEach(pk => {
+                            console.info(`- ${pk.attname}`);
+                        });
+
+                        // Get unique constraints
+                        const uniqueInfo = await client.query(`
+                            SELECT con.conname, pg_get_constraintdef(con.oid)
+                            FROM pg_constraint con
+                            JOIN pg_class rel ON rel.oid = con.conrelid
+                            WHERE rel.relname = 'culinary_jobs_google'
+                            AND con.contype = 'u';
+                        `);
+
+                        console.info('Unique constraints of culinary_jobs_google:');
+                        uniqueInfo.rows.forEach(unique => {
+                            console.info(`- ${unique.conname}: ${unique.pg_get_constraintdef}`);
+                        });
+
+                        // Also check the original table for reference
+                        const originalTableCheck = await client.query(`
+                            SELECT EXISTS (
+                                SELECT FROM information_schema.tables
+                                WHERE table_schema = 'public'
+                                AND table_name = 'culinary_jobs'
+                            );
+                        `);
+
+                        const originalTableExists = originalTableCheck.rows[0].exists;
+                        console.info(`Original table culinary_jobs exists: ${originalTableExists}`);
+
+                        if (originalTableExists) {
+                            // Get the column information
+                            const originalColumnInfo = await client.query(`
+                                SELECT column_name, data_type, character_maximum_length, is_nullable
+                                FROM information_schema.columns
+                                WHERE table_schema = 'public'
+                                AND table_name = 'culinary_jobs'
+                                ORDER BY ordinal_position;
+                            `);
+
+                            console.info('SCHEMA DETAILS - Columns in original culinary_jobs:');
+                            originalColumnInfo.rows.forEach(col => {
+                                console.info(`- ${col.column_name}: ${col.data_type}${col.character_maximum_length ? `(${col.character_maximum_length})` : ''} ${col.is_nullable === 'YES' ? 'NULL' : 'NOT NULL'}`);
+                            });
+                        }
+                    } else {
                         // Create the table with the exact schema
+                        console.info('Table culinary_jobs_google does not exist, creating it...');
                         await client.query(`
                             CREATE TABLE IF NOT EXISTS culinary_jobs_google (
                                 id SERIAL PRIMARY KEY,
@@ -264,23 +336,9 @@ async function insertJobsIntoDatabase(jobs) {
                             );
                         `);
                         console.info('Table culinary_jobs_google created successfully');
-                    } else {
-                        // Check the actual schema of the table
-                        const columnInfo = await client.query(`
-                            SELECT column_name, data_type, character_maximum_length
-                            FROM information_schema.columns
-                            WHERE table_schema = 'public'
-                            AND table_name = 'culinary_jobs_google'
-                            ORDER BY ordinal_position;
-                        `);
-
-                        console.info('Actual columns in culinary_jobs_google:');
-                        columnInfo.rows.forEach(col => {
-                            console.info(`- ${col.column_name}: ${col.data_type}${col.character_maximum_length ? `(${col.character_maximum_length})` : ''}`);
-                        });
                     }
                 } catch (error) {
-                    console.error('Error creating or checking table:', error);
+                    console.error('Error checking or creating table:', error);
                 }
 
                 // Extract contact info if available
@@ -289,10 +347,38 @@ async function insertJobsIntoDatabase(jobs) {
                 const contactTitle = job.emails && job.emails.length > 0 ? job.emails[0].position || '' : '';
                 const contactEmail = job.emails && job.emails.length > 0 ? job.emails[0].email || '' : '';
 
+                // Log the data we're about to insert
+                console.info('INSERTION DATA - Preparing to insert job with the following data:');
+                const jobData = {
+                    title: job.title,
+                    company: job.company,
+                    parent_company: '',
+                    location: job.location,
+                    salary: salaryStr,
+                    contact_name: contactName,
+                    contact_title: contactTitle,
+                    email: contactEmail,
+                    url: job.apply_link,
+                    job_details: job.description ? job.description.substring(0, 50) + '...' : '',
+                    linkedin: '',
+                    domain: job.company_domain || '',
+                    company_size: '',
+                    date_added: now,
+                    last_updated: now,
+                    contacts_last_viewed: null,
+                    parent_url: ''
+                };
+
+                // Log each field
+                Object.entries(jobData).forEach(([key, value]) => {
+                    console.info(`- ${key}: ${value === null ? 'NULL' : value}`);
+                });
+
                 // Insert job data with the exact schema matching the actual database
+                console.info('EXECUTING SQL - Inserting job into culinary_jobs_google table');
                 let jobResult;
                 try {
-                    jobResult = await client.query(`
+                    const insertQuery = `
                         INSERT INTO culinary_jobs_google (
                             title, company, parent_company, location, salary,
                             contact_name, contact_title, email, url, job_details,
@@ -314,7 +400,11 @@ async function insertJobsIntoDatabase(jobs) {
                             company_size = EXCLUDED.company_size,
                             last_updated = CURRENT_TIMESTAMP
                         RETURNING id
-                    `, [
+                    `;
+
+                    console.info('SQL QUERY:', insertQuery);
+
+                    jobResult = await client.query(insertQuery, [
                         job.title,
                         job.company,
                         '', // parent_company (empty for now)
