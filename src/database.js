@@ -169,12 +169,15 @@ async function createIndexes() {
             CREATE INDEX IF NOT EXISTS idx_google_company_name ON culinary_jobs_google(company);
             CREATE INDEX IF NOT EXISTS idx_google_job_title ON culinary_jobs_google(title);
             CREATE INDEX IF NOT EXISTS idx_google_date_added ON culinary_jobs_google(date_added);
+            CREATE INDEX IF NOT EXISTS idx_google_domain ON culinary_jobs_google(domain);
+            CREATE INDEX IF NOT EXISTS idx_google_parent_company ON culinary_jobs_google(parent_company);
         `);
 
         // Create indexes for the contacts table
         await client.query(`
             CREATE INDEX IF NOT EXISTS idx_google_contact_email ON culinary_contacts_google(email);
             CREATE INDEX IF NOT EXISTS idx_google_contact_job_id ON culinary_contacts_google(job_id);
+            CREATE INDEX IF NOT EXISTS idx_google_contact_name ON culinary_contacts_google(name);
         `);
 
         console.info('Database indexes created successfully');
@@ -221,125 +224,186 @@ async function insertJobsIntoDatabase(jobs) {
                 // Get the current timestamp for date fields
                 const now = new Date().toISOString();
 
-                // Try to create the table if it doesn't exist
+                // Try to create the table if it doesn't exist with the EXACT schema from the database
                 try {
-                    await client.query(`
-                        CREATE TABLE IF NOT EXISTS culinary_jobs_google (
-                            id SERIAL PRIMARY KEY,
-                            title VARCHAR(255) NOT NULL,
-                            company VARCHAR(255) NOT NULL,
-                            location VARCHAR(255),
-                            date_posted VARCHAR(255),
-                            job_type VARCHAR(255),
-                            description TEXT,
-                            salary VARCHAR(255),
-                            skills TEXT[],
-                            experience_level VARCHAR(50),
-                            url TEXT,
-                            source VARCHAR(255),
-                            scraped_at TIMESTAMP WITH TIME ZONE,
-                            company_url TEXT,
-                            date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                            last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-
-                            CONSTRAINT unique_job_url UNIQUE (url)
+                    // First check if the table exists
+                    const tableCheck = await client.query(`
+                        SELECT EXISTS (
+                            SELECT FROM information_schema.tables
+                            WHERE table_schema = 'public'
+                            AND table_name = 'culinary_jobs_google'
                         );
                     `);
-                    console.info('Table culinary_jobs_google created or already exists');
+
+                    const tableExists = tableCheck.rows[0].exists;
+
+                    if (!tableExists) {
+                        // Create the table with the exact schema
+                        await client.query(`
+                            CREATE TABLE IF NOT EXISTS culinary_jobs_google (
+                                id SERIAL PRIMARY KEY,
+                                title VARCHAR(255) NOT NULL,
+                                company VARCHAR(255) NOT NULL,
+                                parent_company VARCHAR(255),
+                                location VARCHAR(255),
+                                salary VARCHAR(255),
+                                contact_name VARCHAR(255),
+                                contact_title VARCHAR(255),
+                                email VARCHAR(255),
+                                url TEXT,
+                                job_details TEXT,
+                                linkedin VARCHAR(255),
+                                domain VARCHAR(255),
+                                company_size VARCHAR(255),
+                                date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                                last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                                contacts_last_viewed TIMESTAMP WITH TIME ZONE,
+                                parent_url TEXT,
+
+                                CONSTRAINT unique_job_url UNIQUE (url)
+                            );
+                        `);
+                        console.info('Table culinary_jobs_google created successfully');
+                    } else {
+                        // Check the actual schema of the table
+                        const columnInfo = await client.query(`
+                            SELECT column_name, data_type, character_maximum_length
+                            FROM information_schema.columns
+                            WHERE table_schema = 'public'
+                            AND table_name = 'culinary_jobs_google'
+                            ORDER BY ordinal_position;
+                        `);
+
+                        console.info('Actual columns in culinary_jobs_google:');
+                        columnInfo.rows.forEach(col => {
+                            console.info(`- ${col.column_name}: ${col.data_type}${col.character_maximum_length ? `(${col.character_maximum_length})` : ''}`);
+                        });
+                    }
                 } catch (error) {
-                    console.error('Error creating table:', error);
+                    console.error('Error creating or checking table:', error);
                 }
 
-                // Insert job data with the exact schema matching culinary_jobs
+                // Extract contact info if available
+                const contactName = job.emails && job.emails.length > 0 ?
+                    `${job.emails[0].firstName || ''} ${job.emails[0].lastName || ''}`.trim() : '';
+                const contactTitle = job.emails && job.emails.length > 0 ? job.emails[0].position || '' : '';
+                const contactEmail = job.emails && job.emails.length > 0 ? job.emails[0].email || '' : '';
+
+                // Insert job data with the exact schema matching the actual database
                 const jobResult = await client.query(`
                     INSERT INTO culinary_jobs_google (
-                        title, company, location, date_posted, job_type, description,
-                        salary, skills, experience_level, url, source, scraped_at,
-                        company_url, date_added, last_updated
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+                        title, company, parent_company, location, salary,
+                        contact_name, contact_title, email, url, job_details,
+                        linkedin, domain, company_size, date_added, last_updated,
+                        contacts_last_viewed, parent_url
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
                     ON CONFLICT (url) DO UPDATE SET
                         title = EXCLUDED.title,
                         company = EXCLUDED.company,
+                        parent_company = EXCLUDED.parent_company,
                         location = EXCLUDED.location,
-                        date_posted = EXCLUDED.date_posted,
-                        job_type = EXCLUDED.job_type,
-                        description = EXCLUDED.description,
                         salary = EXCLUDED.salary,
-                        skills = EXCLUDED.skills,
-                        experience_level = EXCLUDED.experience_level,
-                        source = EXCLUDED.source,
-                        scraped_at = EXCLUDED.scraped_at,
-                        company_url = EXCLUDED.company_url,
+                        contact_name = EXCLUDED.contact_name,
+                        contact_title = EXCLUDED.contact_title,
+                        email = EXCLUDED.email,
+                        job_details = EXCLUDED.job_details,
+                        linkedin = EXCLUDED.linkedin,
+                        domain = EXCLUDED.domain,
+                        company_size = EXCLUDED.company_size,
                         last_updated = CURRENT_TIMESTAMP
                     RETURNING id
                 `, [
                     job.title,
                     job.company,
+                    '', // parent_company (empty for now)
                     job.location,
-                    job.posted_at, // Map posted_at to date_posted
-                    job.schedule, // Map schedule to job_type
-                    job.description,
                     salaryStr, // Combined salary string
-                    job.skills || [], // Ensure skills is an array
-                    job.experience_level,
-                    job.apply_link, // Map apply_link to url
-                    job.source,
-                    job.scraped_at || now,
-                    job.company_domain || job.company_website, // Use domain or website as company_url
+                    contactName, // contact_name from first email
+                    contactTitle, // contact_title from first email
+                    contactEmail, // email from first email
+                    job.apply_link, // url
+                    job.description, // job_details
+                    '', // linkedin (empty for now)
+                    job.company_domain || '', // domain
+                    '', // company_size (empty for now)
                     now, // date_added
-                    now  // last_updated
+                    now, // last_updated
+                    null, // contacts_last_viewed
+                    '' // parent_url (empty for now)
                 ]);
 
                 const jobId = jobResult.rows[0].id;
 
                 // Insert email contacts if available
                 if (job.emails && job.emails.length > 0) {
-                    // Try to create the contacts table if it doesn't exist
+                    // Try to create the contacts table if it doesn't exist with the EXACT schema from the database
                     try {
-                        await client.query(`
-                            CREATE TABLE IF NOT EXISTS culinary_contacts_google (
-                                id SERIAL PRIMARY KEY,
-                                job_id INTEGER REFERENCES culinary_jobs_google(id) ON DELETE CASCADE,
-                                email VARCHAR(255) NOT NULL,
-                                first_name VARCHAR(255),
-                                last_name VARCHAR(255),
-                                position VARCHAR(255),
-                                confidence INTEGER,
-                                company VARCHAR(255),
-                                company_url VARCHAR(255),
-                                date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-
-                                CONSTRAINT unique_google_contact_email UNIQUE (job_id, email)
+                        // First check if the table exists
+                        const tableCheck = await client.query(`
+                            SELECT EXISTS (
+                                SELECT FROM information_schema.tables
+                                WHERE table_schema = 'public'
+                                AND table_name = 'culinary_contacts_google'
                             );
                         `);
-                        console.info('Table culinary_contacts_google created or already exists');
+
+                        const tableExists = tableCheck.rows[0].exists;
+
+                        if (!tableExists) {
+                            // Create the table with the exact schema
+                            await client.query(`
+                                CREATE TABLE IF NOT EXISTS culinary_contacts_google (
+                                    id SERIAL PRIMARY KEY,
+                                    job_id INTEGER REFERENCES culinary_jobs_google(id) ON DELETE CASCADE,
+                                    name VARCHAR(255),
+                                    title VARCHAR(255),
+                                    email VARCHAR(255) NOT NULL,
+                                    date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                                    last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                                    CONSTRAINT unique_google_contact_email UNIQUE (job_id, email)
+                                );
+                            `);
+                            console.info('Table culinary_contacts_google created successfully');
+                        } else {
+                            // Check the actual schema of the table
+                            const columnInfo = await client.query(`
+                                SELECT column_name, data_type, character_maximum_length
+                                FROM information_schema.columns
+                                WHERE table_schema = 'public'
+                                AND table_name = 'culinary_contacts_google'
+                                ORDER BY ordinal_position;
+                            `);
+
+                            console.info('Actual columns in culinary_contacts_google:');
+                            columnInfo.rows.forEach(col => {
+                                console.info(`- ${col.column_name}: ${col.data_type}${col.character_maximum_length ? `(${col.character_maximum_length})` : ''}`);
+                            });
+                        }
                     } catch (error) {
-                        console.error('Error creating contacts table:', error);
+                        console.error('Error creating or checking contacts table:', error);
                     }
 
                     for (const email of job.emails) {
                         try {
+                            // Combine first and last name
+                            const fullName = `${email.firstName || ''} ${email.lastName || ''}`.trim();
+
                             await client.query(`
                                 INSERT INTO culinary_contacts_google (
-                                    job_id, email, first_name, last_name, position, confidence, company, company_url, date_added
-                                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                                    job_id, name, title, email, date_added, last_updated
+                                ) VALUES ($1, $2, $3, $4, $5, $6)
                                 ON CONFLICT (job_id, email) DO UPDATE SET
-                                    first_name = EXCLUDED.first_name,
-                                    last_name = EXCLUDED.last_name,
-                                    position = EXCLUDED.position,
-                                    confidence = EXCLUDED.confidence,
-                                    company = EXCLUDED.company,
-                                    company_url = EXCLUDED.company_url
+                                    name = EXCLUDED.name,
+                                    title = EXCLUDED.title,
+                                    last_updated = CURRENT_TIMESTAMP
                             `, [
                                 jobId,
-                                email.email,
-                                email.firstName,
-                                email.lastName,
-                                email.position,
-                                email.confidence,
-                                job.company,
-                                job.company_domain || job.company_website, // Use domain or website as company_url
-                                now // date_added
+                                fullName, // name (combined first and last name)
+                                email.position || '', // title
+                                email.email, // email
+                                now, // date_added
+                                now  // last_updated
                             ]);
                         } catch (error) {
                             console.error(`Error inserting contact ${email.email}:`, error);
