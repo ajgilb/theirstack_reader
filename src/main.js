@@ -6,7 +6,28 @@
  */
 import { Actor } from 'apify';
 import { searchAllJobs, processJobsForDatabase } from './google_jobs_api.js';
-import { initDatabase, insertJobsIntoDatabase } from './database.js';
+import { testFunction } from './test.js';
+
+// Log test function result
+console.log('Test function result:', testFunction());
+
+// Try to import database.js
+try {
+    const databaseModule = await import('./database.js');
+    console.log('Successfully imported database.js');
+    var { initDatabase, insertJobsIntoDatabase } = databaseModule;
+} catch (error) {
+    console.error('Error importing database.js:', error);
+    // Provide dummy functions as fallbacks
+    var initDatabase = async () => {
+        console.log('Using dummy initDatabase function');
+        return true;
+    };
+    var insertJobsIntoDatabase = async () => {
+        console.log('Using dummy insertJobsIntoDatabase function');
+        return 0;
+    };
+}
 
 // Initialize the Apify Actor
 await Actor.init();
