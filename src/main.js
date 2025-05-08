@@ -70,8 +70,10 @@ try {
     // Force database integration to be enabled
     const forcePushToDatabase = true;
 
-    // Test mode - set to true to process only the first job for testing
+    // Test mode - set to true to process only a limited number of jobs for testing
     const testMode = true;
+    // Number of jobs to process in test mode
+    const testModeLimit = 5;
 
     console.log('Google Jobs API Actor configuration:');
     console.log(`- Queries: ${queries.join(', ')}`);
@@ -86,7 +88,7 @@ try {
     // Always show database info since forcePushToDatabase is always true
     console.log(`- Database table: ${databaseTable}`);
     console.log(`- Deduplicate jobs: ${deduplicateJobs}`);
-    console.log(`- Test mode: ${testMode} (only process first job if true)`);
+    console.log(`- Test mode: ${testMode}${testMode ? ` (limit: ${testModeLimit} jobs)` : ''}`);
 
     let totalJobsFound = 0;
     let totalJobsProcessed = 0;
@@ -123,9 +125,9 @@ try {
             console.log(`Filtered to ${filteredJobs.length} full-time positions out of ${jobs.length} total jobs`);
         }
 
-        // In test mode, only process the first job
-        const jobsToProcess = testMode ? filteredJobs.slice(0, 1) : filteredJobs;
-        console.log(`Processing ${jobsToProcess.length} jobs${testMode ? ' (test mode - only first job)' : ''}`);
+        // In test mode, only process a limited number of jobs
+        const jobsToProcess = testMode ? filteredJobs.slice(0, testModeLimit) : filteredJobs;
+        console.log(`Processing ${jobsToProcess.length} jobs${testMode ? ` (test mode - limit: ${testModeLimit})` : ''}`);
 
         // Process jobs for database insertion
         // Always use forceHunterData (which is true) instead of includeHunterData

@@ -437,33 +437,89 @@ async function insertJobsIntoDatabase(jobs) {
                 console.info('EXECUTING SQL - Inserting job into culinary_jobs_google table');
                 let jobResult;
                 try {
-                    const insertQuery = `
-                        INSERT INTO culinary_jobs_google (
-                            title, company, parent_company, location, salary,
-                            contact_name, contact_title, email, url, job_details,
-                            linkedin, domain, company_size, date_added, last_updated,
-                            contacts_last_viewed, parent_url
-                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-                        ON CONFLICT (url) DO UPDATE SET
-                            title = EXCLUDED.title,
-                            company = EXCLUDED.company,
-                            parent_company = EXCLUDED.parent_company,
-                            location = EXCLUDED.location,
-                            salary = EXCLUDED.salary,
-                            contact_name = EXCLUDED.contact_name,
-                            contact_title = EXCLUDED.contact_title,
-                            email = EXCLUDED.email,
-                            job_details = EXCLUDED.job_details,
-                            linkedin = EXCLUDED.linkedin,
-                            domain = EXCLUDED.domain,
-                            company_size = EXCLUDED.company_size,
-                            last_updated = CURRENT_TIMESTAMP
-                        RETURNING id
+                    // First check if the job already exists based on title, company, and location
+                    const checkQuery = `
+                        SELECT id FROM culinary_jobs_google
+                        WHERE title = $1 AND company = $2 AND location = $3
                     `;
 
-                    console.info('SQL QUERY:', insertQuery);
+                    const checkResult = await client.query(checkQuery, [
+                        job.title,
+                        job.company,
+                        job.location
+                    ]);
 
-                    jobResult = await client.query(insertQuery, [
+                    if (checkResult.rows.length > 0) {
+                        console.info(`Job already exists in database: "${job.title}" at "${job.company}" in "${job.location}"`);
+                        console.info(`Updating existing job with ID: ${checkResult.rows[0].id}`);
+
+                        // Update the existing job
+                        const updateQuery = `
+                            UPDATE culinary_jobs_google
+                            SET
+                                title = $1,
+                                company = $2,
+                                parent_company = $3,
+                                location = $4,
+                                salary = $5,
+                                contact_name = $6,
+                                contact_title = $7,
+                                email = $8,
+                                url = $9,
+                                job_details = $10,
+                                linkedin = $11,
+                                domain = $12,
+                                company_size = $13,
+                                last_updated = CURRENT_TIMESTAMP
+                            WHERE id = $14
+                            RETURNING id
+                        `;
+
+                        jobResult = await client.query(updateQuery, [
+                            job.title,
+                            job.company,
+                            '', // parent_company (empty for now)
+                            job.location,
+                            salaryStr, // Combined salary string
+                            contactName, // contact_name from first email
+                            contactTitle, // contact_title from first email
+                            contactEmail, // email from first email
+                            job.apply_link, // url
+                            job.description, // job_details
+                            '', // linkedin (empty for now)
+                            job.company_domain || '', // domain
+                            '', // company_size (empty for now)
+                            checkResult.rows[0].id // id of the existing job
+                        ]);
+                    } else {
+                        // Insert a new job
+                        const insertQuery = `
+                            INSERT INTO culinary_jobs_google (
+                                title, company, parent_company, location, salary,
+                                contact_name, contact_title, email, url, job_details,
+                                linkedin, domain, company_size, date_added, last_updated,
+                                contacts_last_viewed, parent_url
+                            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+                            ON CONFLICT (url) DO UPDATE SET
+                                title = EXCLUDED.title,
+                                company = EXCLUDED.company,
+                                parent_company = EXCLUDED.parent_company,
+                                location = EXCLUDED.location,
+                                salary = EXCLUDED.salary,
+                                contact_name = EXCLUDED.contact_name,
+                                contact_title = EXCLUDED.contact_title,
+                                email = EXCLUDED.email,
+                                job_details = EXCLUDED.job_details,
+                                linkedin = EXCLUDED.linkedin,
+                                domain = EXCLUDED.domain,
+                                company_size = EXCLUDED.company_size,
+                                last_updated = CURRENT_TIMESTAMP
+                            RETURNING id
+                        `;
+
+                        console.info('SQL QUERY:', insertQuery);
+
+                        jobResult = await client.query(insertQuery, [
                         job.title,
                         job.company,
                         '', // parent_company (empty for now)
@@ -482,6 +538,7 @@ async function insertJobsIntoDatabase(jobs) {
                         null, // contacts_last_viewed
                         '' // parent_url (empty for now)
                     ]);
+                    }
                 } catch (error) {
                     console.error(`Error inserting job "${job.title}" at "${job.company}":`);
                     console.error(`Error message: ${error.message}`);
