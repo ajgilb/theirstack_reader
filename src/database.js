@@ -207,6 +207,65 @@ async function insertJobsIntoDatabase(jobs) {
         await client.query('BEGIN');
         console.info('Starting database transaction (BEGIN).');
 
+        // Check and fix the foreign key constraint before inserting any data
+        try {
+            // Check if the contacts table exists
+            const contactsTableCheck = await client.query(`
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables
+                    WHERE table_schema = 'public'
+                    AND table_name = 'culinary_contacts_google'
+                );
+            `);
+
+            const contactsTableExists = contactsTableCheck.rows[0].exists;
+
+            if (contactsTableExists) {
+                // Check if the foreign key constraint is correct
+                const constraintCheck = await client.query(`
+                    SELECT ccu.table_name AS foreign_table_name
+                    FROM information_schema.table_constraints AS tc
+                    JOIN information_schema.constraint_column_usage AS ccu
+                    ON ccu.constraint_name = tc.constraint_name
+                    WHERE tc.constraint_type = 'FOREIGN KEY'
+                    AND tc.table_name = 'culinary_contacts_google'
+                    AND tc.constraint_name = 'culinary_contacts_google_job_id_fkey';
+                `);
+
+                if (constraintCheck.rows.length > 0) {
+                    const foreignTableName = constraintCheck.rows[0].foreign_table_name;
+                    console.info(`Foreign key constraint references table: ${foreignTableName}`);
+
+                    if (foreignTableName !== 'culinary_jobs_google') {
+                        console.warn(`WARNING: Foreign key constraint references wrong table: ${foreignTableName}`);
+                        console.warn('Attempting to fix the constraint automatically...');
+
+                        try {
+                            // Drop the existing constraint
+                            await client.query(`
+                                ALTER TABLE culinary_contacts_google
+                                DROP CONSTRAINT culinary_contacts_google_job_id_fkey;
+                            `);
+
+                            // Add the correct constraint
+                            await client.query(`
+                                ALTER TABLE culinary_contacts_google
+                                ADD CONSTRAINT culinary_contacts_google_job_id_fkey
+                                FOREIGN KEY (job_id) REFERENCES culinary_jobs_google(id) ON DELETE CASCADE;
+                            `);
+
+                            console.info('Successfully fixed the foreign key constraint!');
+                        } catch (error) {
+                            console.error('Failed to fix the foreign key constraint:', error);
+                            console.warn('Please update the constraint manually in the database.');
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error checking foreign key constraint:', error);
+        }
+
         for (const job of jobs) {
             try {
                 // Format salary as a string combining min and max
