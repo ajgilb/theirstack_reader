@@ -55,6 +55,9 @@ async function initDatabase() {
         const result = await pool.query('SELECT NOW()');
         console.info('Successfully connected to Supabase PostgreSQL database:', result.rows[0].now);
 
+        // Create indexes for performance
+        await createIndexes();
+
         return true;
     } catch (error) {
         console.error('Failed to connect to database:', error);
@@ -63,64 +66,121 @@ async function initDatabase() {
 }
 
 /**
- * Creates the necessary database tables if they don't exist
+ * Checks the actual schema of the existing tables
  */
-async function createTables() {
+async function checkExistingSchema() {
+    try {
+        // Check if the jobs table exists
+        const jobsTableCheck = await pool.query(`
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables
+                WHERE table_schema = 'public'
+                AND table_name = 'culinary_jobs_google'
+            );
+        `);
+
+        const jobsTableExists = jobsTableCheck.rows[0].exists;
+        console.info(`Table culinary_jobs_google exists: ${jobsTableExists}`);
+
+        if (jobsTableExists) {
+            // Get the column information
+            const columnInfo = await pool.query(`
+                SELECT column_name, data_type, character_maximum_length
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                AND table_name = 'culinary_jobs_google'
+                ORDER BY ordinal_position;
+            `);
+
+            console.info('Columns in culinary_jobs_google:');
+            columnInfo.rows.forEach(col => {
+                console.info(`- ${col.column_name}: ${col.data_type}${col.character_maximum_length ? `(${col.character_maximum_length})` : ''}`);
+            });
+        }
+
+        // Check if the contacts table exists
+        const contactsTableCheck = await pool.query(`
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables
+                WHERE table_schema = 'public'
+                AND table_name = 'culinary_contacts_google'
+            );
+        `);
+
+        const contactsTableExists = contactsTableCheck.rows[0].exists;
+        console.info(`Table culinary_contacts_google exists: ${contactsTableExists}`);
+
+        if (contactsTableExists) {
+            // Get the column information
+            const columnInfo = await pool.query(`
+                SELECT column_name, data_type, character_maximum_length
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                AND table_name = 'culinary_contacts_google'
+                ORDER BY ordinal_position;
+            `);
+
+            console.info('Columns in culinary_contacts_google:');
+            columnInfo.rows.forEach(col => {
+                console.info(`- ${col.column_name}: ${col.data_type}${col.character_maximum_length ? `(${col.character_maximum_length})` : ''}`);
+            });
+        }
+
+        // Check the original tables for reference
+        const originalJobsTableCheck = await pool.query(`
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables
+                WHERE table_schema = 'public'
+                AND table_name = 'culinary_jobs'
+            );
+        `);
+
+        const originalJobsTableExists = originalJobsTableCheck.rows[0].exists;
+        console.info(`Table culinary_jobs exists: ${originalJobsTableExists}`);
+
+        if (originalJobsTableExists) {
+            // Get the column information
+            const columnInfo = await pool.query(`
+                SELECT column_name, data_type, character_maximum_length
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                AND table_name = 'culinary_jobs'
+                ORDER BY ordinal_position;
+            `);
+
+            console.info('Columns in culinary_jobs:');
+            columnInfo.rows.forEach(col => {
+                console.info(`- ${col.column_name}: ${col.data_type}${col.character_maximum_length ? `(${col.character_maximum_length})` : ''}`);
+            });
+        }
+    } catch (error) {
+        console.error('Error checking schema:', error);
+    }
+}
+
+/**
+ * Creates indexes for performance optimization
+ */
+async function createIndexes() {
     const client = await pool.connect();
     try {
-        // Create the jobs table with the exact same schema as culinary_jobs
+        // Create indexes for the jobs table
         await client.query(`
-            CREATE TABLE IF NOT EXISTS culinary_jobs_google (
-                id SERIAL PRIMARY KEY,
-                title VARCHAR(255) NOT NULL,
-                company VARCHAR(255) NOT NULL,
-                location VARCHAR(255),
-                date_posted VARCHAR(255),
-                job_type VARCHAR(255),
-                description TEXT,
-                salary VARCHAR(255),
-                skills TEXT[],
-                experience_level VARCHAR(50),
-                url TEXT,
-                source VARCHAR(255),
-                scraped_at TIMESTAMP WITH TIME ZONE,
-                company_url TEXT,
-                date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-
-                CONSTRAINT unique_job_url UNIQUE (url)
-            );
-
-            -- Add indexes for performance
             CREATE INDEX IF NOT EXISTS idx_google_company_name ON culinary_jobs_google(company);
             CREATE INDEX IF NOT EXISTS idx_google_job_title ON culinary_jobs_google(title);
             CREATE INDEX IF NOT EXISTS idx_google_date_added ON culinary_jobs_google(date_added);
         `);
 
-        // Create the contacts table with the exact same schema as culinary_contacts
+        // Create indexes for the contacts table
         await client.query(`
-            CREATE TABLE IF NOT EXISTS culinary_contacts_google (
-                id SERIAL PRIMARY KEY,
-                job_id INTEGER REFERENCES culinary_jobs_google(id) ON DELETE CASCADE,
-                email VARCHAR(255) NOT NULL,
-                first_name VARCHAR(255),
-                last_name VARCHAR(255),
-                position VARCHAR(255),
-                confidence INTEGER,
-                company VARCHAR(255),
-                company_url VARCHAR(255),
-                date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-
-                CONSTRAINT unique_google_contact_email UNIQUE (job_id, email)
-            );
-
-            -- Add indexes for performance
             CREATE INDEX IF NOT EXISTS idx_google_contact_email ON culinary_contacts_google(email);
             CREATE INDEX IF NOT EXISTS idx_google_contact_job_id ON culinary_contacts_google(job_id);
         `);
+
+        console.info('Database indexes created successfully');
     } catch (error) {
-        console.error('Error creating database tables:', error);
-        throw error;
+        console.error('Error creating database indexes:', error);
+        // Don't throw the error, just log it
     } finally {
         client.release();
     }
@@ -158,13 +218,45 @@ async function insertJobsIntoDatabase(jobs) {
                     }
                 }
 
+                // Get the current timestamp for date fields
+                const now = new Date().toISOString();
+
+                // Try to create the table if it doesn't exist
+                try {
+                    await client.query(`
+                        CREATE TABLE IF NOT EXISTS culinary_jobs_google (
+                            id SERIAL PRIMARY KEY,
+                            title VARCHAR(255) NOT NULL,
+                            company VARCHAR(255) NOT NULL,
+                            location VARCHAR(255),
+                            date_posted VARCHAR(255),
+                            job_type VARCHAR(255),
+                            description TEXT,
+                            salary VARCHAR(255),
+                            skills TEXT[],
+                            experience_level VARCHAR(50),
+                            url TEXT,
+                            source VARCHAR(255),
+                            scraped_at TIMESTAMP WITH TIME ZONE,
+                            company_url TEXT,
+                            date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                            last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                            CONSTRAINT unique_job_url UNIQUE (url)
+                        );
+                    `);
+                    console.info('Table culinary_jobs_google created or already exists');
+                } catch (error) {
+                    console.error('Error creating table:', error);
+                }
+
                 // Insert job data with the exact schema matching culinary_jobs
                 const jobResult = await client.query(`
                     INSERT INTO culinary_jobs_google (
                         title, company, location, date_posted, job_type, description,
                         salary, skills, experience_level, url, source, scraped_at,
-                        company_url
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                        company_url, date_added, last_updated
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
                     ON CONFLICT (url) DO UPDATE SET
                         title = EXCLUDED.title,
                         company = EXCLUDED.company,
@@ -188,40 +280,70 @@ async function insertJobsIntoDatabase(jobs) {
                     job.schedule, // Map schedule to job_type
                     job.description,
                     salaryStr, // Combined salary string
-                    job.skills,
+                    job.skills || [], // Ensure skills is an array
                     job.experience_level,
                     job.apply_link, // Map apply_link to url
                     job.source,
-                    job.scraped_at,
-                    job.company_domain || job.company_website // Use domain or website as company_url
+                    job.scraped_at || now,
+                    job.company_domain || job.company_website, // Use domain or website as company_url
+                    now, // date_added
+                    now  // last_updated
                 ]);
 
                 const jobId = jobResult.rows[0].id;
 
                 // Insert email contacts if available
                 if (job.emails && job.emails.length > 0) {
-                    for (const email of job.emails) {
+                    // Try to create the contacts table if it doesn't exist
+                    try {
                         await client.query(`
-                            INSERT INTO culinary_contacts_google (
-                                job_id, email, first_name, last_name, position, confidence, company, company_url
-                            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                            ON CONFLICT (job_id, email) DO UPDATE SET
-                                first_name = EXCLUDED.first_name,
-                                last_name = EXCLUDED.last_name,
-                                position = EXCLUDED.position,
-                                confidence = EXCLUDED.confidence,
-                                company = EXCLUDED.company,
-                                company_url = EXCLUDED.company_url
-                        `, [
-                            jobId,
-                            email.email,
-                            email.firstName,
-                            email.lastName,
-                            email.position,
-                            email.confidence,
-                            job.company,
-                            job.company_domain || job.company_website // Use domain or website as company_url
-                        ]);
+                            CREATE TABLE IF NOT EXISTS culinary_contacts_google (
+                                id SERIAL PRIMARY KEY,
+                                job_id INTEGER REFERENCES culinary_jobs_google(id) ON DELETE CASCADE,
+                                email VARCHAR(255) NOT NULL,
+                                first_name VARCHAR(255),
+                                last_name VARCHAR(255),
+                                position VARCHAR(255),
+                                confidence INTEGER,
+                                company VARCHAR(255),
+                                company_url VARCHAR(255),
+                                date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                                CONSTRAINT unique_google_contact_email UNIQUE (job_id, email)
+                            );
+                        `);
+                        console.info('Table culinary_contacts_google created or already exists');
+                    } catch (error) {
+                        console.error('Error creating contacts table:', error);
+                    }
+
+                    for (const email of job.emails) {
+                        try {
+                            await client.query(`
+                                INSERT INTO culinary_contacts_google (
+                                    job_id, email, first_name, last_name, position, confidence, company, company_url, date_added
+                                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                                ON CONFLICT (job_id, email) DO UPDATE SET
+                                    first_name = EXCLUDED.first_name,
+                                    last_name = EXCLUDED.last_name,
+                                    position = EXCLUDED.position,
+                                    confidence = EXCLUDED.confidence,
+                                    company = EXCLUDED.company,
+                                    company_url = EXCLUDED.company_url
+                            `, [
+                                jobId,
+                                email.email,
+                                email.firstName,
+                                email.lastName,
+                                email.position,
+                                email.confidence,
+                                job.company,
+                                job.company_domain || job.company_website, // Use domain or website as company_url
+                                now // date_added
+                            ]);
+                        } catch (error) {
+                            console.error(`Error inserting contact ${email.email}:`, error);
+                        }
                     }
                     console.info(`Inserted ${job.emails.length} email contacts for job ID ${jobId}`);
                 }
@@ -229,8 +351,22 @@ async function insertJobsIntoDatabase(jobs) {
                 insertedCount++;
                 console.info(`Inserted job: "${job.title}" at "${job.company}" (ID: ${jobId})`);
             } catch (error) {
-                console.error(`Error inserting job "${job.title}" at "${job.company}":`, error);
-                // Continue with the next job
+                // Log detailed error information
+                console.error(`Error inserting job "${job.title}" at "${job.company}":`);
+                console.error(`Error message: ${error.message}`);
+                console.error(`Error code: ${error.code}`);
+                console.error(`Error detail: ${error.detail}`);
+                console.error(`Error hint: ${error.hint}`);
+                console.error(`Error position: ${error.position}`);
+                console.error(`Error table: ${error.table}`);
+                console.error(`Error column: ${error.column}`);
+                console.error(`Error constraint: ${error.constraint}`);
+                console.error(`Full error:`, error);
+
+                // If this is the first error in the transaction, roll back and return
+                await client.query('ROLLBACK');
+                console.error('Transaction rolled back due to error.');
+                return 0;
             }
         }
 
