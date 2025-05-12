@@ -70,9 +70,9 @@ try {
     // Force database integration to be enabled
     const forcePushToDatabase = true;
 
-    // Test mode - set to true to process only a limited number of jobs for testing
-    const testMode = true;
-    // Number of jobs to process in test mode
+    // Test mode - set to false to process all jobs
+    const testMode = false;
+    // Number of jobs to process in test mode (only used when testMode is true)
     const testModeLimit = 5;
 
     console.log('Google Jobs API Actor configuration:');
