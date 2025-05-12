@@ -404,7 +404,21 @@ async function insertJobsIntoDatabase(jobs) {
                 const contactName = job.emails && job.emails.length > 0 ?
                     `${job.emails[0].firstName || ''} ${job.emails[0].lastName || ''}`.trim() : '';
                 const contactTitle = job.emails && job.emails.length > 0 ? job.emails[0].position || '' : '';
-                const contactEmail = job.emails && job.emails.length > 0 ? job.emails[0].email || '' : '';
+
+                // For the email, add a unique identifier if it's empty to avoid unique constraint violations
+                let contactEmail = '';
+                if (job.emails && job.emails.length > 0) {
+                    contactEmail = job.emails[0].email || '';
+                }
+
+                // If email is empty, add a unique identifier based on the job title and location
+                // This helps avoid the unique constraint violation on (email, company)
+                if (!contactEmail) {
+                    // Create a unique identifier by combining title and location
+                    const uniqueId = `${job.title}_${job.location}`.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 20);
+                    contactEmail = `no-email-${uniqueId}@placeholder.com`;
+                    console.info(`Generated placeholder email for empty email: ${contactEmail}`);
+                }
 
                 // Log the data we're about to insert
                 console.info('INSERTION DATA - Preparing to insert job with the following data:');
@@ -554,10 +568,74 @@ async function insertJobsIntoDatabase(jobs) {
                     console.error(`Error constraint: ${error.constraint}`);
                     console.error(`Full error:`, error);
 
-                    // Roll back the transaction and return
-                    await client.query('ROLLBACK');
-                    console.error('Transaction rolled back due to error in job insertion.');
-                    return 0;
+                    // Check if this is a unique constraint violation on email and company
+                    if (error.constraint === 'culinary_jobs_google_email_company_key') {
+                        console.warn(`Unique constraint violation detected. Trying again with a truly unique email...`);
+
+                        try {
+                            // Generate a truly unique email by adding a timestamp
+                            const timestamp = new Date().getTime();
+                            const uniqueId = `${job.title}_${timestamp}`.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 20);
+                            const uniqueEmail = `no-email-${uniqueId}@placeholder.com`;
+                            console.info(`Generated unique placeholder email: ${uniqueEmail}`);
+
+                            // Try inserting again with the unique email
+                            const retryQuery = `
+                                INSERT INTO culinary_jobs_google (
+                                    title, company, parent_company, location, salary,
+                                    contact_name, contact_title, email, url, job_details,
+                                    linkedin, domain, company_size, date_added, last_updated,
+                                    contacts_last_viewed, parent_url
+                                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+                                ON CONFLICT (url) DO UPDATE SET
+                                    title = EXCLUDED.title,
+                                    company = EXCLUDED.company,
+                                    parent_company = EXCLUDED.parent_company,
+                                    location = EXCLUDED.location,
+                                    salary = EXCLUDED.salary,
+                                    contact_name = EXCLUDED.contact_name,
+                                    contact_title = EXCLUDED.contact_title,
+                                    email = EXCLUDED.email,
+                                    job_details = EXCLUDED.job_details,
+                                    linkedin = EXCLUDED.linkedin,
+                                    domain = EXCLUDED.domain,
+                                    company_size = EXCLUDED.company_size,
+                                    last_updated = CURRENT_TIMESTAMP
+                                RETURNING id
+                            `;
+
+                            jobResult = await client.query(retryQuery, [
+                                job.title,
+                                job.company,
+                                '', // parent_company (empty for now)
+                                job.location,
+                                salaryStr, // Combined salary string
+                                contactName, // contact_name from first email
+                                contactTitle, // contact_title from first email
+                                uniqueEmail, // Use the unique email
+                                job.apply_link, // url
+                                job.description, // job_details
+                                '', // linkedin (empty for now)
+                                job.company_domain || '', // domain
+                                '', // company_size (empty for now)
+                                now, // date_added
+                                now, // last_updated
+                                null, // contacts_last_viewed
+                                '' // parent_url (empty for now)
+                            ]);
+
+                            console.info(`Successfully inserted job with unique email after constraint violation`);
+                        } catch (retryError) {
+                            console.error(`Failed to insert job even with unique email:`, retryError);
+                            // Continue with the next job instead of rolling back
+                            continue;
+                        }
+                    } else {
+                        // For other errors, roll back the transaction and return
+                        await client.query('ROLLBACK');
+                        console.error('Transaction rolled back due to error in job insertion.');
+                        return 0;
+                    }
                 }
 
                 const jobId = jobResult.rows[0].id;
