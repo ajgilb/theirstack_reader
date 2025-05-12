@@ -100,9 +100,10 @@ try {
 
     // Process each query
     for (const query of queriesToProcess) {
-        // In test mode, only process one page
-        const pagesToProcess = testMode ? 1 : maxPagesPerQuery;
-        console.log(`Searching for jobs with query: "${query}" (${testMode ? 'test mode - only 1 page' : `up to ${pagesToProcess} pages`})`);
+        // In test mode, process enough pages to get our target number of jobs
+        // Start with 1 page, but allow up to 3 pages in test mode if needed
+        const pagesToProcess = testMode ? 3 : maxPagesPerQuery;
+        console.log(`Searching for jobs with query: "${query}" (${testMode ? 'test mode - up to 3 pages' : `up to ${pagesToProcess} pages`})`);
 
         // Search for jobs
         const jobs = await searchAllJobs(query, location, pagesToProcess);
@@ -128,6 +129,14 @@ try {
         // In test mode, only process a limited number of jobs
         const jobsToProcess = testMode ? filteredJobs.slice(0, testModeLimit) : filteredJobs;
         console.log(`Processing ${jobsToProcess.length} jobs${testMode ? ` (test mode - limit: ${testModeLimit})` : ''}`);
+
+        // Log the jobs we're processing
+        if (testMode) {
+            console.log('Jobs being processed:');
+            jobsToProcess.forEach((job, index) => {
+                console.log(`Job #${index + 1}: "${job.title}" at "${job.company}" in "${job.location}"`);
+            });
+        }
 
         // Process jobs for database insertion
         // Always use forceHunterData (which is true) instead of includeHunterData

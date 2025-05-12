@@ -438,6 +438,7 @@ async function insertJobsIntoDatabase(jobs) {
                 let jobResult;
                 try {
                     // First check if the job already exists based on title, company, and location
+                    console.info(`Checking if job already exists: "${job.title}" at "${job.company}" in "${job.location}"`);
                     const checkQuery = `
                         SELECT id FROM culinary_jobs_google
                         WHERE title = $1 AND company = $2 AND location = $3
@@ -448,6 +449,8 @@ async function insertJobsIntoDatabase(jobs) {
                         job.company,
                         job.location
                     ]);
+
+                    console.info(`Found ${checkResult.rows.length} existing jobs with matching title, company, and location`);
 
                     if (checkResult.rows.length > 0) {
                         console.info(`Job already exists in database: "${job.title}" at "${job.company}" in "${job.location}"`);
