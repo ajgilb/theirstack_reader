@@ -7,11 +7,12 @@ import pg from 'pg';
 const { Pool } = pg;
 
 // Database configuration - using individual Supabase environment variables
-const supabaseUser = process.env.SUPABASE_USER || 'postgres.mbaqiwhkngfxxmlkionj';
-const supabasePassword = process.env.SUPABASE_PASSWORD || 'Relham12?';
-const supabaseHost = process.env.SUPABASE_HOST || 'aws-0-us-west-1.pooler.supabase.com';
-const supabasePort = process.env.SUPABASE_PORT || '6543';
-const supabaseDatabase = process.env.SUPABASE_DATABASE || 'postgres';
+// These should be set in the Apify environment variables
+const supabaseUser = process.env.SUPABASE_USER;
+const supabasePassword = process.env.SUPABASE_PASSWORD;
+const supabaseHost = process.env.SUPABASE_HOST;
+const supabasePort = process.env.SUPABASE_PORT;
+const supabaseDatabase = process.env.SUPABASE_DATABASE;
 
 // Build connection string from environment variables or use DATABASE_URL if provided
 const connectionString = process.env.DATABASE_URL ||
@@ -24,6 +25,12 @@ let pool = null;
  * @returns {Promise<boolean>} - True if connection is successful
  */
 async function initDatabase() {
+    // Check if we have all the required database credentials
+    if (!process.env.DATABASE_URL && (!supabaseUser || !supabasePassword || !supabaseHost || !supabasePort || !supabaseDatabase)) {
+        console.error('Missing database credentials. Please set DATABASE_URL or all SUPABASE_* environment variables.');
+        return false;
+    }
+
     if (!connectionString) {
         console.error('No database connection string available');
         return false;
@@ -32,10 +39,10 @@ async function initDatabase() {
     try {
         // Log which environment variables are being used
         console.info('Using Supabase configuration:');
-        console.info(`- Host: ${supabaseHost}`);
-        console.info(`- Port: ${supabasePort}`);
-        console.info(`- Database: ${supabaseDatabase}`);
-        console.info(`- User: ${supabaseUser}`);
+        console.info(`- Host: ${supabaseHost || 'Not set (using DATABASE_URL)'}`);
+        console.info(`- Port: ${supabasePort || 'Not set (using DATABASE_URL)'}`);
+        console.info(`- Database: ${supabaseDatabase || 'Not set (using DATABASE_URL)'}`);
+        console.info(`- User: ${supabaseUser || 'Not set (using DATABASE_URL)'}`);
         // Don't log the password for security reasons
 
         // Initialize the connection pool

@@ -49,7 +49,7 @@ try {
             'restaurant executives united states',
             'hotel executives united states'
         ],
-        maxPagesPerQuery = 5,
+        maxPagesPerQuery = 10, // Increased from 5 to 10 to get more jobs
         location = '',
         saveToDataset = true,
         // Read pushToDatabase from input but we'll force it to true below
@@ -215,7 +215,10 @@ try {
 
             // Set the DATABASE_URL environment variable if provided
             if (databaseUrl) {
+                console.log(`Using provided database URL: ${databaseUrl.substring(0, 20)}...`);
                 process.env.DATABASE_URL = databaseUrl;
+            } else {
+                console.log('No database URL provided. Using environment variables for database connection.');
             }
 
             // Initialize the database connection
@@ -226,7 +229,8 @@ try {
                 const insertedCount = await insertJobsIntoDatabase(processedJobs);
                 console.log(`Successfully inserted ${insertedCount} jobs into the database (${databaseTable}).`);
             } else {
-                console.error(`Failed to initialize database connection. Using default Supabase connection.`);
+                console.error(`Failed to initialize database connection. Please check your database credentials.`);
+                console.error(`Make sure to set DATABASE_URL or all SUPABASE_* environment variables in the Apify console.`);
             }
         }
 
