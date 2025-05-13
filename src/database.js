@@ -209,6 +209,99 @@ async function insertJobsIntoDatabase(jobs) {
 
         // Check and fix the foreign key constraint before inserting any data
         try {
+            // Check if the jobs table exists
+            const jobsTableCheck = await client.query(`
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables
+                    WHERE table_schema = 'public'
+                    AND table_name = 'culinary_jobs_google'
+                );
+            `);
+
+            const jobsTableExists = jobsTableCheck.rows[0].exists;
+            console.info(`Table culinary_jobs_google exists: ${jobsTableExists}`);
+
+            if (jobsTableExists) {
+                // Get schema details for debugging
+                const columnInfo = await client.query(`
+                    SELECT column_name, data_type, is_nullable, character_maximum_length
+                    FROM information_schema.columns
+                    WHERE table_schema = 'public'
+                    AND table_name = 'culinary_jobs_google'
+                    ORDER BY ordinal_position;
+                `);
+
+                console.info('SCHEMA DETAILS - Actual columns in culinary_jobs_google:');
+                columnInfo.rows.forEach(col => {
+                    console.info(`- ${col.column_name}: ${col.data_type}${col.character_maximum_length ? `(${col.character_maximum_length})` : ''} ${col.is_nullable === 'YES' ? 'NULL' : 'NOT NULL'}`);
+                });
+
+                // Get primary key
+                const pkInfo = await client.query(`
+                    SELECT a.attname
+                    FROM pg_index i
+                    JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+                    WHERE i.indrelid = 'culinary_jobs_google'::regclass
+                    AND i.indisprimary;
+                `);
+
+                console.info('Primary key of culinary_jobs_google:');
+                pkInfo.rows.forEach(pk => {
+                    console.info(`- ${pk.attname}`);
+                });
+
+                // Get unique constraints
+                const uniqueInfo = await client.query(`
+                    SELECT con.conname
+                    FROM pg_constraint con
+                    JOIN pg_class rel ON rel.oid = con.conrelid
+                    WHERE rel.relname = 'culinary_jobs_google'
+                    AND con.contype = 'u';
+                `);
+
+                console.info('Unique constraints of culinary_jobs_google:');
+                for (const constraint of uniqueInfo.rows) {
+                    // Get the columns for this constraint
+                    const constraintCols = await client.query(`
+                        SELECT a.attname
+                        FROM pg_constraint c
+                        JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)
+                        WHERE c.conname = $1;
+                    `, [constraint.conname]);
+
+                    const columns = constraintCols.rows.map(row => row.attname).join(', ');
+                    console.info(`- ${constraint.conname}: UNIQUE (${columns})`);
+                }
+            }
+
+            // Check if the original table exists (for comparison)
+            const originalTableCheck = await client.query(`
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables
+                    WHERE table_schema = 'public'
+                    AND table_name = 'culinary_jobs'
+                );
+            `);
+
+            const originalTableExists = originalTableCheck.rows[0].exists;
+            console.info(`Original table culinary_jobs exists: ${originalTableExists}`);
+
+            if (originalTableExists) {
+                // Get schema details for the original table
+                const originalColumnInfo = await client.query(`
+                    SELECT column_name, data_type, is_nullable, character_maximum_length
+                    FROM information_schema.columns
+                    WHERE table_schema = 'public'
+                    AND table_name = 'culinary_jobs'
+                    ORDER BY ordinal_position;
+                `);
+
+                console.info('SCHEMA DETAILS - Columns in original culinary_jobs:');
+                originalColumnInfo.rows.forEach(col => {
+                    console.info(`- ${col.column_name}: ${col.data_type}${col.character_maximum_length ? `(${col.character_maximum_length})` : ''} ${col.is_nullable === 'YES' ? 'NULL' : 'NOT NULL'}`);
+                });
+            }
+
             // Check if the contacts table exists
             const contactsTableCheck = await client.query(`
                 SELECT EXISTS (
@@ -260,10 +353,27 @@ async function insertJobsIntoDatabase(jobs) {
                             console.warn('Please update the constraint manually in the database.');
                         }
                     }
+                } else {
+                    console.warn('No foreign key constraint found on culinary_contacts_google.job_id');
+                    console.warn('Attempting to add the constraint...');
+
+                    try {
+                        // Add the correct constraint
+                        await client.query(`
+                            ALTER TABLE culinary_contacts_google
+                            ADD CONSTRAINT culinary_contacts_google_job_id_fkey
+                            FOREIGN KEY (job_id) REFERENCES culinary_jobs_google(id) ON DELETE CASCADE;
+                        `);
+
+                        console.info('Successfully added the foreign key constraint!');
+                    } catch (error) {
+                        console.error('Failed to add the foreign key constraint:', error);
+                        console.warn('Please add the constraint manually in the database.');
+                    }
                 }
             }
         } catch (error) {
-            console.error('Error checking foreign key constraint:', error);
+            console.error('Error checking database schema:', error);
         }
 
         for (const job of jobs) {
@@ -391,7 +501,8 @@ async function insertJobsIntoDatabase(jobs) {
                                 contacts_last_viewed TIMESTAMP WITH TIME ZONE,
                                 parent_url TEXT,
 
-                                CONSTRAINT unique_job_url UNIQUE (url)
+                                CONSTRAINT unique_job_url UNIQUE (url),
+                                CONSTRAINT culinary_jobs_google_email_company_key UNIQUE (email, company)
                             );
                         `);
                         console.info('Table culinary_jobs_google created successfully');
@@ -644,8 +755,8 @@ async function insertJobsIntoDatabase(jobs) {
                 if (job.emails && job.emails.length > 0) {
                     // Try to create the contacts table if it doesn't exist with the EXACT schema from the database
                     try {
-                        // First check if the table exists
-                        const tableCheck = await client.query(`
+                        // Check if the contacts table exists
+                        const contactsTableCheck = await client.query(`
                             SELECT EXISTS (
                                 SELECT FROM information_schema.tables
                                 WHERE table_schema = 'public'
@@ -653,93 +764,80 @@ async function insertJobsIntoDatabase(jobs) {
                             );
                         `);
 
-                        const tableExists = tableCheck.rows[0].exists;
+                        const contactsTableExists = contactsTableCheck.rows[0].exists;
 
-                        if (!tableExists) {
-                            // Check if the contacts table exists
-                            const contactsTableCheck = await client.query(`
-                                SELECT EXISTS (
-                                    SELECT FROM information_schema.tables
-                                    WHERE table_schema = 'public'
-                                    AND table_name = 'culinary_contacts_google'
+                        if (!contactsTableExists) {
+                            // Create the contacts table with the correct foreign key reference
+                            await client.query(`
+                                CREATE TABLE IF NOT EXISTS culinary_contacts_google (
+                                    id SERIAL PRIMARY KEY,
+                                    job_id INTEGER REFERENCES culinary_jobs_google(id) ON DELETE CASCADE,
+                                    name VARCHAR(255),
+                                    title VARCHAR(255),
+                                    email VARCHAR(255) NOT NULL,
+                                    date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                                    last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                                    CONSTRAINT unique_google_contact_email UNIQUE (job_id, email)
                                 );
                             `);
+                            console.info('Table culinary_contacts_google created successfully');
+                        } else {
+                            // Check if the foreign key constraint is correct
+                            const constraintCheck = await client.query(`
+                                SELECT ccu.table_name AS foreign_table_name
+                                FROM information_schema.table_constraints AS tc
+                                JOIN information_schema.constraint_column_usage AS ccu
+                                ON ccu.constraint_name = tc.constraint_name
+                                WHERE tc.constraint_type = 'FOREIGN KEY'
+                                AND tc.table_name = 'culinary_contacts_google'
+                                AND tc.constraint_name = 'culinary_contacts_google_job_id_fkey';
+                            `);
 
-                            const contactsTableExists = contactsTableCheck.rows[0].exists;
+                            if (constraintCheck.rows.length > 0) {
+                                const foreignTableName = constraintCheck.rows[0].foreign_table_name;
+                                console.info(`Foreign key constraint references table: ${foreignTableName}`);
 
-                            if (!contactsTableExists) {
-                                // Create the contacts table with the correct foreign key reference
-                                await client.query(`
-                                    CREATE TABLE IF NOT EXISTS culinary_contacts_google (
-                                        id SERIAL PRIMARY KEY,
-                                        job_id INTEGER REFERENCES culinary_jobs_google(id) ON DELETE CASCADE,
-                                        name VARCHAR(255),
-                                        title VARCHAR(255),
-                                        email VARCHAR(255) NOT NULL,
-                                        date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                                        last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                                if (foreignTableName !== 'culinary_jobs_google') {
+                                    console.warn(`WARNING: Foreign key constraint references wrong table: ${foreignTableName}`);
+                                    console.warn('Attempting to fix the constraint automatically...');
 
-                                        CONSTRAINT unique_google_contact_email UNIQUE (job_id, email)
-                                    );
-                                `);
-                                console.info('Table culinary_contacts_google created successfully');
-                            } else {
-                                // Check if the foreign key constraint is correct
-                                const constraintCheck = await client.query(`
-                                    SELECT ccu.table_name AS foreign_table_name
-                                    FROM information_schema.table_constraints AS tc
-                                    JOIN information_schema.constraint_column_usage AS ccu
-                                    ON ccu.constraint_name = tc.constraint_name
-                                    WHERE tc.constraint_type = 'FOREIGN KEY'
-                                    AND tc.table_name = 'culinary_contacts_google'
-                                    AND tc.constraint_name = 'culinary_contacts_google_job_id_fkey';
-                                `);
+                                    try {
+                                        // Drop the existing constraint
+                                        await client.query(`
+                                            ALTER TABLE culinary_contacts_google
+                                            DROP CONSTRAINT culinary_contacts_google_job_id_fkey;
+                                        `);
 
-                                if (constraintCheck.rows.length > 0) {
-                                    const foreignTableName = constraintCheck.rows[0].foreign_table_name;
-                                    console.info(`Foreign key constraint references table: ${foreignTableName}`);
+                                        // Add the correct constraint
+                                        await client.query(`
+                                            ALTER TABLE culinary_contacts_google
+                                            ADD CONSTRAINT culinary_contacts_google_job_id_fkey
+                                            FOREIGN KEY (job_id) REFERENCES culinary_jobs_google(id) ON DELETE CASCADE;
+                                        `);
 
-                                    if (foreignTableName !== 'culinary_jobs_google') {
-                                        console.warn(`WARNING: Foreign key constraint references wrong table: ${foreignTableName}`);
-                                        console.warn('Attempting to fix the constraint automatically...');
-
-                                        try {
-                                            // Drop the existing constraint
-                                            await client.query(`
-                                                ALTER TABLE culinary_contacts_google
-                                                DROP CONSTRAINT culinary_contacts_google_job_id_fkey;
-                                            `);
-
-                                            // Add the correct constraint
-                                            await client.query(`
-                                                ALTER TABLE culinary_contacts_google
-                                                ADD CONSTRAINT culinary_contacts_google_job_id_fkey
-                                                FOREIGN KEY (job_id) REFERENCES culinary_jobs_google(id) ON DELETE CASCADE;
-                                            `);
-
-                                            console.info('Successfully fixed the foreign key constraint!');
-                                        } catch (error) {
-                                            console.error('Failed to fix the foreign key constraint:', error);
-                                            console.warn('Please update the constraint manually in the database.');
-                                        }
+                                        console.info('Successfully fixed the foreign key constraint!');
+                                    } catch (error) {
+                                        console.error('Failed to fix the foreign key constraint:', error);
+                                        console.warn('Please update the constraint manually in the database.');
                                     }
                                 }
                             }
-                        } else {
-                            // Check the actual schema of the table
-                            const columnInfo = await client.query(`
-                                SELECT column_name, data_type, character_maximum_length
-                                FROM information_schema.columns
-                                WHERE table_schema = 'public'
-                                AND table_name = 'culinary_contacts_google'
-                                ORDER BY ordinal_position;
-                            `);
-
-                            console.info('Actual columns in culinary_contacts_google:');
-                            columnInfo.rows.forEach(col => {
-                                console.info(`- ${col.column_name}: ${col.data_type}${col.character_maximum_length ? `(${col.character_maximum_length})` : ''}`);
-                            });
                         }
+                    } else {
+                        // Check the actual schema of the table
+                        const columnInfo = await client.query(`
+                            SELECT column_name, data_type, character_maximum_length
+                            FROM information_schema.columns
+                            WHERE table_schema = 'public'
+                            AND table_name = 'culinary_contacts_google'
+                            ORDER BY ordinal_position;
+                        `);
+
+                        console.info('Actual columns in culinary_contacts_google:');
+                        columnInfo.rows.forEach(col => {
+                            console.info(`- ${col.column_name}: ${col.data_type}${col.character_maximum_length ? `(${col.character_maximum_length})` : ''}`);
+                        });
                     } catch (error) {
                         console.error('Error creating or checking contacts table:', error);
                     }
