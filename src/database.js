@@ -45,6 +45,12 @@ async function initDatabase() {
         console.info(`- User: ${supabaseUser || 'Not set (using DATABASE_URL)'}`);
         // Don't log the password for security reasons
 
+        // Log a sanitized version of the connection string for debugging
+        if (process.env.DATABASE_URL) {
+            const sanitizedUrl = process.env.DATABASE_URL.replace(/:[^:@]+@/, ':***@');
+            console.info(`Using DATABASE_URL: ${sanitizedUrl}`);
+        }
+
         // Initialize the connection pool
         pool = new Pool({
             connectionString,
@@ -68,6 +74,39 @@ async function initDatabase() {
         return true;
     } catch (error) {
         console.error('Failed to connect to database:', error);
+
+        // Provide more detailed error information for common connection issues
+        if (error.code === 'ENOTFOUND') {
+            console.error(`Could not resolve hostname: ${error.hostname}`);
+            console.error('Please check your DATABASE_URL for typos in the hostname.');
+
+            // Try to parse the connection string to identify issues
+            try {
+                const url = new URL(connectionString);
+                console.error(`Attempted to connect to: ${url.hostname}`);
+
+                // Check for common issues
+                if (url.hostname.includes('supabase.co') && !url.hostname.startsWith('db.')) {
+                    console.error('For direct database connections, the hostname should start with "db."');
+                    console.error('Example: db.mbaqiwhkngfxxmlkionj.supabase.co');
+                }
+
+                if (url.hostname.includes('pooler') && !url.hostname.includes('aws-')) {
+                    console.error('For pooled connections, the hostname should include the region.');
+                    console.error('Example: aws-0-us-west-1.pooler.supabase.com');
+                }
+            } catch (parseError) {
+                console.error('Could not parse the connection string. It may be malformed.');
+            }
+        } else if (error.code === 'ECONNREFUSED') {
+            console.error(`Connection refused at ${error.address}:${error.port}`);
+            console.error('Please check if the port is correct and if the database server is accepting connections.');
+        } else if (error.code === '28P01') {
+            console.error('Authentication failed. Please check your username and password.');
+        } else if (error.code === '3D000') {
+            console.error('Database does not exist. Please check the database name in your connection string.');
+        }
+
         return false;
     }
 }
