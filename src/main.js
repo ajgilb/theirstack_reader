@@ -24,87 +24,112 @@ async function initDatabase() {
         console.log('Initializing PostgreSQL database connection...');
 
         // Get database connection string
-        const connectionString = process.env.DATABASE_URL;
+        let connectionString = process.env.DATABASE_URL;
 
         if (!connectionString) {
             console.error('No DATABASE_URL environment variable found');
             return false;
         }
 
-        console.log(`Using DATABASE_URL: ${connectionString.substring(0, 20)}...`);
+        // Define alternative connection strings to try if the first one fails
+        const dbUser = 'google_scraper';
+        const dbPassword = 'Relham12?';
+        const alternativeConnections = [
+            // Direct database with IP address using new user
+            `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@34.102.106.226:5432/postgres`,
 
-        // Parse the connection string to extract components
-        const parsedUrl = new URL(connectionString.replace('postgresql://', 'http://'));
-        const host = parsedUrl.hostname;
-        const port = parsedUrl.port || '5432';
-        const database = parsedUrl.pathname.substring(1);
-        const auth = parsedUrl.username + (parsedUrl.password ? ':' + parsedUrl.password : '');
+            // AWS US West 1 pooler with IP address using new user
+            `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@3.101.124.236:6543/postgres`,
 
-        console.log(`Parsed connection details:`);
-        console.log(`- Host: ${host}`);
-        console.log(`- Port: ${port}`);
-        console.log(`- Database: ${database}`);
-        console.log(`- Auth: ${auth.substring(0, 20)}...`);
+            // Original hostname with new user (as fallback)
+            `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@db.mbaqiwhkngfxxmlkionj.supabase.co:5432/postgres`
+        ];
 
-        // Try to resolve the hostname to an IPv4 address
-        try {
-            const dns = await import('dns');
-            const { promisify } = await import('util');
-            const lookup = promisify(dns.lookup);
-
-            const { address, family } = await lookup(host, { family: 4 });
-            console.log(`Resolved ${host} to IPv4 address: ${address}`);
-
-            // Create a connection pool with explicit host
-            pool = new Pool({
-                user: auth.split(':')[0],
-                password: auth.includes(':') ? auth.split(':')[1] : '',
-                host: address, // Use the resolved IPv4 address
-                port: parseInt(port, 10),
-                database: database,
-                ssl: {
-                    rejectUnauthorized: false
-                }
-            });
-        } catch (dnsError) {
-            console.error(`Failed to resolve hostname to IPv4 address:`, dnsError);
-
-            // Fall back to using the connection string
-            console.log('Falling back to connection string with family: 4');
-            pool = new Pool({
-                connectionString,
-                ssl: {
-                    rejectUnauthorized: false
-                },
-                family: 4
-            });
+        // Add the current connection string to the list if it's not already there
+        if (!alternativeConnections.includes(connectionString)) {
+            alternativeConnections.unshift(connectionString);
         }
 
-        // Test the connection
-        const result = await pool.query('SELECT NOW()');
-        console.log('Successfully connected to PostgreSQL!');
-        console.log(`Server time: ${result.rows[0].now}`);
+        // Try each connection string until one works
+        let lastError = null;
+        for (let i = 0; i < alternativeConnections.length; i++) {
+            connectionString = alternativeConnections[i];
+            console.log(`Trying connection string #${i+1}: ${connectionString.substring(0, 20)}...`);
 
-        // Check if tables exist and create them if needed
-        await checkAndCreateTables();
+            try {
+                // Parse the connection string to extract components
+                const parsedUrl = new URL(connectionString.replace('postgresql://', 'http://'));
+                const host = parsedUrl.hostname;
+                const port = parsedUrl.port || '5432';
+                const database = parsedUrl.pathname.substring(1);
+                const auth = parsedUrl.username + (parsedUrl.password ? ':' + parsedUrl.password : '');
 
-        return true;
-    } catch (error) {
-        console.error('Failed to connect to PostgreSQL:', error);
+                console.log(`Parsed connection details:`);
+                console.log(`- Host: ${host}`);
+                console.log(`- Port: ${port}`);
+                console.log(`- Database: ${database}`);
+                console.log(`- Auth: ${auth.substring(0, 20)}...`);
+
+                // Create a connection pool with explicit parameters
+                pool = new Pool({
+                    user: auth.split(':')[0],
+                    password: auth.includes(':') ? auth.split(':')[1] : '',
+                    host: host,
+                    port: parseInt(port, 10),
+                    database: database,
+                    ssl: {
+                        rejectUnauthorized: false
+                    },
+                    // Force IPv4
+                    family: 4,
+                    // Set a short connection timeout
+                    connectionTimeoutMillis: 5000
+                });
+
+                // Test the connection
+                const result = await pool.query('SELECT NOW()');
+                console.log('Successfully connected to PostgreSQL!');
+                console.log(`Server time: ${result.rows[0].now}`);
+
+                // Check if tables exist and create them if needed
+                await checkAndCreateTables();
+
+                return true;
+            } catch (error) {
+                console.error(`Failed to connect with connection string #${i+1}:`, error.message);
+                lastError = error;
+
+                // Close the pool if it was created
+                if (pool) {
+                    try {
+                        await pool.end();
+                    } catch (endError) {
+                        console.error('Error closing pool:', endError.message);
+                    }
+                    pool = null;
+                }
+            }
+        }
+
+        // If we get here, all connection attempts failed
+        console.error('All connection attempts failed. Last error:', lastError);
 
         // Provide more detailed error information
-        if (error.code === 'ENOTFOUND') {
-            console.error(`Could not resolve hostname: ${error.hostname}`);
+        if (lastError.code === 'ENOTFOUND') {
+            console.error(`Could not resolve hostname: ${lastError.hostname}`);
             console.error('Please check your DATABASE_URL for typos in the hostname.');
-        } else if (error.code === 'ECONNREFUSED') {
-            console.error(`Connection refused at ${error.address}:${error.port}`);
+        } else if (lastError.code === 'ECONNREFUSED') {
+            console.error(`Connection refused at ${lastError.address}:${lastError.port}`);
             console.error('Please check if the port is correct and if the database server is accepting connections.');
-        } else if (error.code === '28P01') {
+        } else if (lastError.code === '28P01') {
             console.error('Authentication failed. Please check your username and password.');
-        } else if (error.code === '3D000') {
+        } else if (lastError.code === '3D000') {
             console.error('Database does not exist. Please check the database name in your connection string.');
         }
 
+        return false;
+    } catch (error) {
+        console.error('Unexpected error during database initialization:', error);
         return false;
     }
 }
@@ -526,23 +551,24 @@ try {
                 console.log(`Using provided database URL: ${databaseUrl.substring(0, 20)}...`);
                 process.env.DATABASE_URL = databaseUrl;
             } else if (!process.env.DATABASE_URL) {
-                // Set default DATABASE_URL using the service role key
-                const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1iYXFpd2hrbmdmeHhtbGtpb25qIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDE0MzUzMiwiZXhwIjoyMDU5NzE5NTMyfQ.7fdYmDgf_Ik1xtABnNje5peczWjoFKhvrvokPRFknzE';
+                // Use the new database user credentials
+                const dbUser = 'google_scraper';
+                const dbPassword = 'Relham12?';
 
                 // Try different connection strings with direct IP addresses
                 const connectionOptions = [
-                    // Option 1: AWS US West 1 pooler with IP address
-                    `postgresql://postgres.${serviceRoleKey}@3.101.124.236:6543/postgres`,
+                    // Option 1: Direct database with IP address using new user
+                    `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@34.102.106.226:5432/postgres`,
 
-                    // Option 2: Direct database with IP address
-                    `postgresql://postgres.${serviceRoleKey}@34.102.106.226:5432/postgres`,
+                    // Option 2: AWS US West 1 pooler with IP address using new user
+                    `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@3.101.124.236:6543/postgres`,
 
-                    // Option 3: Original hostname (as fallback)
-                    `postgresql://postgres.${serviceRoleKey}@db.mbaqiwhkngfxxmlkionj.supabase.co:5432/postgres`
+                    // Option 3: Original hostname with new user (as fallback)
+                    `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@db.mbaqiwhkngfxxmlkionj.supabase.co:5432/postgres`
                 ];
 
                 // Use the first option by default
-                console.log('No database URL provided. Using default DATABASE_URL with direct IP address.');
+                console.log('No database URL provided. Using default DATABASE_URL with new user credentials.');
                 process.env.DATABASE_URL = connectionOptions[0];
             } else {
                 console.log('Using environment DATABASE_URL variable.');
