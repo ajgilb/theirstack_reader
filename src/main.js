@@ -33,15 +33,52 @@ async function initDatabase() {
 
         console.log(`Using DATABASE_URL: ${connectionString.substring(0, 20)}...`);
 
-        // Create a connection pool
-        pool = new Pool({
-            connectionString,
-            ssl: {
-                rejectUnauthorized: false
-            },
-            // Force IPv4 to avoid connectivity issues
-            family: 4
-        });
+        // Parse the connection string to extract components
+        const parsedUrl = new URL(connectionString.replace('postgresql://', 'http://'));
+        const host = parsedUrl.hostname;
+        const port = parsedUrl.port || '5432';
+        const database = parsedUrl.pathname.substring(1);
+        const auth = parsedUrl.username + (parsedUrl.password ? ':' + parsedUrl.password : '');
+
+        console.log(`Parsed connection details:`);
+        console.log(`- Host: ${host}`);
+        console.log(`- Port: ${port}`);
+        console.log(`- Database: ${database}`);
+        console.log(`- Auth: ${auth.substring(0, 20)}...`);
+
+        // Try to resolve the hostname to an IPv4 address
+        try {
+            const dns = await import('dns');
+            const { promisify } = await import('util');
+            const lookup = promisify(dns.lookup);
+
+            const { address, family } = await lookup(host, { family: 4 });
+            console.log(`Resolved ${host} to IPv4 address: ${address}`);
+
+            // Create a connection pool with explicit host
+            pool = new Pool({
+                user: auth.split(':')[0],
+                password: auth.includes(':') ? auth.split(':')[1] : '',
+                host: address, // Use the resolved IPv4 address
+                port: parseInt(port, 10),
+                database: database,
+                ssl: {
+                    rejectUnauthorized: false
+                }
+            });
+        } catch (dnsError) {
+            console.error(`Failed to resolve hostname to IPv4 address:`, dnsError);
+
+            // Fall back to using the connection string
+            console.log('Falling back to connection string with family: 4');
+            pool = new Pool({
+                connectionString,
+                ssl: {
+                    rejectUnauthorized: false
+                },
+                family: 4
+            });
+        }
 
         // Test the connection
         const result = await pool.query('SELECT NOW()');
@@ -491,9 +528,22 @@ try {
             } else if (!process.env.DATABASE_URL) {
                 // Set default DATABASE_URL using the service role key
                 const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1iYXFpd2hrbmdmeHhtbGtpb25qIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDE0MzUzMiwiZXhwIjoyMDU5NzE5NTMyfQ.7fdYmDgf_Ik1xtABnNje5peczWjoFKhvrvokPRFknzE';
-                const defaultDbUrl = `postgresql://postgres.${serviceRoleKey}@db.mbaqiwhkngfxxmlkionj.supabase.co:5432/postgres`;
-                console.log('No database URL provided. Using default DATABASE_URL.');
-                process.env.DATABASE_URL = defaultDbUrl;
+
+                // Try different connection strings with direct IP addresses
+                const connectionOptions = [
+                    // Option 1: AWS US West 1 pooler with IP address
+                    `postgresql://postgres.${serviceRoleKey}@3.101.124.236:6543/postgres`,
+
+                    // Option 2: Direct database with IP address
+                    `postgresql://postgres.${serviceRoleKey}@34.102.106.226:5432/postgres`,
+
+                    // Option 3: Original hostname (as fallback)
+                    `postgresql://postgres.${serviceRoleKey}@db.mbaqiwhkngfxxmlkionj.supabase.co:5432/postgres`
+                ];
+
+                // Use the first option by default
+                console.log('No database URL provided. Using default DATABASE_URL with direct IP address.');
+                process.env.DATABASE_URL = connectionOptions[0];
             } else {
                 console.log('Using environment DATABASE_URL variable.');
             }
