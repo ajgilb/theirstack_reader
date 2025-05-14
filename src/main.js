@@ -11,43 +11,166 @@ import { testFunction } from './test.js';
 // Log test function result
 console.log('Test function result:', testFunction());
 
-// Try to import database-supabase.js
-try {
-    console.log('Attempting to import database module...');
+// Import the Supabase client directly
+import { createClient } from '@supabase/supabase-js';
 
-    // Try the import with detailed error handling
-    try {
-        // First try to import the Supabase version
-        const databaseModule = await import('./database-supabase.js');
-        console.log('Successfully imported database-supabase.js');
-        var { initDatabase, insertJobsIntoDatabase } = databaseModule;
-    } catch (supabaseError) {
-        console.error('Error importing database-supabase.js:', supabaseError.message);
+// Define database functions
+let supabase = null;
 
-        // Fall back to the original database.js
-        try {
-            console.log('Falling back to database.js...');
-            const fallbackModule = await import('./database.js');
-            console.log('Successfully imported database.js as fallback');
-            var { initDatabase, insertJobsIntoDatabase } = fallbackModule;
-        } catch (fallbackError) {
-            console.error('Error importing fallback database.js:', fallbackError.message);
-            throw new Error('Could not import any database module');
-        }
+// Initialize database function
+async function initDatabase() {
+    // Get Supabase credentials from environment variables
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+        console.error('Missing Supabase credentials. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.');
+        return false;
     }
-} catch (error) {
-    console.error('Error importing database modules. Using dummy functions instead.');
-    console.error('Error details:', error);
 
-    // Provide dummy functions as fallbacks
-    var initDatabase = async () => {
-        console.log('Using dummy initDatabase function');
+    try {
+        console.info('Initializing Supabase client...');
+        console.info(`Using Supabase URL: ${supabaseUrl}`);
+
+        // Create Supabase client
+        supabase = createClient(supabaseUrl, supabaseKey, {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
+            }
+        });
+
+        // Test the connection
+        const { data, error } = await supabase
+            .from('culinary_jobs_google')
+            .select('*')
+            .limit(1);
+
+        if (error) {
+            console.error('Failed to connect to Supabase:', error);
+            return false;
+        }
+
+        console.info('Successfully connected to Supabase!');
         return true;
-    };
-    var insertJobsIntoDatabase = async () => {
-        console.log('Using dummy insertJobsIntoDatabase function');
+    } catch (error) {
+        console.error('Error initializing Supabase client:', error);
+        return false;
+    }
+}
+
+// Insert jobs into database function
+async function insertJobsIntoDatabase(jobs) {
+    if (!supabase) {
+        console.error('Database not initialized');
         return 0;
-    };
+    }
+
+    let insertedCount = 0;
+
+    try {
+        console.info(`Inserting ${jobs.length} jobs into the database...`);
+
+        for (const job of jobs) {
+            try {
+                // Format salary as a string combining min and max
+                let salaryStr = '';
+                if (job.salary_min && job.salary_max) {
+                    salaryStr = `${job.salary_min} - ${job.salary_max}`;
+                    if (job.salary_currency) {
+                        salaryStr = `${job.salary_currency} ${salaryStr}`;
+                    }
+                    if (job.salary_period) {
+                        salaryStr = `${salaryStr} ${job.salary_period}`;
+                    }
+                }
+
+                // Get the current timestamp for date fields
+                const now = new Date().toISOString();
+
+                // Get contact info from the first email if available
+                const contactName = job.emails && job.emails.length > 0 ?
+                    `${job.emails[0].firstName || ''} ${job.emails[0].lastName || ''}`.trim() : '';
+                const contactTitle = job.emails && job.emails.length > 0 ? job.emails[0].position || '' : '';
+                const contactEmail = job.emails && job.emails.length > 0 ? job.emails[0].email || '' : '';
+
+                // Insert job data
+                const { data: jobResult, error: jobError } = await supabase
+                    .from('culinary_jobs_google')
+                    .upsert([
+                        {
+                            title: job.title,
+                            company: job.company,
+                            parent_company: '', // Empty for now
+                            location: job.location,
+                            salary: salaryStr,
+                            contact_name: contactName,
+                            contact_title: contactTitle,
+                            email: contactEmail,
+                            url: job.apply_link,
+                            job_details: job.description,
+                            linkedin: '', // Empty for now
+                            domain: job.company_domain || '',
+                            company_size: '', // Empty for now
+                            date_added: now,
+                            last_updated: now,
+                            contacts_last_viewed: null,
+                            parent_url: '' // Empty for now
+                        }
+                    ], {
+                        onConflict: 'title,company',
+                        returning: 'id'
+                    });
+
+                if (jobError) {
+                    console.error(`Error inserting job "${job.title}" at "${job.company}":`, jobError);
+                    continue;
+                }
+
+                const jobId = jobResult[0].id;
+
+                // Insert email contacts if available
+                if (job.emails && job.emails.length > 0) {
+                    for (const email of job.emails) {
+                        try {
+                            // Combine first and last name
+                            const fullName = `${email.firstName || ''} ${email.lastName || ''}`.trim();
+
+                            await supabase
+                                .from('culinary_contacts_google')
+                                .upsert([
+                                    {
+                                        job_id: jobId,
+                                        name: fullName,
+                                        title: email.position || '',
+                                        email: email.email,
+                                        date_added: now,
+                                        last_updated: now
+                                    }
+                                ], {
+                                    onConflict: 'job_id,email',
+                                    returning: 'id'
+                                });
+                        } catch (emailError) {
+                            console.error(`Error inserting contact ${email.email}:`, emailError);
+                        }
+                    }
+                    console.info(`Inserted ${job.emails.length} email contacts for job ID ${jobId}`);
+                }
+
+                insertedCount++;
+                console.info(`Inserted job: "${job.title}" at "${job.company}" (ID: ${jobId})`);
+            } catch (error) {
+                console.error(`Error processing job "${job.title}" at "${job.company}":`, error);
+            }
+        }
+
+        console.info(`Successfully inserted ${insertedCount} jobs into the database.`);
+        return insertedCount;
+    } catch (error) {
+        console.error('Error during database insertion:', error);
+        return insertedCount;
+    }
 }
 
 // Initialize the Apify Actor
