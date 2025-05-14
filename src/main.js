@@ -11,57 +11,160 @@ import { testFunction } from './test.js';
 // Log test function result
 console.log('Test function result:', testFunction());
 
-// Import the Supabase client directly
-import { createClient } from '@supabase/supabase-js';
+// Import the PostgreSQL client
+import pg from 'pg';
+const { Pool } = pg;
 
-// Define database functions
-let supabase = null;
+// Define database variables
+let pool = null;
 
 // Initialize database function
 async function initDatabase() {
-    // Get Supabase credentials from environment variables
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseKey) {
-        console.error('Missing Supabase credentials. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.');
-        return false;
-    }
-
     try {
-        console.info('Initializing Supabase client...');
-        console.info(`Using Supabase URL: ${supabaseUrl}`);
+        console.log('Initializing PostgreSQL database connection...');
 
-        // Create Supabase client
-        supabase = createClient(supabaseUrl, supabaseKey, {
-            auth: {
-                autoRefreshToken: false,
-                persistSession: false
-            }
-        });
+        // Get database connection string
+        const connectionString = process.env.DATABASE_URL;
 
-        // Test the connection
-        const { data, error } = await supabase
-            .from('culinary_jobs_google')
-            .select('*')
-            .limit(1);
-
-        if (error) {
-            console.error('Failed to connect to Supabase:', error);
+        if (!connectionString) {
+            console.error('No DATABASE_URL environment variable found');
             return false;
         }
 
-        console.info('Successfully connected to Supabase!');
+        console.log(`Using DATABASE_URL: ${connectionString.substring(0, 20)}...`);
+
+        // Create a connection pool
+        pool = new Pool({
+            connectionString,
+            ssl: {
+                rejectUnauthorized: false
+            },
+            // Force IPv4 to avoid connectivity issues
+            family: 4
+        });
+
+        // Test the connection
+        const result = await pool.query('SELECT NOW()');
+        console.log('Successfully connected to PostgreSQL!');
+        console.log(`Server time: ${result.rows[0].now}`);
+
+        // Check if tables exist and create them if needed
+        await checkAndCreateTables();
+
         return true;
     } catch (error) {
-        console.error('Error initializing Supabase client:', error);
+        console.error('Failed to connect to PostgreSQL:', error);
+
+        // Provide more detailed error information
+        if (error.code === 'ENOTFOUND') {
+            console.error(`Could not resolve hostname: ${error.hostname}`);
+            console.error('Please check your DATABASE_URL for typos in the hostname.');
+        } else if (error.code === 'ECONNREFUSED') {
+            console.error(`Connection refused at ${error.address}:${error.port}`);
+            console.error('Please check if the port is correct and if the database server is accepting connections.');
+        } else if (error.code === '28P01') {
+            console.error('Authentication failed. Please check your username and password.');
+        } else if (error.code === '3D000') {
+            console.error('Database does not exist. Please check the database name in your connection string.');
+        }
+
         return false;
+    }
+}
+
+// Check if tables exist and create them if needed
+async function checkAndCreateTables() {
+    try {
+        console.log('Checking if required tables exist...');
+
+        // Check if culinary_jobs_google table exists
+        const jobsTableCheck = await pool.query(`
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables
+                WHERE table_schema = 'public'
+                AND table_name = 'culinary_jobs_google'
+            );
+        `);
+
+        const jobsTableExists = jobsTableCheck.rows[0].exists;
+        console.log(`Table culinary_jobs_google exists: ${jobsTableExists}`);
+
+        if (!jobsTableExists) {
+            console.log('Creating culinary_jobs_google table...');
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS culinary_jobs_google (
+                    id SERIAL PRIMARY KEY,
+                    title VARCHAR(255) NOT NULL,
+                    company VARCHAR(255) NOT NULL,
+                    parent_company VARCHAR(255),
+                    location VARCHAR(255),
+                    salary VARCHAR(255),
+                    contact_name VARCHAR(255),
+                    contact_title VARCHAR(255),
+                    email VARCHAR(255),
+                    url TEXT,
+                    job_details TEXT,
+                    linkedin VARCHAR(255),
+                    domain VARCHAR(255),
+                    company_size VARCHAR(255),
+                    date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    contacts_last_viewed TIMESTAMP WITH TIME ZONE,
+                    parent_url VARCHAR(255),
+
+                    CONSTRAINT culinary_jobs_google_title_company_key UNIQUE (title, company)
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_google_company_name ON culinary_jobs_google(company);
+                CREATE INDEX IF NOT EXISTS idx_google_job_title ON culinary_jobs_google(title);
+                CREATE INDEX IF NOT EXISTS idx_google_date_added ON culinary_jobs_google(date_added);
+                CREATE INDEX IF NOT EXISTS idx_google_domain ON culinary_jobs_google(domain);
+                CREATE INDEX IF NOT EXISTS idx_google_parent_company ON culinary_jobs_google(parent_company);
+            `);
+            console.log('Table culinary_jobs_google created successfully');
+        }
+
+        // Check if culinary_contacts_google table exists
+        const contactsTableCheck = await pool.query(`
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables
+                WHERE table_schema = 'public'
+                AND table_name = 'culinary_contacts_google'
+            );
+        `);
+
+        const contactsTableExists = contactsTableCheck.rows[0].exists;
+        console.log(`Table culinary_contacts_google exists: ${contactsTableExists}`);
+
+        if (!contactsTableExists) {
+            console.log('Creating culinary_contacts_google table...');
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS culinary_contacts_google (
+                    id SERIAL PRIMARY KEY,
+                    job_id INTEGER REFERENCES culinary_jobs_google(id) ON DELETE CASCADE,
+                    name VARCHAR(255),
+                    title VARCHAR(255),
+                    email VARCHAR(255) NOT NULL,
+                    date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                    CONSTRAINT unique_google_contact_email UNIQUE (job_id, email)
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_google_contact_email ON culinary_contacts_google(email);
+                CREATE INDEX IF NOT EXISTS idx_google_contact_job_id ON culinary_contacts_google(job_id);
+                CREATE INDEX IF NOT EXISTS idx_google_contact_name ON culinary_contacts_google(name);
+            `);
+            console.log('Table culinary_contacts_google created successfully');
+        }
+    } catch (error) {
+        console.error('Error checking or creating tables:', error);
     }
 }
 
 // Insert jobs into database function
 async function insertJobsIntoDatabase(jobs) {
-    if (!supabase) {
+    if (!pool) {
         console.error('Database not initialized');
         return 0;
     }
@@ -71,98 +174,122 @@ async function insertJobsIntoDatabase(jobs) {
     try {
         console.info(`Inserting ${jobs.length} jobs into the database...`);
 
-        for (const job of jobs) {
-            try {
-                // Format salary as a string combining min and max
-                let salaryStr = '';
-                if (job.salary_min && job.salary_max) {
-                    salaryStr = `${job.salary_min} - ${job.salary_max}`;
-                    if (job.salary_currency) {
-                        salaryStr = `${job.salary_currency} ${salaryStr}`;
-                    }
-                    if (job.salary_period) {
-                        salaryStr = `${salaryStr} ${job.salary_period}`;
-                    }
-                }
+        // Start a transaction
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
 
-                // Get the current timestamp for date fields
-                const now = new Date().toISOString();
-
-                // Get contact info from the first email if available
-                const contactName = job.emails && job.emails.length > 0 ?
-                    `${job.emails[0].firstName || ''} ${job.emails[0].lastName || ''}`.trim() : '';
-                const contactTitle = job.emails && job.emails.length > 0 ? job.emails[0].position || '' : '';
-                const contactEmail = job.emails && job.emails.length > 0 ? job.emails[0].email || '' : '';
-
-                // Insert job data
-                const { data: jobResult, error: jobError } = await supabase
-                    .from('culinary_jobs_google')
-                    .upsert([
-                        {
-                            title: job.title,
-                            company: job.company,
-                            parent_company: '', // Empty for now
-                            location: job.location,
-                            salary: salaryStr,
-                            contact_name: contactName,
-                            contact_title: contactTitle,
-                            email: contactEmail,
-                            url: job.apply_link,
-                            job_details: job.description,
-                            linkedin: '', // Empty for now
-                            domain: job.company_domain || '',
-                            company_size: '', // Empty for now
-                            date_added: now,
-                            last_updated: now,
-                            contacts_last_viewed: null,
-                            parent_url: '' // Empty for now
+            for (const job of jobs) {
+                try {
+                    // Format salary as a string combining min and max
+                    let salaryStr = '';
+                    if (job.salary_min && job.salary_max) {
+                        salaryStr = `${job.salary_min} - ${job.salary_max}`;
+                        if (job.salary_currency) {
+                            salaryStr = `${job.salary_currency} ${salaryStr}`;
                         }
-                    ], {
-                        onConflict: 'title,company',
-                        returning: 'id'
-                    });
-
-                if (jobError) {
-                    console.error(`Error inserting job "${job.title}" at "${job.company}":`, jobError);
-                    continue;
-                }
-
-                const jobId = jobResult[0].id;
-
-                // Insert email contacts if available
-                if (job.emails && job.emails.length > 0) {
-                    for (const email of job.emails) {
-                        try {
-                            // Combine first and last name
-                            const fullName = `${email.firstName || ''} ${email.lastName || ''}`.trim();
-
-                            await supabase
-                                .from('culinary_contacts_google')
-                                .upsert([
-                                    {
-                                        job_id: jobId,
-                                        name: fullName,
-                                        title: email.position || '',
-                                        email: email.email,
-                                        date_added: now,
-                                        last_updated: now
-                                    }
-                                ], {
-                                    onConflict: 'job_id,email',
-                                    returning: 'id'
-                                });
-                        } catch (emailError) {
-                            console.error(`Error inserting contact ${email.email}:`, emailError);
+                        if (job.salary_period) {
+                            salaryStr = `${salaryStr} ${job.salary_period}`;
                         }
                     }
-                    console.info(`Inserted ${job.emails.length} email contacts for job ID ${jobId}`);
-                }
 
-                insertedCount++;
-                console.info(`Inserted job: "${job.title}" at "${job.company}" (ID: ${jobId})`);
-            } catch (error) {
-                console.error(`Error processing job "${job.title}" at "${job.company}":`, error);
+                    // Get the current timestamp for date fields
+                    const now = new Date().toISOString();
+
+                    // Get contact info from the first email if available
+                    const contactName = job.emails && job.emails.length > 0 ?
+                        `${job.emails[0].firstName || ''} ${job.emails[0].lastName || ''}`.trim() : '';
+                    const contactTitle = job.emails && job.emails.length > 0 ? job.emails[0].position || '' : '';
+                    const contactEmail = job.emails && job.emails.length > 0 ? job.emails[0].email || '' : '';
+
+                    // Insert job data
+                    const jobResult = await client.query(
+                        `INSERT INTO culinary_jobs_google
+                        (title, company, parent_company, location, salary, contact_name, contact_title, email,
+                        url, job_details, linkedin, domain, company_size, date_added, last_updated, contacts_last_viewed, parent_url)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+                        ON CONFLICT (title, company) DO UPDATE SET
+                        location = EXCLUDED.location,
+                        salary = EXCLUDED.salary,
+                        contact_name = EXCLUDED.contact_name,
+                        contact_title = EXCLUDED.contact_title,
+                        email = EXCLUDED.email,
+                        url = EXCLUDED.url,
+                        job_details = EXCLUDED.job_details,
+                        domain = EXCLUDED.domain,
+                        last_updated = EXCLUDED.last_updated
+                        RETURNING id`,
+                        [
+                            job.title,
+                            job.company,
+                            '', // parent_company
+                            job.location,
+                            salaryStr,
+                            contactName,
+                            contactTitle,
+                            contactEmail,
+                            job.apply_link,
+                            job.description,
+                            '', // linkedin
+                            job.company_domain || '',
+                            '', // company_size
+                            now, // date_added
+                            now, // last_updated
+                            null, // contacts_last_viewed
+                            '' // parent_url
+                        ]
+                    );
+
+                    const jobId = jobResult.rows[0].id;
+
+                    // Insert email contacts if available
+                    if (job.emails && job.emails.length > 0) {
+                        for (const email of job.emails) {
+                            try {
+                                // Combine first and last name
+                                const fullName = `${email.firstName || ''} ${email.lastName || ''}`.trim();
+
+                                await client.query(
+                                    `INSERT INTO culinary_contacts_google
+                                    (job_id, name, title, email, date_added, last_updated)
+                                    VALUES ($1, $2, $3, $4, $5, $6)
+                                    ON CONFLICT (job_id, email) DO UPDATE SET
+                                    name = EXCLUDED.name,
+                                    title = EXCLUDED.title,
+                                    last_updated = EXCLUDED.last_updated`,
+                                    [
+                                        jobId,
+                                        fullName,
+                                        email.position || '',
+                                        email.email,
+                                        now,
+                                        now
+                                    ]
+                                );
+                            } catch (emailError) {
+                                console.error(`Error inserting contact ${email.email}:`, emailError);
+                            }
+                        }
+                        console.info(`Inserted ${job.emails.length} email contacts for job ID ${jobId}`);
+                    }
+
+                    insertedCount++;
+                    console.info(`Inserted job: "${job.title}" at "${job.company}" (ID: ${jobId})`);
+                } catch (error) {
+                    console.error(`Error processing job "${job.title}" at "${job.company}":`, error);
+                }
             }
+
+            // Commit the transaction
+            await client.query('COMMIT');
+            console.info(`Successfully committed transaction with ${insertedCount} jobs.`);
+        } catch (error) {
+            // Rollback the transaction on error
+            await client.query('ROLLBACK');
+            console.error('Transaction failed, rolling back:', error);
+        } finally {
+            // Release the client back to the pool
+            client.release();
         }
 
         console.info(`Successfully inserted ${insertedCount} jobs into the database.`);
@@ -200,9 +327,6 @@ try {
         pushToDatabase: inputPushToDatabase = true,
         databaseUrl = '',
         databaseTable = 'culinary_jobs_google',
-        // Supabase connection parameters
-        supabaseUrl = '',
-        supabaseServiceRoleKey = '',
         deduplicateJobs = true,
         fullTimeOnly = true,
         excludeFastFood = true,
@@ -364,27 +488,14 @@ try {
             if (databaseUrl) {
                 console.log(`Using provided database URL: ${databaseUrl.substring(0, 20)}...`);
                 process.env.DATABASE_URL = databaseUrl;
+            } else if (!process.env.DATABASE_URL) {
+                // Set default DATABASE_URL using the service role key
+                const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1iYXFpd2hrbmdmeHhtbGtpb25qIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDE0MzUzMiwiZXhwIjoyMDU5NzE5NTMyfQ.7fdYmDgf_Ik1xtABnNje5peczWjoFKhvrvokPRFknzE';
+                const defaultDbUrl = `postgresql://postgres.${serviceRoleKey}@db.mbaqiwhkngfxxmlkionj.supabase.co:5432/postgres`;
+                console.log('No database URL provided. Using default DATABASE_URL.');
+                process.env.DATABASE_URL = defaultDbUrl;
             } else {
-                console.log('No database URL provided. Using environment variables for database connection.');
-            }
-
-            // Set Supabase environment variables
-            // First check input parameters
-            if (input.supabaseUrl) {
-                console.log(`Using provided Supabase URL: ${input.supabaseUrl}`);
-                process.env.SUPABASE_URL = input.supabaseUrl;
-            } else if (!process.env.SUPABASE_URL) {
-                // Set default Supabase URL if not provided
-                const defaultSupabaseUrl = 'https://mbaqiwhkngfxxmlkionj.supabase.co';
-                console.log(`Using default Supabase URL: ${defaultSupabaseUrl}`);
-                process.env.SUPABASE_URL = defaultSupabaseUrl;
-            }
-
-            if (input.supabaseServiceRoleKey) {
-                console.log('Using provided Supabase service role key');
-                process.env.SUPABASE_SERVICE_ROLE_KEY = input.supabaseServiceRoleKey;
-            } else if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-                console.log('No Supabase service role key provided. Please set SUPABASE_SERVICE_ROLE_KEY environment variable.');
+                console.log('Using environment DATABASE_URL variable.');
             }
 
             // Initialize the database connection
