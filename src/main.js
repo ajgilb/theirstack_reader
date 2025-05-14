@@ -11,50 +11,33 @@ import { testFunction } from './test.js';
 // Log test function result
 console.log('Test function result:', testFunction());
 
-// Try to import database.js
+// Try to import database-supabase.js
 try {
-    console.log('Attempting to import database.js...');
-
-    // Log the current directory and files for debugging
-    try {
-        const { readdir } = await import('fs/promises');
-        const files = await readdir('./src');
-        console.log('Files in ./src directory:', files);
-    } catch (fsError) {
-        console.error('Error listing files in directory:', fsError);
-    }
+    console.log('Attempting to import database module...');
 
     // Try the import with detailed error handling
     try {
-        // Try different import paths
-        let databaseModule;
-        try {
-            // Try relative path
-            databaseModule = await import('./database.js');
-            console.log('Successfully imported database.js using relative path');
-        } catch (relativeError) {
-            console.error('Failed to import using relative path:', relativeError.message);
-            try {
-                // Try absolute path
-                databaseModule = await import('/usr/src/app/src/database.js');
-                console.log('Successfully imported database.js using absolute path');
-            } catch (absoluteError) {
-                console.error('Failed to import using absolute path:', absoluteError.message);
-                throw new Error('Could not import database.js using any path');
-            }
-        }
-
-        console.log('Successfully imported database.js');
+        // First try to import the Supabase version
+        const databaseModule = await import('./database-supabase.js');
+        console.log('Successfully imported database-supabase.js');
         var { initDatabase, insertJobsIntoDatabase } = databaseModule;
-    } catch (importError) {
-        console.error('Detailed import error:', importError);
-        console.error('Error name:', importError.name);
-        console.error('Error message:', importError.message);
-        console.error('Error stack:', importError.stack);
-        throw importError; // Re-throw to be caught by the outer try-catch
+    } catch (supabaseError) {
+        console.error('Error importing database-supabase.js:', supabaseError.message);
+
+        // Fall back to the original database.js
+        try {
+            console.log('Falling back to database.js...');
+            const fallbackModule = await import('./database.js');
+            console.log('Successfully imported database.js as fallback');
+            var { initDatabase, insertJobsIntoDatabase } = fallbackModule;
+        } catch (fallbackError) {
+            console.error('Error importing fallback database.js:', fallbackError.message);
+            throw new Error('Could not import any database module');
+        }
     }
 } catch (error) {
-    console.error('Error importing database.js. Using dummy functions instead.');
+    console.error('Error importing database modules. Using dummy functions instead.');
+    console.error('Error details:', error);
 
     // Provide dummy functions as fallbacks
     var initDatabase = async () => {
@@ -94,6 +77,9 @@ try {
         pushToDatabase: inputPushToDatabase = true,
         databaseUrl = '',
         databaseTable = 'culinary_jobs_google',
+        // Supabase connection parameters
+        supabaseUrl = '',
+        supabaseServiceRoleKey = '',
         deduplicateJobs = true,
         fullTimeOnly = true,
         excludeFastFood = true,
@@ -251,12 +237,31 @@ try {
         if (forcePushToDatabase) {
             console.log(`Pushing ${processedJobs.length} jobs to database...`);
 
-            // Set the DATABASE_URL environment variable if provided
+            // Set database connection environment variables
             if (databaseUrl) {
                 console.log(`Using provided database URL: ${databaseUrl.substring(0, 20)}...`);
                 process.env.DATABASE_URL = databaseUrl;
             } else {
                 console.log('No database URL provided. Using environment variables for database connection.');
+            }
+
+            // Set Supabase environment variables
+            // First check input parameters
+            if (input.supabaseUrl) {
+                console.log(`Using provided Supabase URL: ${input.supabaseUrl}`);
+                process.env.SUPABASE_URL = input.supabaseUrl;
+            } else if (!process.env.SUPABASE_URL) {
+                // Set default Supabase URL if not provided
+                const defaultSupabaseUrl = 'https://mbaqiwhkngfxxmlkionj.supabase.co';
+                console.log(`Using default Supabase URL: ${defaultSupabaseUrl}`);
+                process.env.SUPABASE_URL = defaultSupabaseUrl;
+            }
+
+            if (input.supabaseServiceRoleKey) {
+                console.log('Using provided Supabase service role key');
+                process.env.SUPABASE_SERVICE_ROLE_KEY = input.supabaseServiceRoleKey;
+            } else if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+                console.log('No Supabase service role key provided. Please set SUPABASE_SERVICE_ROLE_KEY environment variable.');
             }
 
             // Initialize the database connection
