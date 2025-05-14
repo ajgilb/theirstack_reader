@@ -18,8 +18,42 @@ const { Pool } = pg;
 // Define database variables
 let pool = null;
 
+// Try to import the REST API module
+let restModule = null;
+try {
+    restModule = await import('./database-rest.js');
+    console.log('Successfully imported database-rest.js');
+} catch (restError) {
+    console.error('Failed to import database-rest.js:', restError.message);
+}
+
+// Default implementation of insertJobsIntoDatabase (used if both approaches fail)
+let insertJobsIntoDatabase = async (jobs) => {
+    console.error('No database connection available. Cannot insert jobs.');
+    return 0;
+};
+
 // Initialize database function
 async function initDatabase() {
+    // First try the REST API approach if available
+    if (restModule) {
+        try {
+            console.log('Trying REST API approach first...');
+            const success = await restModule.initDatabase();
+            if (success) {
+                console.log('Successfully connected using REST API!');
+                // Use the REST API implementation
+                insertJobsIntoDatabase = restModule.insertJobsIntoDatabase;
+                return true;
+            }
+            console.log('REST API approach failed, falling back to PostgreSQL...');
+        } catch (error) {
+            console.error('Error with REST API approach:', error.message);
+            console.log('Falling back to PostgreSQL...');
+        }
+    }
+
+    // Fall back to PostgreSQL approach
     try {
         console.log('Initializing PostgreSQL database connection...');
 
@@ -93,6 +127,9 @@ async function initDatabase() {
 
                 // Check if tables exist and create them if needed
                 await checkAndCreateTables();
+
+                // Set the insertJobsIntoDatabase function to use the PostgreSQL implementation
+                insertJobsIntoDatabase = insertJobsIntoDatabasePostgres;
 
                 return true;
             } catch (error) {
@@ -224,8 +261,8 @@ async function checkAndCreateTables() {
     }
 }
 
-// Insert jobs into database function
-async function insertJobsIntoDatabase(jobs) {
+// Insert jobs into database function using PostgreSQL
+async function insertJobsIntoDatabasePostgres(jobs) {
     if (!pool) {
         console.error('Database not initialized');
         return 0;
