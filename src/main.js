@@ -13,11 +13,49 @@ console.log('Test function result:', testFunction());
 
 // Try to import database.js
 try {
-    const databaseModule = await import('./database.js');
-    console.log('Successfully imported database.js');
-    var { initDatabase, insertJobsIntoDatabase } = databaseModule;
+    console.log('Attempting to import database.js...');
+
+    // Log the current directory and files for debugging
+    try {
+        const { readdir } = await import('fs/promises');
+        const files = await readdir('./src');
+        console.log('Files in ./src directory:', files);
+    } catch (fsError) {
+        console.error('Error listing files in directory:', fsError);
+    }
+
+    // Try the import with detailed error handling
+    try {
+        // Try different import paths
+        let databaseModule;
+        try {
+            // Try relative path
+            databaseModule = await import('./database.js');
+            console.log('Successfully imported database.js using relative path');
+        } catch (relativeError) {
+            console.error('Failed to import using relative path:', relativeError.message);
+            try {
+                // Try absolute path
+                databaseModule = await import('/usr/src/app/src/database.js');
+                console.log('Successfully imported database.js using absolute path');
+            } catch (absoluteError) {
+                console.error('Failed to import using absolute path:', absoluteError.message);
+                throw new Error('Could not import database.js using any path');
+            }
+        }
+
+        console.log('Successfully imported database.js');
+        var { initDatabase, insertJobsIntoDatabase } = databaseModule;
+    } catch (importError) {
+        console.error('Detailed import error:', importError);
+        console.error('Error name:', importError.name);
+        console.error('Error message:', importError.message);
+        console.error('Error stack:', importError.stack);
+        throw importError; // Re-throw to be caught by the outer try-catch
+    }
 } catch (error) {
-    console.error('Error importing database.js:', error);
+    console.error('Error importing database.js. Using dummy functions instead.');
+
     // Provide dummy functions as fallbacks
     var initDatabase = async () => {
         console.log('Using dummy initDatabase function');
