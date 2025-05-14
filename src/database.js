@@ -51,13 +51,64 @@ async function initDatabase() {
             console.info(`Using DATABASE_URL: ${sanitizedUrl}`);
         }
 
-        // Initialize the connection pool
-        pool = new Pool({
-            connectionString,
-            ssl: {
-                rejectUnauthorized: false
+        // Initialize the connection pool with explicit configuration to avoid IPv6 issues
+        // Parse the connection string to extract components
+        let dbConfig = {};
+
+        if (connectionString) {
+            try {
+                // Parse the connection string
+                const matches = connectionString.match(/postgresql:\/\/([^:]+)(?::([^@]+))?@([^:]+):(\d+)\/(.+)/);
+
+                if (matches) {
+                    const [, user, password, host, port, database] = matches;
+
+                    // Log the parsed connection details (without password)
+                    console.info('Parsed connection details:');
+                    console.info(`- User: ${user}`);
+                    console.info(`- Host: ${host}`);
+                    console.info(`- Port: ${port}`);
+                    console.info(`- Database: ${database}`);
+
+                    // Create explicit configuration
+                    dbConfig = {
+                        user,
+                        password,
+                        host,
+                        port: parseInt(port, 10),
+                        database,
+                        ssl: {
+                            rejectUnauthorized: false
+                        },
+                        // Force IPv4 to avoid connectivity issues
+                        family: 4
+                    };
+                } else {
+                    console.warn('Could not parse connection string, falling back to direct usage');
+                    dbConfig = {
+                        connectionString,
+                        ssl: {
+                            rejectUnauthorized: false
+                        },
+                        // Force IPv4 to avoid connectivity issues
+                        family: 4
+                    };
+                }
+            } catch (parseError) {
+                console.error('Error parsing connection string:', parseError);
+                dbConfig = {
+                    connectionString,
+                    ssl: {
+                        rejectUnauthorized: false
+                    },
+                    // Force IPv4 to avoid connectivity issues
+                    family: 4
+                };
             }
-        });
+        }
+
+        // Create the connection pool with our config
+        pool = new Pool(dbConfig);
 
         // Add error handler for the pool
         pool.on('error', (err) => {
