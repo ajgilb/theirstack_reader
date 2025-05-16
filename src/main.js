@@ -529,9 +529,111 @@ try {
             });
         }
 
+        // Initialize database connection early to check for existing jobs
+        console.log('Initializing database connection to check for existing jobs...');
+
+        // Set database connection environment variables
+        if (databaseUrl) {
+            console.log(`Using provided database URL: ${databaseUrl.substring(0, 20)}...`);
+            process.env.DATABASE_URL = databaseUrl;
+        } else if (!process.env.DATABASE_URL) {
+            // Use the new database user credentials
+            const dbUser = 'google_scraper';
+            const dbPassword = 'Relham12?';
+
+            // Try different connection strings with direct IP addresses
+            const connectionOptions = [
+                // Option 1: Direct database with IP address using new user (IPv4 only)
+                `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@34.102.106.226:5432/postgres?family=4`,
+
+                // Option 2: AWS US West 1 pooler with IP address using new user (IPv4 only)
+                `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@3.101.124.236:6543/postgres?family=4`,
+
+                // Option 3: Original hostname with new user (as fallback)
+                `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@db.mbaqiwhkngfxxmlkionj.supabase.co:5432/postgres?family=4`
+            ];
+
+            console.log('Available connection options:');
+            connectionOptions.forEach((option, index) => {
+                console.log(`- Option ${index + 1}: ${option.replace(/:[^:@]+@/, ':***@')}`);
+            });
+
+            // Use the first option by default
+            console.log('No database URL provided. Using default DATABASE_URL with new user credentials.');
+            process.env.DATABASE_URL = connectionOptions[0];
+        } else {
+            console.log('Using environment DATABASE_URL variable.');
+        }
+
+        // Initialize the database connection
+        const dbInitialized = await initDatabase();
+
+        // Filter out jobs that already exist in the database
+        let filteredJobsToProcess = jobsToProcess;
+
+        if (dbInitialized && pool) {
+            try {
+                console.log('Checking for existing jobs in the database...');
+                const client = await pool.connect();
+
+                try {
+                    // Create an array to store jobs that don't exist in the database
+                    const newJobs = [];
+
+                    // Check each job
+                    for (const job of jobsToProcess) {
+                        try {
+                            const checkQuery = `
+                                SELECT id FROM culinary_jobs_google
+                                WHERE title = $1 AND company = $2
+                            `;
+
+                            const result = await client.query(checkQuery, [job.title, job.company]);
+
+                            if (result.rows.length > 0) {
+                                // Job already exists
+                                console.log(`Job already exists in database: "${job.title}" at "${job.company}" (ID: ${result.rows[0].id})`);
+
+                                // Add to skipped duplicates for reporting
+                                jobStats.skippedDuplicateJobs.push(job);
+                            } else {
+                                // Job doesn't exist, add it to the list of jobs to process
+                                console.log(`Job does not exist in database: "${job.title}" at "${job.company}"`);
+                                newJobs.push(job);
+                            }
+                        } catch (error) {
+                            console.error(`Error checking if job exists: "${job.title}" at "${job.company}"`, error);
+                            // If there's an error, include the job to be safe
+                            newJobs.push(job);
+                        }
+                    }
+
+                    // Update the list of jobs to process
+                    filteredJobsToProcess = newJobs;
+                    console.log(`After checking database: ${jobsToProcess.length - newJobs.length} existing jobs filtered out, ${newJobs.length} new jobs to process`);
+
+                } finally {
+                    client.release();
+                }
+            } catch (error) {
+                console.error('Error checking for existing jobs:', error);
+                // If there's an error, continue with all jobs
+                console.log('Continuing with all jobs due to database check error');
+            }
+        } else {
+            console.log('Database not initialized, continuing with all jobs');
+        }
+
+        // If there are no new jobs to process, skip the API calls
+        if (filteredJobsToProcess.length === 0) {
+            console.log('No new jobs to process, skipping API calls');
+            continue;
+        }
+
         // Process jobs for database insertion
         // Always use forceHunterData (which is true) instead of includeHunterData
-        const processedJobs = await processJobsForDatabase(jobsToProcess, forceHunterData);
+        console.log(`Processing ${filteredJobsToProcess.length} new jobs with Hunter.io integration...`);
+        const processedJobs = await processJobsForDatabase(filteredJobsToProcess, forceHunterData);
 
         // Track excluded jobs for email reporting
         const excludedJobs = jobsToProcess.filter(job => job._exclusionReason);
@@ -611,42 +713,7 @@ try {
         if (forcePushToDatabase) {
             console.log(`Pushing ${processedJobs.length} jobs to database...`);
 
-            // Set database connection environment variables
-            if (databaseUrl) {
-                console.log(`Using provided database URL: ${databaseUrl.substring(0, 20)}...`);
-                process.env.DATABASE_URL = databaseUrl;
-            } else if (!process.env.DATABASE_URL) {
-                // Use the new database user credentials
-                const dbUser = 'google_scraper';
-                const dbPassword = 'Relham12?';
-
-                // Try different connection strings with direct IP addresses
-                const connectionOptions = [
-                    // Option 1: Direct database with IP address using new user (IPv4 only)
-                    `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@34.102.106.226:5432/postgres?family=4`,
-
-                    // Option 2: AWS US West 1 pooler with IP address using new user (IPv4 only)
-                    `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@3.101.124.236:6543/postgres?family=4`,
-
-                    // Option 3: Original hostname with new user (as fallback)
-                    `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@db.mbaqiwhkngfxxmlkionj.supabase.co:5432/postgres?family=4`
-                ];
-
-                console.log('Available connection options:');
-                connectionOptions.forEach((option, index) => {
-                    console.log(`- Option ${index + 1}: ${option.replace(/:[^:@]+@/, ':***@')}`);
-                });
-
-                // Use the first option by default
-                console.log('No database URL provided. Using default DATABASE_URL with new user credentials.');
-                process.env.DATABASE_URL = connectionOptions[0];
-            } else {
-                console.log('Using environment DATABASE_URL variable.');
-            }
-
-            // Initialize the database connection
-            const dbInitialized = await initDatabase();
-
+            // Database connection should already be initialized
             if (dbInitialized) {
                 // Insert jobs into the database
                 const insertedCount = await insertJobsIntoDatabase(processedJobs);
