@@ -339,6 +339,25 @@ async function createIndexes() {
     const client = await pool.connect();
     try {
         // Create indexes for the jobs table
+        // Drop the unique constraint on URL if it exists
+        try {
+            await client.query(`
+                DO $$
+                BEGIN
+                    IF EXISTS (
+                        SELECT 1 FROM pg_constraint
+                        WHERE conname = 'unique_job_url' AND conrelid = 'culinary_jobs_google'::regclass
+                    ) THEN
+                        ALTER TABLE culinary_jobs_google DROP CONSTRAINT unique_job_url;
+                    END IF;
+                END $$;
+            `);
+            console.info('Checked and dropped unique_job_url constraint if it existed');
+        } catch (error) {
+            console.error('Error checking/dropping URL constraint:', error);
+        }
+
+        // Create indexes for the jobs table
         await client.query(`
             CREATE INDEX IF NOT EXISTS idx_google_company_name ON culinary_jobs_google(company);
             CREATE INDEX IF NOT EXISTS idx_google_job_title ON culinary_jobs_google(title);
@@ -675,7 +694,6 @@ async function insertJobsIntoDatabase(jobs) {
                                 contacts_last_viewed TIMESTAMP WITH TIME ZONE,
                                 parent_url TEXT,
 
-                                CONSTRAINT unique_job_url UNIQUE (url),
                                 CONSTRAINT culinary_jobs_google_email_company_key UNIQUE (email, company)
                             );
                         `);
@@ -915,11 +933,18 @@ async function insertJobsIntoDatabase(jobs) {
                             // Continue with the next job instead of rolling back
                             continue;
                         }
+                    } else if (error.constraint === 'unique_job_url') {
+                        // This is a URL constraint violation - the job already exists with this URL
+                        console.warn(`URL constraint violation detected for job "${job.title}" at "${job.company}"`);
+                        console.warn(`URL: ${job.apply_link}`);
+                        console.warn(`Skipping this job and continuing with the next one...`);
+
+                        // Skip this job and continue with the next one
+                        continue;
                     } else {
-                        // For other errors, roll back the transaction and return
-                        await client.query('ROLLBACK');
-                        console.error('Transaction rolled back due to error in job insertion.');
-                        return 0;
+                        // For other errors, log the error and continue with the next job
+                        console.error('Error in job insertion, continuing with next job.');
+                        continue;
                     }
                 }
 
