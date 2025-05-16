@@ -7,6 +7,7 @@
 import { Actor } from 'apify';
 import { searchAllJobs, processJobsForDatabase } from './google_jobs_api.js';
 import { testFunction } from './test.js';
+import { sendCompletionEmail } from './email.js';
 
 // Log test function result
 console.log('Test function result:', testFunction());
@@ -317,7 +318,7 @@ async function insertJobsIntoDatabasePostgres(jobs) {
                         job_details = EXCLUDED.job_details,
                         domain = EXCLUDED.domain,
                         last_updated = EXCLUDED.last_updated
-                        RETURNING id`,
+                        RETURNING id, (xmax = 0) AS is_new`,
                         [
                             job.title,
                             job.company,
@@ -340,6 +341,18 @@ async function insertJobsIntoDatabasePostgres(jobs) {
                     );
 
                     const jobId = jobResult.rows[0].id;
+                    const isNewJob = jobResult.rows[0].is_new;
+
+                    // Track job for email reporting
+                    if (isNewJob) {
+                        // This is a new job
+                        jobStats.newJobs.push(job);
+                        console.info(`Added NEW job: "${job.title}" at "${job.company}" (ID: ${jobId})`);
+                    } else {
+                        // This is a duplicate job
+                        jobStats.skippedDuplicateJobs.push(job);
+                        console.info(`Updated existing job: "${job.title}" at "${job.company}" (ID: ${jobId})`);
+                    }
 
                     // Insert email contacts if available
                     if (job.emails && job.emails.length > 0) {
@@ -402,6 +415,19 @@ async function insertJobsIntoDatabasePostgres(jobs) {
 // Initialize the Apify Actor
 await Actor.init();
 
+// Track job statistics for email reporting
+const jobStats = {
+    startTime: new Date(),
+    endTime: null,
+    durationMinutes: 0,
+    durationSeconds: 0,
+    processedCount: 0,
+    newJobs: [],
+    skippedDuplicateJobs: [],
+    skippedExcludedJobs: [],
+    queries: []
+};
+
 try {
     console.log('Starting Google Jobs API Actor...');
 
@@ -431,8 +457,13 @@ try {
         excludeFastFood = true,
         excludeRecruiters = true,
         // Default is true, but we'll force it to true below
-        includeHunterData = true
+        includeHunterData = true,
+        // Read testMode from input
+        testMode = false
     } = input;
+
+    // Store queries in job stats
+    jobStats.queries = [...queries];
 
     // Force Hunter.io integration to be enabled
     const forceHunterData = true;
@@ -440,8 +471,6 @@ try {
     // Force database integration to be enabled
     const forcePushToDatabase = true;
 
-    // Test mode - set to false to process all jobs
-    const testMode = false;
     // Number of jobs to process in test mode (only used when testMode is true)
     const testModeLimit = 5;
 
@@ -458,7 +487,7 @@ try {
     // Always show database info since forcePushToDatabase is always true
     console.log(`- Database table: ${databaseTable}`);
     console.log(`- Deduplicate jobs: ${deduplicateJobs}`);
-    console.log(`- Test mode: ${testMode}${testMode ? ` (limit: ${testModeLimit} jobs)` : ''}`);
+    console.log(`- Test mode: ${testMode}${testMode ? ` (limit: ${testModeLimit} jobs per query, email only to aj@chefsheet.com)` : ''}`);
 
     let totalJobsFound = 0;
     let totalJobsProcessed = 0;
@@ -511,7 +540,14 @@ try {
         // Process jobs for database insertion
         // Always use forceHunterData (which is true) instead of includeHunterData
         const processedJobs = await processJobsForDatabase(jobsToProcess, forceHunterData);
+
+        // Track excluded jobs for email reporting
+        const excludedJobs = jobsToProcess.filter(job => job._exclusionReason);
+        jobStats.skippedExcludedJobs.push(...excludedJobs);
+
+        // Update job processing count
         totalJobsProcessed += processedJobs.length;
+        jobStats.processedCount += processedJobs.length;
 
         // Save to Apify dataset if requested
         if (saveToDataset) {
@@ -638,5 +674,30 @@ try {
     console.error(`Error in Google Jobs API Actor: ${error.message}`);
     throw error;
 } finally {
+    // Calculate end time and duration
+    jobStats.endTime = new Date();
+    const durationMs = jobStats.endTime - jobStats.startTime;
+    jobStats.durationSeconds = Math.round(durationMs / 1000);
+    jobStats.durationMinutes = Math.round(durationMs / 60000 * 10) / 10; // Round to 1 decimal place
+
+    console.log(`\nJob Statistics:`);
+    console.log(`- Start time: ${jobStats.startTime.toISOString()}`);
+    console.log(`- End time: ${jobStats.endTime.toISOString()}`);
+    console.log(`- Duration: ${jobStats.durationMinutes} minutes (${jobStats.durationSeconds} seconds)`);
+    console.log(`- Jobs processed: ${jobStats.processedCount}`);
+    console.log(`- New jobs: ${jobStats.newJobs.length}`);
+    console.log(`- Skipped duplicates: ${jobStats.skippedDuplicateJobs.length}`);
+    console.log(`- Skipped exclusions: ${jobStats.skippedExcludedJobs.length}`);
+
+    // Send completion email
+    try {
+        console.log('Sending completion email...');
+        // Pass the testMode parameter to the email function
+        const emailSent = await sendCompletionEmail(jobStats, testMode);
+        console.log(`Email sending ${emailSent ? 'successful' : 'failed'}`);
+    } catch (emailError) {
+        console.error('Error sending completion email:', emailError.message);
+    }
+
     await Actor.exit();
 }

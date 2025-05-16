@@ -258,6 +258,11 @@ async function processJobsForDatabase(jobs, includeHunterData = false) {
                 excludedByRestaurantChain++;
             }
             excludedCount++;
+
+            // Add excluded job to the return value for tracking
+            job._exclusionReason = exclusionCheck.reason;
+            job._exclusionMatch = exclusionCheck.match;
+
             continue;
         }
 

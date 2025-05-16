@@ -94,6 +94,12 @@
         "type": "boolean",
         "description": "Whether to include email addresses from Hunter.io",
         "default": true
+      },
+      "testMode": {
+        "title": "Test Mode",
+        "type": "boolean",
+        "description": "Run in test mode (process fewer jobs and only send email to primary recipient)",
+        "default": false
       }
     },
     "required": ["queries"]
@@ -104,6 +110,7 @@
   },
   "environmentVariables": {
     "SEARCH_API_KEY": "Bq5Ymf24RJQb3iW8EQkCUN1M",
-    "HUNTER_API_KEY": "8257696b56b9d35fe21a3d546e801e635a8b14a7"
+    "HUNTER_API_KEY": "8257696b56b9d35fe21a3d546e801e635a8b14a7",
+    "RESEND_API_KEY": ""
   }
 }
