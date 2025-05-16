@@ -15,12 +15,13 @@ RUN npm --quiet set progress=false \
 # Copy the rest of the application
 COPY . ./
 
-# Run the build script to ensure email.js exists
-RUN echo "Running build script to ensure email.js exists" \
-    && ./build.sh \
+# Ensure src directory exists and copy email.js.template to src/email.js
+RUN mkdir -p src \
+    && echo "Copying email.js.template to src/email.js" \
+    && cp email.js.template src/email.js \
     && echo "Verifying email.js exists" \
     && ls -la src/ \
-    && if [ -f "src/email.js" ]; then echo "FOUND src/email.js"; else echo "ERROR: src/email.js NOT FOUND after build script"; exit 1; fi
+    && if [ -f "src/email.js" ]; then echo "FOUND src/email.js"; else echo "ERROR: src/email.js NOT FOUND"; exit 1; fi
 
 # Run the actor
 CMD ["node", "src/main.js"]
