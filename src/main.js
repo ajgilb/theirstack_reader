@@ -70,15 +70,20 @@ async function initDatabase() {
         const dbUser = 'google_scraper';
         const dbPassword = 'Relham12?';
         const alternativeConnections = [
-            // Direct database with IP address using new user
-            `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@34.102.106.226:5432/postgres`,
+            // Direct database with IP address using new user (IPv4 only)
+            `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@34.102.106.226:5432/postgres?family=4`,
 
-            // AWS US West 1 pooler with IP address using new user
-            `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@3.101.124.236:6543/postgres`,
+            // AWS US West 1 pooler with IP address using new user (IPv4 only)
+            `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@3.101.124.236:6543/postgres?family=4`,
 
-            // Original hostname with new user (as fallback)
-            `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@db.mbaqiwhkngfxxmlkionj.supabase.co:5432/postgres`
+            // Original hostname with new user (as fallback) (IPv4 only)
+            `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@db.mbaqiwhkngfxxmlkionj.supabase.co:5432/postgres?family=4`
         ];
+
+        console.log('Alternative connection options:');
+        alternativeConnections.forEach((option, index) => {
+            console.log(`- Option ${index + 1}: ${option.replace(/:[^:@]+@/, ':***@')}`);
+        });
 
         // Add the current connection string to the list if it's not already there
         if (!alternativeConnections.includes(connectionString)) {
@@ -115,11 +120,20 @@ async function initDatabase() {
                     ssl: {
                         rejectUnauthorized: false
                     },
-                    // Force IPv4
+                    // Force IPv4 - this is critical to avoid IPv6 connectivity issues
                     family: 4,
                     // Set a short connection timeout
                     connectionTimeoutMillis: 5000
                 });
+
+                // Log the connection configuration
+                console.log('Connection configuration:');
+                console.log(`- Host: ${host}`);
+                console.log(`- Port: ${port}`);
+                console.log(`- Database: ${database}`);
+                console.log(`- User: ${auth.split(':')[0]}`);
+                console.log(`- Family: 4 (forcing IPv4)`);
+                console.log(`- SSL: enabled (rejectUnauthorized: false)`);
 
                 // Test the connection
                 const result = await pool.query('SELECT NOW()');
@@ -630,15 +644,20 @@ try {
 
                 // Try different connection strings with direct IP addresses
                 const connectionOptions = [
-                    // Option 1: Direct database with IP address using new user
-                    `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@34.102.106.226:5432/postgres`,
+                    // Option 1: Direct database with IP address using new user (IPv4 only)
+                    `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@34.102.106.226:5432/postgres?family=4`,
 
-                    // Option 2: AWS US West 1 pooler with IP address using new user
-                    `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@3.101.124.236:6543/postgres`,
+                    // Option 2: AWS US West 1 pooler with IP address using new user (IPv4 only)
+                    `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@3.101.124.236:6543/postgres?family=4`,
 
                     // Option 3: Original hostname with new user (as fallback)
-                    `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@db.mbaqiwhkngfxxmlkionj.supabase.co:5432/postgres`
+                    `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@db.mbaqiwhkngfxxmlkionj.supabase.co:5432/postgres?family=4`
                 ];
+
+                console.log('Available connection options:');
+                connectionOptions.forEach((option, index) => {
+                    console.log(`- Option ${index + 1}: ${option.replace(/:[^:@]+@/, ':***@')}`);
+                });
 
                 // Use the first option by default
                 console.log('No database URL provided. Using default DATABASE_URL with new user credentials.');
