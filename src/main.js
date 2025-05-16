@@ -8,6 +8,7 @@ import { Actor } from 'apify';
 import { searchAllJobs, processJobsForDatabase } from './google_jobs_api.js';
 import { testFunction } from './test.js';
 import { sendCompletionEmail } from './email.js';
+import { initDatabase as importedInitDatabase, insertJobsIntoDatabase as importedInsertJobsIntoDatabase } from './database.js';
 
 // Log test function result
 console.log('Test function result:', testFunction());
@@ -30,16 +31,32 @@ try {
 
 // Default implementation of insertJobsIntoDatabase (used if both approaches fail)
 let insertJobsIntoDatabase = async (jobs) => {
-    console.error('No database connection available. Cannot insert jobs.');
+    console.log('Using dummy insertJobsIntoDatabase function');
     return 0;
 };
 
 // Initialize database function
 async function initDatabase() {
-    // First try the REST API approach if available
+    // First try the imported database.js implementation
+    try {
+        console.log('Trying imported database.js implementation...');
+        const success = await importedInitDatabase();
+        if (success) {
+            console.log('Successfully connected using imported database.js!');
+            // Use the imported implementation
+            insertJobsIntoDatabase = importedInsertJobsIntoDatabase;
+            return true;
+        }
+        console.log('Imported database.js approach failed, falling back to REST API...');
+    } catch (error) {
+        console.error('Error with imported database.js approach:', error.message);
+        console.log('Falling back to REST API...');
+    }
+
+    // Next try the REST API approach if available
     if (restModule) {
         try {
-            console.log('Trying REST API approach first...');
+            console.log('Trying REST API approach...');
             const success = await restModule.initDatabase();
             if (success) {
                 console.log('Successfully connected using REST API!');
@@ -47,143 +64,16 @@ async function initDatabase() {
                 insertJobsIntoDatabase = restModule.insertJobsIntoDatabase;
                 return true;
             }
-            console.log('REST API approach failed, falling back to PostgreSQL...');
+            console.log('REST API approach failed, falling back to dummy implementation...');
         } catch (error) {
             console.error('Error with REST API approach:', error.message);
-            console.log('Falling back to PostgreSQL...');
+            console.log('Falling back to dummy implementation...');
         }
     }
 
-    // Fall back to PostgreSQL approach
-    try {
-        console.log('Initializing PostgreSQL database connection...');
-
-        // Get database connection string
-        let connectionString = process.env.DATABASE_URL;
-
-        if (!connectionString) {
-            console.error('No DATABASE_URL environment variable found');
-            return false;
-        }
-
-        // Define alternative connection strings to try if the first one fails
-        const dbUser = 'google_scraper';
-        const dbPassword = 'Relham12?';
-        const alternativeConnections = [
-            // Direct database with IP address using new user (IPv4 only)
-            `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@34.102.106.226:5432/postgres?family=4`,
-
-            // AWS US West 1 pooler with IP address using new user (IPv4 only)
-            `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@3.101.124.236:6543/postgres?family=4`,
-
-            // Original hostname with new user (as fallback) (IPv4 only)
-            `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@db.mbaqiwhkngfxxmlkionj.supabase.co:5432/postgres?family=4`
-        ];
-
-        console.log('Alternative connection options:');
-        alternativeConnections.forEach((option, index) => {
-            console.log(`- Option ${index + 1}: ${option.replace(/:[^:@]+@/, ':***@')}`);
-        });
-
-        // Add the current connection string to the list if it's not already there
-        if (!alternativeConnections.includes(connectionString)) {
-            alternativeConnections.unshift(connectionString);
-        }
-
-        // Try each connection string until one works
-        let lastError = null;
-        for (let i = 0; i < alternativeConnections.length; i++) {
-            connectionString = alternativeConnections[i];
-            console.log(`Trying connection string #${i+1}: ${connectionString.substring(0, 20)}...`);
-
-            try {
-                // Parse the connection string to extract components
-                const parsedUrl = new URL(connectionString.replace('postgresql://', 'http://'));
-                const host = parsedUrl.hostname;
-                const port = parsedUrl.port || '5432';
-                const database = parsedUrl.pathname.substring(1);
-                const auth = parsedUrl.username + (parsedUrl.password ? ':' + parsedUrl.password : '');
-
-                console.log(`Parsed connection details:`);
-                console.log(`- Host: ${host}`);
-                console.log(`- Port: ${port}`);
-                console.log(`- Database: ${database}`);
-                console.log(`- Auth: ${auth.substring(0, 20)}...`);
-
-                // Create a connection pool with explicit parameters
-                pool = new Pool({
-                    user: auth.split(':')[0],
-                    password: auth.includes(':') ? auth.split(':')[1] : '',
-                    host: host,
-                    port: parseInt(port, 10),
-                    database: database,
-                    ssl: {
-                        rejectUnauthorized: false
-                    },
-                    // Force IPv4 - this is critical to avoid IPv6 connectivity issues
-                    family: 4,
-                    // Set a short connection timeout
-                    connectionTimeoutMillis: 5000
-                });
-
-                // Log the connection configuration
-                console.log('Connection configuration:');
-                console.log(`- Host: ${host}`);
-                console.log(`- Port: ${port}`);
-                console.log(`- Database: ${database}`);
-                console.log(`- User: ${auth.split(':')[0]}`);
-                console.log(`- Family: 4 (forcing IPv4)`);
-                console.log(`- SSL: enabled (rejectUnauthorized: false)`);
-
-                // Test the connection
-                const result = await pool.query('SELECT NOW()');
-                console.log('Successfully connected to PostgreSQL!');
-                console.log(`Server time: ${result.rows[0].now}`);
-
-                // Check if tables exist and create them if needed
-                await checkAndCreateTables();
-
-                // Set the insertJobsIntoDatabase function to use the PostgreSQL implementation
-                insertJobsIntoDatabase = insertJobsIntoDatabasePostgres;
-
-                return true;
-            } catch (error) {
-                console.error(`Failed to connect with connection string #${i+1}:`, error.message);
-                lastError = error;
-
-                // Close the pool if it was created
-                if (pool) {
-                    try {
-                        await pool.end();
-                    } catch (endError) {
-                        console.error('Error closing pool:', endError.message);
-                    }
-                    pool = null;
-                }
-            }
-        }
-
-        // If we get here, all connection attempts failed
-        console.error('All connection attempts failed. Last error:', lastError);
-
-        // Provide more detailed error information
-        if (lastError.code === 'ENOTFOUND') {
-            console.error(`Could not resolve hostname: ${lastError.hostname}`);
-            console.error('Please check your DATABASE_URL for typos in the hostname.');
-        } else if (lastError.code === 'ECONNREFUSED') {
-            console.error(`Connection refused at ${lastError.address}:${lastError.port}`);
-            console.error('Please check if the port is correct and if the database server is accepting connections.');
-        } else if (lastError.code === '28P01') {
-            console.error('Authentication failed. Please check your username and password.');
-        } else if (lastError.code === '3D000') {
-            console.error('Database does not exist. Please check the database name in your connection string.');
-        }
-
-        return false;
-    } catch (error) {
-        console.error('Unexpected error during database initialization:', error);
-        return false;
-    }
+    // If all else fails, use the dummy implementation
+    console.log('Using dummy initDatabase function');
+    return false;
 }
 
 // Check for and remove URL unique constraint
