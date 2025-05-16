@@ -186,6 +186,89 @@ async function initDatabase() {
     }
 }
 
+// Check for and remove URL unique constraint
+async function checkAndRemoveUrlConstraint() {
+    try {
+        console.log('Checking for URL unique constraint...');
+
+        // Check if the URL constraint exists
+        const constraintCheck = await pool.query(`
+            SELECT con.conname
+            FROM pg_constraint con
+            JOIN pg_class rel ON rel.oid = con.conrelid
+            JOIN pg_attribute att ON att.attrelid = rel.oid AND att.attnum = ANY(con.conkey)
+            WHERE rel.relname = 'culinary_jobs_google'
+            AND att.attname = 'url'
+            AND con.contype = 'u';
+        `);
+
+        if (constraintCheck.rows.length > 0) {
+            const constraintName = constraintCheck.rows[0].conname;
+            console.log(`Found URL unique constraint: ${constraintName}`);
+
+            // Drop the constraint
+            console.log(`Removing URL unique constraint: ${constraintName}...`);
+            await pool.query(`
+                ALTER TABLE culinary_jobs_google
+                DROP CONSTRAINT ${constraintName};
+            `);
+
+            console.log(`Successfully removed URL unique constraint: ${constraintName}`);
+
+            // Create an index on URL instead (for performance but not uniqueness)
+            console.log('Creating non-unique index on URL column...');
+            await pool.query(`
+                CREATE INDEX IF NOT EXISTS idx_google_url ON culinary_jobs_google(url);
+            `);
+
+            console.log('Successfully created non-unique index on URL column');
+        } else {
+            console.log('No URL unique constraint found - no action needed');
+
+            // Check if the URL index exists
+            const indexCheck = await pool.query(`
+                SELECT indexname
+                FROM pg_indexes
+                WHERE tablename = 'culinary_jobs_google'
+                AND indexname = 'idx_google_url';
+            `);
+
+            if (indexCheck.rows.length === 0) {
+                console.log('Creating non-unique index on URL column...');
+                await pool.query(`
+                    CREATE INDEX IF NOT EXISTS idx_google_url ON culinary_jobs_google(url);
+                `);
+                console.log('Successfully created non-unique index on URL column');
+            }
+        }
+
+        // Also check for email-company constraint
+        const emailCompanyConstraintCheck = await pool.query(`
+            SELECT con.conname
+            FROM pg_constraint con
+            JOIN pg_class rel ON rel.oid = con.conrelid
+            WHERE rel.relname = 'culinary_jobs_google'
+            AND con.conname = 'culinary_jobs_google_email_company_key';
+        `);
+
+        if (emailCompanyConstraintCheck.rows.length > 0) {
+            const constraintName = emailCompanyConstraintCheck.rows[0].conname;
+            console.log(`Found email-company unique constraint: ${constraintName}`);
+
+            // Drop the constraint
+            console.log(`Removing email-company unique constraint: ${constraintName}...`);
+            await pool.query(`
+                ALTER TABLE culinary_jobs_google
+                DROP CONSTRAINT ${constraintName};
+            `);
+
+            console.log(`Successfully removed email-company unique constraint: ${constraintName}`);
+        }
+    } catch (error) {
+        console.error('Error checking or removing URL constraint:', error);
+    }
+}
+
 // Check if tables exist and create them if needed
 async function checkAndCreateTables() {
     try {
@@ -202,6 +285,11 @@ async function checkAndCreateTables() {
 
         const jobsTableExists = jobsTableCheck.rows[0].exists;
         console.log(`Table culinary_jobs_google exists: ${jobsTableExists}`);
+
+        // Check and remove URL unique constraint if it exists
+        if (jobsTableExists) {
+            await checkAndRemoveUrlConstraint();
+        }
 
         if (!jobsTableExists) {
             console.log('Creating culinary_jobs_google table...');
