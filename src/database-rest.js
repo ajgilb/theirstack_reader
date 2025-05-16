@@ -68,25 +68,25 @@ function makeRequest(method, path, data = null) {
 async function initDatabase() {
     try {
         console.log('Testing Supabase REST API connection...');
-        
+
         // Test the connection by making a simple request
         const result = await makeRequest('GET', '/culinary_jobs_google?select=count&limit=1');
-        
+
         console.log('Successfully connected to Supabase REST API!');
         console.log('Response:', result);
-        
+
         return true;
     } catch (error) {
         console.error('Failed to connect to Supabase REST API:', error.message);
-        
+
         // Try with a different endpoint
         try {
             console.log('Trying alternative endpoint...');
             const result = await makeRequest('GET', '/_pgsql/health');
-            
+
             console.log('Successfully connected to Supabase health endpoint!');
             console.log('Response:', result);
-            
+
             return true;
         } catch (altError) {
             console.error('Failed to connect to alternative endpoint:', altError.message);
@@ -102,10 +102,10 @@ async function initDatabase() {
  */
 async function insertJobsIntoDatabase(jobs) {
     let insertedCount = 0;
-    
+
     try {
         console.log(`Inserting ${jobs.length} jobs into the database via REST API...`);
-        
+
         for (const job of jobs) {
             try {
                 // Format salary as a string combining min and max
@@ -119,16 +119,16 @@ async function insertJobsIntoDatabase(jobs) {
                         salaryStr = `${salaryStr} ${job.salary_period}`;
                     }
                 }
-                
+
                 // Get the current timestamp for date fields
                 const now = new Date().toISOString();
-                
+
                 // Get contact info from the first email if available
-                const contactName = job.emails && job.emails.length > 0 ? 
+                const contactName = job.emails && job.emails.length > 0 ?
                     `${job.emails[0].firstName || ''} ${job.emails[0].lastName || ''}`.trim() : '';
                 const contactTitle = job.emails && job.emails.length > 0 ? job.emails[0].position || '' : '';
                 const contactEmail = job.emails && job.emails.length > 0 ? job.emails[0].email || '' : '';
-                
+
                 // Insert job data
                 const jobData = {
                     title: job.title,
@@ -149,28 +149,82 @@ async function insertJobsIntoDatabase(jobs) {
                     contacts_last_viewed: null,
                     parent_url: '' // Empty for now
                 };
-                
-                // Use UPSERT with on_conflict parameter
-                const jobResult = await makeRequest(
-                    'POST', 
-                    '/culinary_jobs_google?on_conflict=title,company',
-                    jobData
-                );
-                
+
+                // Job insertion is handled below
+
+                // Get the job result from the try/catch block
+                let jobResult;
+                try {
+                    // First check if the job already exists based on title and company
+                    const checkResult = await makeRequest(
+                        'GET',
+                        `/culinary_jobs_google?title=eq.${encodeURIComponent(job.title)}&company=eq.${encodeURIComponent(job.company)}&select=id`
+                    );
+
+                    if (checkResult && checkResult.length > 0) {
+                        console.log(`Job already exists in database: "${job.title}" at "${job.company}" (ID: ${checkResult[0].id})`);
+
+                        // Update the existing job
+                        await makeRequest(
+                            'PATCH',
+                            `/culinary_jobs_google?id=eq.${checkResult[0].id}`,
+                            jobData
+                        );
+
+                        // Use the existing job ID
+                        jobResult = [{id: checkResult[0].id}];
+                    } else {
+                        // Use UPSERT with on_conflict parameter
+                        try {
+                            jobResult = await makeRequest(
+                                'POST',
+                                '/culinary_jobs_google?on_conflict=title,company',
+                                jobData
+                            );
+                        } catch (insertError) {
+                            // If there's a URL constraint error, try again with a modified URL
+                            if (insertError.message && insertError.message.includes('culinary_jobs_google_url_key')) {
+                                console.warn(`URL constraint violation detected for job "${job.title}" at "${job.company}"`);
+                                console.warn(`URL: ${job.apply_link}`);
+                                console.warn(`Trying again with a modified URL...`);
+
+                                // Add a timestamp to make the URL unique
+                                const timestamp = new Date().getTime();
+                                jobData.url = `${job.apply_link}${job.apply_link.includes('?') ? '&' : '?'}t=${timestamp}`;
+
+                                // Try again with the modified URL
+                                jobResult = await makeRequest(
+                                    'POST',
+                                    '/culinary_jobs_google?on_conflict=title,company',
+                                    jobData
+                                );
+
+                                console.log(`Successfully inserted job with modified URL`);
+                            } else {
+                                // Re-throw other errors
+                                throw insertError;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Error inserting job "${job.title}" at "${job.company}":`, error.message);
+                    continue;
+                }
+
                 const jobId = jobResult[0]?.id;
-                
+
                 if (!jobId) {
                     console.error(`Failed to get job ID for "${job.title}" at "${job.company}"`);
                     continue;
                 }
-                
+
                 // Insert email contacts if available
                 if (job.emails && job.emails.length > 0) {
                     for (const email of job.emails) {
                         try {
                             // Combine first and last name
                             const fullName = `${email.firstName || ''} ${email.lastName || ''}`.trim();
-                            
+
                             const contactData = {
                                 job_id: jobId,
                                 name: fullName,
@@ -179,7 +233,7 @@ async function insertJobsIntoDatabase(jobs) {
                                 date_added: now,
                                 last_updated: now
                             };
-                            
+
                             await makeRequest(
                                 'POST',
                                 '/culinary_contacts_google?on_conflict=job_id,email',
@@ -191,14 +245,14 @@ async function insertJobsIntoDatabase(jobs) {
                     }
                     console.log(`Inserted ${job.emails.length} email contacts for job ID ${jobId}`);
                 }
-                
+
                 insertedCount++;
                 console.log(`Inserted job: "${job.title}" at "${job.company}" (ID: ${jobId})`);
             } catch (error) {
                 console.error(`Error processing job "${job.title}" at "${job.company}":`, error.message);
             }
         }
-        
+
         console.log(`Successfully inserted ${insertedCount} jobs into the database.`);
         return insertedCount;
     } catch (error) {
