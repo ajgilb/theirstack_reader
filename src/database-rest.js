@@ -220,6 +220,7 @@ async function insertJobsIntoDatabase(jobs) {
 
                 // Insert email contacts if available
                 if (job.emails && job.emails.length > 0) {
+                    let insertedEmailCount = 0;
                     for (const email of job.emails) {
                         try {
                             // Combine first and last name
@@ -234,16 +235,66 @@ async function insertJobsIntoDatabase(jobs) {
                                 last_updated: now
                             };
 
-                            await makeRequest(
-                                'POST',
-                                '/culinary_contacts_google?on_conflict=job_id,email',
-                                contactData
-                            );
+                            // First check if the contact already exists
+                            try {
+                                const checkResult = await makeRequest(
+                                    'GET',
+                                    `/culinary_contacts_google?job_id=eq.${jobId}&email=eq.${encodeURIComponent(email.email)}&select=id`
+                                );
+
+                                if (checkResult && checkResult.length > 0) {
+                                    console.log(`Contact ${email.email} already exists for job ID ${jobId}`);
+
+                                    // Update the existing contact
+                                    await makeRequest(
+                                        'PATCH',
+                                        `/culinary_contacts_google?id=eq.${checkResult[0].id}`,
+                                        contactData
+                                    );
+
+                                    insertedEmailCount++;
+                                } else {
+                                    // Insert new contact
+                                    try {
+                                        await makeRequest(
+                                            'POST',
+                                            '/culinary_contacts_google',
+                                            contactData
+                                        );
+                                        insertedEmailCount++;
+                                    } catch (insertError) {
+                                        // If there's a constraint error, log it and continue
+                                        if (insertError.message && insertError.message.includes('culinary_contacts_google_job_id_email_key')) {
+                                            console.warn(`Contact ${email.email} already exists for job ID ${jobId} (constraint violation)`);
+                                        } else {
+                                            throw insertError;
+                                        }
+                                    }
+                                }
+                            } catch (checkError) {
+                                console.error(`Error checking if contact ${email.email} exists:`, checkError.message);
+                                // Try to insert anyway
+                                try {
+                                    await makeRequest(
+                                        'POST',
+                                        '/culinary_contacts_google',
+                                        contactData
+                                    );
+                                    insertedEmailCount++;
+                                } catch (insertError) {
+                                    // If there's a constraint error, log it and continue
+                                    if (insertError.message && insertError.message.includes('culinary_contacts_google_job_id_email_key')) {
+                                        console.warn(`Contact ${email.email} already exists for job ID ${jobId} (constraint violation)`);
+                                    } else {
+                                        throw insertError;
+                                    }
+                                }
+                            }
                         } catch (emailError) {
                             console.error(`Error inserting contact ${email.email}:`, emailError.message);
                         }
                     }
-                    console.log(`Inserted ${job.emails.length} email contacts for job ID ${jobId}`);
+                    console.log(`Inserted/updated ${insertedEmailCount} out of ${job.emails.length} email contacts for job ID ${jobId}`);
                 }
 
                 insertedCount++;
