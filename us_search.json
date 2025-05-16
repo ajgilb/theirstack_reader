@@ -1,0 +1,844 @@
+{
+  "search_metadata": {
+    "id": "search_p1r3VbxvXpgtJmm2MvB26gOP",
+    "status": "Success",
+    "created_at": "2025-05-07T00:41:04Z",
+    "request_time_taken": 2.99,
+    "parsing_time_taken": 0.15,
+    "total_time_taken": 3.14,
+    "request_url": "https://www.google.com/search?q=restaurant+managers+united+states&oq=restaurant+managers+united+states&gl=us&hl=en&udm=8&jbr=sep:0",
+    "html_url": "https://www.searchapi.io/api/v1/searches/search_p1r3VbxvXpgtJmm2MvB26gOP.html",
+    "json_url": "https://www.searchapi.io/api/v1/searches/search_p1r3VbxvXpgtJmm2MvB26gOP"
+  },
+  "search_parameters": {
+    "engine": "google_jobs",
+    "q": "restaurant managers united states",
+    "google_domain": "google.com",
+    "hl": "en",
+    "gl": "us"
+  },
+  "search_information": {
+    "query_displayed": "restaurant managers united states",
+    "detected_location": "Unknown"
+  },
+  "jobs": [
+    {
+      "position": 1,
+      "title": "Restaurant Manager",
+      "company_name": "Hillstone Restaurant Group",
+      "location": "Bethesda, MD",
+      "via": "via Smart Recruiters Jobs",
+      "description": "Job Description\n\nRestaurant Manager\n\nLocation: Candidates are placed based on best fit, making relocation flexibility necessary\n\nSalary: $100,000 - $110,000 per year\n\nAbout Us:\n\nSince 1977, we have built a track record of success in the hospitality industry. With 38 locations across 10 states—and more opening in the next 12 months—we are experiencing rapid growth and are looking for top talent to join our team.\n\nThe Opportunity:\n\nWe are seeking dynamic and results-driven Restaurant Managers to lead operations, drive growth, and enhance guest experience. This role offers the chance to be part of an expanding company with a strong reputation for excellence.\n\nWhat You’ll Do:\n• Lead and develop high-performing teams\n• Drive operational efficiency and guest satisfaction\n• Ensure financial targets and business objectives are met\n• Complete an intensive 8-week rotational training program\n\nWhat We’re Looking For:\n• Proven leadership experience, preferably in hospitality and restaurants\n• Strong ability to critically think\n• Excellent communication and problem-solving skills\n• Passion for delivering top-tier guest service\n• Ability to adapt in a fast-paced, growth-oriented environment\n\nWhy Join Us?\n• Competitive salary: $100K - $110K\n• Opportunities for career advancement\n• Be part of a company with a proven success record\n• Supportive, team-oriented work environment\n• Benefits include paid vacation and a comprehensive medical plan\n\nTo learn more, visit our website, or read a featured profile in Bon Appétit magazine: http://www.hillstone.com/press/bonappetit\n\nQualifications\n\nHillstone restaurants can be found across the nation, making relocation flexibility necessary.\n\nAdditional Information\n\nAll your information will be kept confidential according to EEO guidelines.",
+      "job_highlights": [
+        {
+          "title": "Qualifications",
+          "items": [
+            "Proven leadership experience, preferably in hospitality and restaurants",
+            "Strong ability to critically think",
+            "Excellent communication and problem-solving skills",
+            "Passion for delivering top-tier guest service",
+            "Ability to adapt in a fast-paced, growth-oriented environment",
+            "Hillstone restaurants can be found across the nation, making relocation flexibility necessary"
+          ]
+        },
+        {
+          "title": "Benefits",
+          "items": [
+            "Salary: $100,000 - $110,000 per year",
+            "Competitive salary: $100K - $110K",
+            "Opportunities for career advancement",
+            "Be part of a company with a proven success record",
+            "Supportive, team-oriented work environment",
+            "Benefits include paid vacation and a comprehensive medical plan"
+          ]
+        },
+        {
+          "title": "Responsibilities",
+          "items": [
+            "Lead and develop high-performing teams",
+            "Drive operational efficiency and guest satisfaction",
+            "Ensure financial targets and business objectives are met",
+            "Complete an intensive 8-week rotational training program"
+          ]
+        }
+      ],
+      "extensions": [
+        "Full-time",
+        "No degree mentioned",
+        "Health insurance",
+        "Paid time off"
+      ],
+      "detected_extensions": {
+        "schedule": "Full-time",
+        "no_degree_mentioned": true,
+        "health_insurance": true,
+        "paid_time_off": true
+      },
+      "apply_link": "https://jobs.smartrecruiters.com/HillstoneRestaurantGroup/744000043373910-restaurant-manager?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+      "apply_links": [
+        {
+          "link": "https://jobs.smartrecruiters.com/HillstoneRestaurantGroup/744000043373910-restaurant-manager?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Smart Recruiters Jobs"
+        },
+        {
+          "link": "https://www.indeed.com/viewjob?jk=bf1b91efac0775d0&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Indeed"
+        },
+        {
+          "link": "https://www.foxrccareers.com/foxrc-flower-child-careers-home/jobs/17192?lang=en-us&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "FoxRC Careers Home Apply"
+        },
+        {
+          "link": "https://www.ziprecruiter.com/c/Uncle-Julios/Job/Restaurant-Manager/-in-Bethesda,MD?jid=2098d829877d5559&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "ZipRecruiter"
+        },
+        {
+          "link": "https://www.glassdoor.com/job-listing/restaurant-manager-flower-child-JV_IC1153817_KO0,18_KE19,31.htm?jl=1009713150370&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Glassdoor"
+        },
+        {
+          "link": "https://www.linkedin.com/jobs/view/restaurant-manager-at-hillstone-restaurant-group-4215327274?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "LinkedIn"
+        },
+        {
+          "link": "https://www.simplyhired.com/job/XdMWn8_BXWv6GM7ozcPN7GlR-JBq6dbe1_qI7ixozLFYn6BXMfJrSw?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "SimplyHired"
+        },
+        {
+          "link": "https://www.jobzmall.com/cheesecake-factory/job/restaurant-manager-136?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "JobzMall"
+        }
+      ],
+      "sharing_link": "https://www.google.com/search?ibp=htl;jobs&q=restaurant+managers+united+states&htidocid=iFhqDulcE5XdjLOyAAAAAA%3D%3D&hl=en-US&shndl=37&shmd=H4sIAAAAAAAA_02NsQrCMBBAce0nON1q0UQEF91EqAhd_IFyiUdSibmQu0I_xA-2bi5veo_XfFbN5kGiOFXMCj1mDFRhB3d2IITVR-AMHXNItD5H1SIna0WSCUulozee35YzOZ7ti538MEjESiWh0nA47mdTcmjb25iS6KLC37GrPBUYM1xII8kTt9Bfv7zBnnuXAAAA&shmds=v1_AQbUm97C_s2u6z2jeALb3HaOTOulUTLp1_kB0-XSYtyglvuDvQ&shem=vidc&source=sh/x/job/li/m1/1#fpstate=tldetail&htivrt=jobs&htiq=restaurant+managers+united+states&htidocid=iFhqDulcE5XdjLOyAAAAAA%3D%3D",
+      "thumbnail": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIADgAOAMBIgACEQEDEQH/xAAbAAEAAwEBAQEAAAAAAAAAAAAAAwQFBgIHAf/EACoQAAEEAQMCBAcBAAAAAAAAAAEAAgMEEQUSIQYxEyJRcTIzQWGBkbEU/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAH/xAAWEQEBAQAAAAAAAAAAAAAAAAAAEQH/2gAMAwEAAhEDEQA/APuKIiAiIgIiICIiCrNqNOB1ps1iNhqwiecE/LjO7Dj9vI79FeRqlEy+ELUZk8VsO3PO8s3hvvt59lgdRdHM1u3q1l9qaKS3p7KsBinlj2Ob4uS8McA9p8QeU57H1XqXQLTLT7Na1VMv++K0xsgOMNriEtOPvyg6Ntuu6SeMTM3V8eMM/BkZGfxys93UuisouvP1CIVWu2ulOcDjdzx2xznsq0Gn3237s75NPfBeYzxmuDnYcI9vA7FufXHCpjp24/pjWNIlvRtbdhfFXaZJJW1w5m3hzyXEZ5xnA7BBrSdSaNE6JsuowMdK0PaHuxhpO0E5+EEggE4yQrB1bTw6dptw7oJmQSjdyyR5aGNPoTubj3WNrGh3LcmqxVLdRlXV4RFY8aMufF5NhLOcOy3GAeAcnnOFSu9GCfUH3q95sM8mo17D8DImhiMLhG/1IdFkO+m4jsSg6Wnq+n3bMlarZbLLG57XtaDwWu2uGe3B4RZfTWhW9GuXnSTMkgs2J5/nynG+VzwAxxLG43kHaBnGSiDolD/lgDi4RgEnJx65z/VMiCA1K5zmJvIwfuMYQU64IIibkdv1j+cKdFJghdWhc4OdGCQAB+DkL8bUgYWlsTfKct+uCp0SYCIioIiICIiAiIgIiIP/2Q=="
+    },
+    {
+      "position": 2,
+      "title": "Restaurant Manager",
+      "company_name": "CHIPOTLE",
+      "location": "Miami, FL",
+      "via": "via Chipotle Careers",
+      "description": "CULTIVATE A BETTER WORLD\n\nFood served fast does not have to be a typical fast-food experience. Chipotle has always done things differently, both in and out of our restaurants. We are changing the face of fast food, starting conversations, and directly supporting efforts to shift the future of farming and food. We hope you will join us as we continue to learn, evolve, and shape what comes next on our mission to make better food accessible to everyone.\n\nTHE OPPORTUNITY\n\nChipotle is growing fast – we’re opening a restaurant every two days and we need excellent leaders to grow with us! Our General Managers are the captains of the ship. They understand what it takes to run a strong business, hire and train great people, and grow our company. At Chipotle, you’ll join a team that’s committed to Cultivating A Better World. If this sounds like something you’d like to be a part of, we’d love to meet you! See more details below and apply today.\n\nWHAT’S IN IT FOR YOU\n• Medical, dental, and vision insurance & 401k\n• Quarterly bonus program\n• Opportunities for people-development bonuses\n• Tuition assistance (100% coverage for select degrees or up to $5,250/year)\n• Career growth (need we say more?)\n• Paid time off\n• Holiday closures\n\nWHAT YOU’LL BRING TO THE TABLE\n• A friendly, enthusiastic attitude\n• Business knowledge (P&L management, food safety, sales-forecasting, staffing… you get the idea)\n• Ability to oversee the preparation of safe, delicious food while maintaining a clean, organized restaurant\n• A creative approach to marketing (fundraisers, community-engagement, etc.)\n• Passion for leadership and team development\n• The ability to deliver a great guest experience\n• Previous restaurant experience\n• Ability to jump in and assist where needed\n• The ability to communicate in the primary language(s) of the work location\n\nWHO WE ARE\n\nChipotle Mexican Grill, Inc. (NYSE: CMG) is cultivating a better world by serving responsibly sourced, classically cooked, real food with wholesome ingredients without artificial colors, flavors or preservatives. Chipotle has restaurants in the United States, Canada, the United Kingdom, France and Germany and is the only restaurant company of its size that owns and operates all its restaurants in North America and Europe. With employees passionate about providing a great guest experience, Chipotle is a longtime leader and innovator in the food industry. Chipotle is committed to making its food more accessible to everyone while continuing to be a brand with a demonstrated purpose as it leads the way in digital, technology and sustainable business practices. For more information or to place an order online, visit www.chipotle.com.\n\nChipotle Mexican Grill is an equal opportunity employer that values diversity at all levels. As a people-first company rooted in values, our purpose extends beyond serving nutritious food using real ingredients. It means hiring world-class individuals and fostering a culture that champions diversity, ensures equity, and celebrates inclusion. All qualified applicants, regardless of personal characteristics, are encouraged to apply.\n\nQualified applicants with disabilities may be entitled to reasonable accommodation under the terms of the Americans with Disabilities Act and/or certain state or local laws. Please contact ADAaccommodations@chipotle.com if you need an accommodation due to a disability to complete an application, job interview, and/or to otherwise participate in the hiring process. This email does not respond to non-accommodations related requests.",
+      "job_highlights": [
+        {
+          "title": "Qualifications",
+          "items": [
+            "A friendly, enthusiastic attitude",
+            "Business knowledge (P&L management, food safety, sales-forecasting, staffing… you get the idea)",
+            "Ability to oversee the preparation of safe, delicious food while maintaining a clean, organized restaurant",
+            "A creative approach to marketing (fundraisers, community-engagement, etc.)",
+            "Passion for leadership and team development",
+            "The ability to deliver a great guest experience",
+            "Previous restaurant experience",
+            "Ability to jump in and assist where needed",
+            "The ability to communicate in the primary language(s) of the work location"
+          ]
+        },
+        {
+          "title": "Benefits",
+          "items": [
+            "Medical, dental, and vision insurance & 401k",
+            "Quarterly bonus program",
+            "Opportunities for people-development bonuses",
+            "Tuition assistance (100% coverage for select degrees or up to $5,250/year)",
+            "Career growth (need we say more?)",
+            "Paid time off",
+            "Holiday closures"
+          ]
+        }
+      ],
+      "extensions": [
+        "Full-time",
+        "No degree mentioned",
+        "Health insurance",
+        "Dental insurance",
+        "Paid time off"
+      ],
+      "detected_extensions": {
+        "schedule": "Full-time",
+        "no_degree_mentioned": true,
+        "health_insurance": true,
+        "dental_insurance": true,
+        "paid_time_off": true
+      },
+      "apply_link": "https://jobs.chipotle.com/job/miami/restaurant-manager/282/78626103504?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+      "apply_links": [
+        {
+          "link": "https://jobs.chipotle.com/job/miami/restaurant-manager/282/78626103504?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Chipotle Careers"
+        },
+        {
+          "link": "https://careers.baskinrobbins.com/restaurant-manager/job/7363D082B0E06BD0B062A3C1A9C36C08?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Baskin Robbins Careers"
+        },
+        {
+          "link": "https://careers.outback.com/restaurant-manager/job/28718444?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Outback Steakhouse Careers"
+        },
+        {
+          "link": "https://careers.carrabbas.com/restaurant-manager/job/28716776?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Careers At Carrabba's - Carrabba's Italian Grill"
+        },
+        {
+          "link": "https://harri.com/bh-1024/job/2397613-restaurant-manager?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Harri"
+        },
+        {
+          "link": "https://www.indeed.com/viewjob?jk=afcbc7d85b3b2679&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Indeed"
+        },
+        {
+          "link": "https://www.workstream.us/j/1d35674b/joey-restaurants/miami-68686/restaurant-manager-d266f6ec?locale=en&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Workstream"
+        },
+        {
+          "link": "https://www.geckohospitality.com/job/3138395-restaurant-manager-miami-fl/?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Gecko Hospitality"
+        }
+      ],
+      "sharing_link": "https://www.google.com/search?ibp=htl;jobs&q=restaurant+managers+united+states&htidocid=IRy_2Fvl7LsCgvBfAAAAAA%3D%3D&hl=en-US&shndl=37&shmd=H4sIAAAAAAAA_xXLPQvCMBAA0L27i9OtiiYiuOgoftKiiHu5hCOJpLmQi9DNv64ub3vNp5k9SCq-C6YKHSZ0VGAJVzYghMV64AQnZhdpuvO1ZtlqLRKV-60arLI8aE5keNQvNvKnF4-FcsRK_XqzGlVObj7Zny_327M9QEjQBRzCAo7tFwvgcgqBAAAA&shmds=v1_AQbUm94JfV7oq-WZWBkra3A0vq39rUfatRX3qyaK8BjJxiYCTg&shem=vidc&source=sh/x/job/li/m1/1#fpstate=tldetail&htivrt=jobs&htiq=restaurant+managers+united+states&htidocid=IRy_2Fvl7LsCgvBfAAAAAA%3D%3D",
+      "thumbnail": "data:image/png;base64,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"
+    },
+    {
+      "position": 3,
+      "title": "Restaurant Manager",
+      "company_name": "Raising Cane's",
+      "location": "Bel Air, MD",
+      "via": "via Raising Cane's Careers",
+      "description": "Company Description\n\nInitial hiring pay range (based on location, experience, etc.): $ 22.00-23.50/ hour\n\nAt Raising Cane’s Chicken Fingers® we serve only the best tasting and most craveable chicken finger meals. It’s our ONE LOVE®. Our Crew make it happen, our Culture makes it unique and the Community makes it all worthwhile.\n\nEvery talented Crewmember in our Restaurant Support Office (RSO) is important to our success and a value to our rapidly growing Company. We all work with a sense of purpose and focus on our chicken finger meals, Customers, Crew, Communities and Company Culture. We are constantly striving to Raise The Bar. The future for Raising Cane’s is growth focused and we’re on the path to being one of the top 10 restaurant companies in the United States.\n\nBenefits offered for all Full-time Restaurant Managers:\n• Medical, Dental, Vision & Pharmacy Benefits\n• Dependent Care & Healthcare Flexible Spending Accounts\n• Company-provided Life and Disability insurance\n• Hospital Indemnity, Accident and Critical Illness\n• 401(k) With Employer Match (age 21 & older)\n• Access to financial advisors for budget and retirement planning\n• One Pass Gym Membership Program\n• Tuition Reimbursement\n• Crewmember Assistance Program\n• Pet Insurance\n\nPerks & Rewards for Restaurant Managers:\n• Weekly Pay!*\n• Competitive pay + monthly bonus\n• Paid Time Off & Sick time\n• 8 paid Holidays a year**\n• Early closure for company events\n• Casual Work Attire\n• Perkspot Employee Discount Programs\n• *Raising Cane's pays weekly, except in some states (e.g., California) where the company pays bi-weekly.\n• **Some locations may vary\n\nJob Description\n\nYour Role at Raising Cane’s:\n\nThe Restaurant Manager is responsible for supporting the Restaurant Leader in day-to-day operations of the restaurant and upholding Raising Cane’s standards and culture in shift management responsibilities of restaurant operations.\n\nThe physical work environment includes working in a fast-paced kitchen environment (which requires extended periods of physical exertion, such as walking, standing, lifting and bending) and interacting with customers. It also includes both inside and outside work in varied temperatures, working with and around food products, common allergens, industrial equipment, commercial cleaning products that require the use of personal protective equipment and physical activities necessary to complete the responsibilities of the job.\n\nYour Impact and Responsibilities:\n• Purpose of the position:\n• Ensures operations meet Raising Cane’s standards in all restaurant zones during a shift\n• Acts as manager on duty and opens and closes the restaurant\n• Manages cash handling and ensures accountability\n• General to the role:\n• Enforces Raising Cane’s policies and standards\n• Executes shift management meeting Raising Cane’s operations and safety standards\n• Uses required tools, forms and logs to support shift execution, document results and take corrective action when needed\n• Directs crewmembers during a shift\n• Provides exemplary customer service\n• Utilizes reward and recognition program for the crewmembers in the restaurant\n• Authorizes employee functions requiring manager approval (e.g. discounts, promotions, timeclock overrides, etc.)\n• Ensures cleanliness of the restaurant and ensures the facility is in good working order\n• Completes other duties as assigned\n\nQualifications\n\nRequirements for Success:\n• Detail-oriented, organized and able to manage multiple priorities that may be constantly changing\n• Self-driven, flexible, and highly energetic with strong written and verbal communication skills\n• Able to work effectively and efficiently both independently and collaboratively\n• Able to recognize problems, set goals, execute and convert plans into action to solve problems\n• Knowledge and skills in staffing, scheduling, people and cost management\n• Proficient in a variety of technology systems including Microsoft Office (Excel, Word and Outlook) and ability to learn and adapt to new systems quickly\n• Able to work a variety of shifts including days, evenings and weekends and travel as needed for work-related functions and training\n• Must complete all required Raising Cane’s company training programs\n• 1+ years of restaurant or retail management experience\n• Must be 18 years of age or older\n• High school diploma or equivalent preferred\n\nAdditional Information\n\nAll your information will be kept confidential according to EEO guidelines.\n\nTerms of Use\n\nPrivacy Policy\n\nCandidate Privacy Notice\n\nIt is unlawful in Massachusetts to require or administer a lie detector test as a condition of employment or continued employment. An employer who violates this law shall be subject to criminal penalties and civil liability.",
+      "job_highlights": [
+        {
+          "title": "Qualifications",
+          "items": [
+            "Detail-oriented, organized and able to manage multiple priorities that may be constantly changing",
+            "Self-driven, flexible, and highly energetic with strong written and verbal communication skills",
+            "Able to work effectively and efficiently both independently and collaboratively",
+            "Able to recognize problems, set goals, execute and convert plans into action to solve problems",
+            "Knowledge and skills in staffing, scheduling, people and cost management",
+            "Proficient in a variety of technology systems including Microsoft Office (Excel, Word and Outlook) and ability to learn and adapt to new systems quickly",
+            "Able to work a variety of shifts including days, evenings and weekends and travel as needed for work-related functions and training",
+            "Must complete all required Raising Cane’s company training programs",
+            "1+ years of restaurant or retail management experience",
+            "Must be 18 years of age or older"
+          ]
+        },
+        {
+          "title": "Benefits",
+          "items": [
+            "Initial hiring pay range (based on location, experience, etc.): $ 22.00-23.50/ hour",
+            "Medical, Dental, Vision & Pharmacy Benefits",
+            "Dependent Care & Healthcare Flexible Spending Accounts",
+            "Company-provided Life and Disability insurance",
+            "Hospital Indemnity, Accident and Critical Illness",
+            "401(k) With Employer Match (age 21 & older)",
+            "Access to financial advisors for budget and retirement planning",
+            "One Pass Gym Membership Program",
+            "Tuition Reimbursement",
+            "Crewmember Assistance Program",
+            "Pet Insurance",
+            "Perks & Rewards for Restaurant Managers:",
+            "Weekly Pay!*",
+            "Competitive pay + monthly bonus",
+            "Paid Time Off & Sick time",
+            "8 paid Holidays a year**",
+            "Early closure for company events",
+            "Casual Work Attire",
+            "Perkspot Employee Discount Programs",
+            "*Raising Cane's pays weekly, except in some states (e.g., California) where the company pays bi-weekly"
+          ]
+        },
+        {
+          "title": "Responsibilities",
+          "items": [
+            "The Restaurant Manager is responsible for supporting the Restaurant Leader in day-to-day operations of the restaurant and upholding Raising Cane’s standards and culture in shift management responsibilities of restaurant operations",
+            "The physical work environment includes working in a fast-paced kitchen environment (which requires extended periods of physical exertion, such as walking, standing, lifting and bending) and interacting with customers",
+            "It also includes both inside and outside work in varied temperatures, working with and around food products, common allergens, industrial equipment, commercial cleaning products that require the use of personal protective equipment and physical activities necessary to complete the responsibilities of the job",
+            "Ensures operations meet Raising Cane’s standards in all restaurant zones during a shift",
+            "Acts as manager on duty and opens and closes the restaurant",
+            "Manages cash handling and ensures accountability",
+            "General to the role:",
+            "Enforces Raising Cane’s policies and standards",
+            "Executes shift management meeting Raising Cane’s operations and safety standards",
+            "Uses required tools, forms and logs to support shift execution, document results and take corrective action when needed",
+            "Directs crewmembers during a shift",
+            "Provides exemplary customer service",
+            "Utilizes reward and recognition program for the crewmembers in the restaurant",
+            "Authorizes employee functions requiring manager approval (e.g. discounts, promotions, timeclock overrides, etc.)",
+            "Ensures cleanliness of the restaurant and ensures the facility is in good working order",
+            "Completes other duties as assigned"
+          ]
+        }
+      ],
+      "extensions": [
+        "9 days ago",
+        "Full-time",
+        "No degree mentioned",
+        "Health insurance",
+        "Paid time off",
+        "Dental insurance"
+      ],
+      "detected_extensions": {
+        "posted_at": "9 days ago",
+        "schedule": "Full-time",
+        "no_degree_mentioned": true,
+        "health_insurance": true,
+        "paid_time_off": true,
+        "dental_insurance": true
+      },
+      "apply_link": "https://jobs.raisingcanes.com/restaurant-manager/job/28986813?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+      "apply_links": [
+        {
+          "link": "https://jobs.raisingcanes.com/restaurant-manager/job/28986813?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Raising Cane's Careers"
+        },
+        {
+          "link": "https://careers.bonefishgrill.com/restaurant-manager/job/28868856?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Bonefish Grill Careers"
+        },
+        {
+          "link": "https://www.indeed.com/viewjob?jk=85fb11efef45fc6a&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Indeed"
+        },
+        {
+          "link": "https://www.geckohospitality.com/job/45478745-restaurant-manager-bel-air-md/?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Gecko Hospitality"
+        },
+        {
+          "link": "https://www.ziprecruiter.com/c/Bob-Evans-Restaurants/Job/Restaurant-Manager/-in-Bel-Air,MD?jid=b5cb466780b9379f&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "ZipRecruiter"
+        },
+        {
+          "link": "https://jobs.smartrecruiters.com/RaisingCanes/744000051087730-restaurant-manager?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Smart Recruiters Jobs"
+        },
+        {
+          "link": "https://www.linkedin.com/jobs/view/restaurant-manager-at-bonefish-grill-4175579104?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "LinkedIn"
+        },
+        {
+          "link": "https://management-millersalehouse.icims.com/jobs/3681/restaurant-manager/job?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Miller's Ale House - ICIMS"
+        }
+      ],
+      "sharing_link": "https://www.google.com/search?ibp=htl;jobs&q=restaurant+managers+united+states&htidocid=ST2oZwBJPrzbu2OWAAAAAA%3D%3D&hl=en-US&shndl=37&shmd=H4sIAAAAAAAA_xXLOwoCMRAAUGz3CIIwnSiaiGCjlR8QhG32AsskDEkkzoRMhL2B11ab173uM-tWA2nDd0Vu0CNjoApbeIgDJaw-gjDcRUKm-Sm2VvRorWo24bda8sbLywqTk8k-xemfUSNWKhkbjfvDbjKFw3oxYNLEAa7ItFRIDBfKcE51A_3tCwISNvOKAAAA&shmds=v1_AQbUm94dsI9_1Ny3n6xbmS3CKvlW2NeNQYN2t-HR8GY95Embdw&shem=vidc&source=sh/x/job/li/m1/1#fpstate=tldetail&htivrt=jobs&htiq=restaurant+managers+united+states&htidocid=ST2oZwBJPrzbu2OWAAAAAA%3D%3D",
+      "thumbnail": "data:image/png;base64,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"
+    },
+    {
+      "position": 4,
+      "title": "Restaurant Management Opportunities",
+      "company_name": "Buffalo Wild Wings",
+      "location": "Morganton, NC",
+      "via": "via Buffalo Wild Wings",
+      "description": "In most jobs, everyone doesn’t spontaneously erupt into applause and start raining down high-fives. At Buffalo Wild Wings, that’s just a Thursday night. This is the place to start the next phase of your restaurant management career. Whether you grow in our system here or your game-plan takes you elsewhere, we want you to have an experience that lasts a lifetime. GAME TIME ENERGY, LIFETIME EXPERIENCE As a part of our management team (Kitchen Manager, Service Manager, Assistant General Manager, General Manager), you will be the expert in creating legendary experiences for guests. From local restaurant marketing to Profit and Loss statement results, you will ensure that your restaurant is at the top of its game. You will lead your team members through performance, engagement, and training initiatives. As a growing company, we’re always looking for top talent to join our team. By applying, you’re adding your resume to our database, and we’ll reach out to you as soon as a position is available. HOME OF THE GREATEST OF ALL TIMES Buffalo Wild Wings fuels moments worth sharing – for our guests and for our team members. And, when that means access to all these benefits – well, that’s just another day at the office. Bonus Program* Free Shift Meals* Best in Class Training & Continuous Learning Advancement Opportunities Paid Time Off* 401(k) Retirement Plan* Tuition Benefits* Medical, Dental and Vision* Champions of Hope* Cash Referral Program Journey Wellbeing Support Tool PerkSpot Discount Program Recognition Program Slip Resistant Shoes Programs Community & Charitable Involvement Igniting Dreams Grant Program Training Contests YOU GOT THIS You have 1-5 years of management experience and previous restaurant manager experience. You have a general knowledge of labor laws, health codes, safe food handling and sanitation, responsible alcohol service, safety and security systems and procedures, and computer operations. You can manage and direct the work of others, champion change, and have a passion for training and developing your team. You can analyze a Profit and Loss statement. Not sure if your experience aligns? We encourage you to apply. Sports-lover or not, all backgrounds are welcome here. Buffalo Wild Wings, Inc. is an equal opportunity employer. *Subject to availability and certain eligibility requirements.",
+      "job_highlights": [
+        {
+          "title": "Qualifications",
+          "items": [
+            "You have a general knowledge of labor laws, health codes, safe food handling and sanitation, responsible alcohol service, safety and security systems and procedures, and computer operations",
+            "You can manage and direct the work of others, champion change, and have a passion for training and developing your team",
+            "You can analyze a Profit and Loss statement"
+          ]
+        },
+        {
+          "title": "Benefits",
+          "items": [
+            "And, when that means access to all these benefits – well, that’s just another day at the office",
+            "Bonus Program* Free Shift Meals* Best in Class Training & Continuous Learning Advancement Opportunities Paid Time Off* 401(k) Retirement Plan* Tuition Benefits* Medical, Dental and Vision* Champions of Hope* Cash Referral Program Journey Wellbeing Support Tool PerkSpot Discount Program Recognition Program Slip Resistant Shoes Programs Community & Charitable Involvement Igniting Dreams Grant Program Training Contests YOU GOT THIS You have 1-5 years of management experience and previous restaurant manager experience"
+          ]
+        },
+        {
+          "title": "Responsibilities",
+          "items": [
+            "GAME TIME ENERGY, LIFETIME EXPERIENCE As a part of our management team (Kitchen Manager, Service Manager, Assistant General Manager, General Manager), you will be the expert in creating legendary experiences for guests",
+            "From local restaurant marketing to Profit and Loss statement results, you will ensure that your restaurant is at the top of its game",
+            "You will lead your team members through performance, engagement, and training initiatives"
+          ]
+        }
+      ],
+      "extensions": [
+        "7 days ago",
+        "Full-time",
+        "No degree mentioned",
+        "Health insurance",
+        "Paid time off",
+        "Dental insurance"
+      ],
+      "detected_extensions": {
+        "posted_at": "7 days ago",
+        "schedule": "Full-time",
+        "no_degree_mentioned": true,
+        "health_insurance": true,
+        "paid_time_off": true,
+        "dental_insurance": true
+      },
+      "apply_link": "https://careers.buffalowildwings.com/restaurant-management-opportunities/job/AD409A28A1BED2F6D9D7E2F76D26D1A5?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+      "apply_links": [
+        {
+          "link": "https://careers.buffalowildwings.com/restaurant-management-opportunities/job/AD409A28A1BED2F6D9D7E2F76D26D1A5?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Buffalo Wild Wings"
+        },
+        {
+          "link": "https://careers.sonicdrivein.com/restaurant-management-opportunities/job/5313BC51F137B99A471432C83C801414?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Sonic Careers"
+        },
+        {
+          "link": "https://www.ziprecruiter.com/c/Sonic/Job/Restaurant-Management-Opportunities/-in-Morganton,NC?jid=d7668d19b340ed5a&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "ZipRecruiter"
+        },
+        {
+          "link": "https://www.indeed.com/viewjob?jk=c2f83ccd12e1e3af&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Indeed"
+        },
+        {
+          "link": "https://www.linkedin.com/jobs/view/restaurant-management-opportunities-at-sonic-drive-in-4199096092?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "LinkedIn"
+        },
+        {
+          "link": "https://www.simplyhired.com/job/XZQB6xqWYJfup9XIblnjbM22iOji1l7d9FZ2QofLmmFj7G6Ny5LIoA?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "SimplyHired"
+        },
+        {
+          "link": "https://www.localjobs.com/job/morganton-nc-restaurant-management-opportunities-0?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "LocalJobs.com"
+        },
+        {
+          "link": "https://www.snagajob.com/jobs/1085546764?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Snagajob"
+        }
+      ],
+      "sharing_link": "https://www.google.com/search?ibp=htl;jobs&q=restaurant+managers+united+states&htidocid=2nstMdcrQtNg_RPeAAAAAA%3D%3D&hl=en-US&shndl=37&shmd=H4sIAAAAAAAA_xWOMQrCQBAAsc0TrBbsRHMi2MROC0GIgo1l2MT1cnLZPW43kNf4VmMzTDVM8V0U1YPUcMzIBjUyehpo1ntKkm3kYIEUtnCVFpQwdz0Iw0XER1oee7OklXOqsfRzxkJXdjI4YWplch9p9Y9Ge8yUIho1-8NuKhP79eo0vt8YBZ4hvmawVwgMtWQ_vwhv4Hb-ASd5Mb-hAAAA&shmds=v1_AQbUm95xPtZaHhKNiAkz6mevquFXitiI90cYm5QfEciy_yF8Ig&shem=vidc&source=sh/x/job/li/m1/1#fpstate=tldetail&htivrt=jobs&htiq=restaurant+managers+united+states&htidocid=2nstMdcrQtNg_RPeAAAAAA%3D%3D",
+      "thumbnail": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAMAAACfWMssAAAA8FBMVEX///8AAAD/0wAfGRv/3QD/2gD/4gD/0QD/3wAAABv/6AD/5QAAAB3/6wD/1QAfGRkAABe/v7/i4eEAAAb5+PjYxwLPvQbz8vL/7wDHxsYAAAz54AAyLBbPzs7X1td1cnQhHSdST1KurK0lHyRhUxGnjw26ogqAbRElHhCXlJVnZGQrJRSxnw9dUhYyLjKajRFxYBX/9gDewgCklwPQtQsPAA+KfQhPRgB4d4I+PlNfWhRKSEeGhodHOQDe0QA+MxdGPhZzYAAeDQAWERpBPksiITUqGwDrzwA1MD+zqgs+Oz5RRRIxIBp3bhQ5JwASAABCPX6NAAACj0lEQVRIie2VXXOaQBSGOQusy7dBWQU0+G1VAiQaaqo1JqS1iU38//+mi7TT5CKrucyM7wUzh9ln3neWcw6CcNJJn11203Wb59UPUm7QqkCucrvzAdbtgtfrU8ehg+EXgNGRaG0Mk9A3JFlCMq7XnQvoNo/h7KgSawSVsJNcXoXTcGbQCXSO4LrXVEMI4VBPvyrzm3Jsyv43GB3MGV2vJMZp6XzRGtWW31d1hEw1gbMD4BhozsnhTS2whaC16N4SVqtrqHE5F+I8JyJ3Z7WaYNuCW16ZrDY33pgLdidqziF5Nt/Xy/uVvH+hxXDONQxJAa4iFs1eQOrva1TyuZaBh9kZxtFyloNV+2GtmXtSTTxOH7R6LKmEsaZX2nltL7PtdIPztOYM3Hc5u9InCA/S/lTfje0qSw5ipigJ1dhN+5wv0gRq4p5eeSiL4g6iRVvcq6zcDmSEOaALjjQow3K5E1/Jsiylh0vGPRck8Y+mANYbkHkmpFT/yQMpcwyinWi9MbT0KUEqJ+o5DKRNtPxryIA9xSprYyLCAaveUPVvIT9foLtdpCuiqKQaMh1eny8mGrlQ/gWFKJj/epzqljKQEO6D/T7YYdc6W2dKTlrXndFN6hM11pWUlIzJ0/ucUIWeal5e9JJYsbKtPlzlHYgdfY1lyt8CI6AyTjYq1bPfBtlPWOlyq/tIbWQ8TqhmDR9hE8nJelDMk1l/1jeymh5aAU1I8j4PxdQo5svZ6lTCjxDwuTxsopqb5/SqMJTjNNa0R2gf3q0jWK80QgqOmRON5WzzN06hDnixrxbji0xi0AYEx+1yuw3ekPpqvW4QJ25Admg1/ldz7LEfzsvLjj2fjtjir1Rzzwpx+uykkz6F/gB8I0JmtPoN+AAAAABJRU5ErkJggg=="
+    },
+    {
+      "position": 5,
+      "title": "Restaurant Manager",
+      "company_name": "Sweetgreen",
+      "location": "Framingham, MA",
+      "via": "via Revolution Job Board",
+      "description": "Our Restaurant Managers (Assistant Coaches) lead our team members!\n\nWe call our Assistant Managers, Assistant Coaches. They are our most valuable ingredient - the heart of our business, the face of our brand, and what truly make the sweetgreen experience special and unique. Coaches help drive sweetgreen's values within the stores - creating a family environment where all feel welcome to enjoy a healthy meal together. We are looking for happy, humble, and hard-working people to join our growing team.\n\nWe strive to create amazing experiences - not only for our guests, but also our employees.\n\nWhat you'll do:\n\nEvery great team is led by a great leader. You lead enthusiastically, with a focus on exceptional customer service and results. Your responsibilities include everything from mentoring team members to managing all front and back of house operations to architecting the ultimate customer experience. You are a quick thinker, a problem solver, a skilled communicator and a world-class motivator.\n\nYou must be able to perform the following job duties satisfactorily, with or without a reasonable accommodation.\n• Leading by example and being a role model for the standards and behaviors consistent with sweetgreen’s core values and culture.\n• Proactively attracting, identifying, and hiring team members that embody the sweetgreen profile and have the ability to grow within the organization.\n• Successfully and consistently communicating team wins, priorities, best practices and operational changes to deliver brilliant execution.\n• Connecting with the local community by executing sweetgreen’s local marketing and community involvement initiatives.\n• Serving as a role model for high quality, hands on, floor management - including effective deployment of labor to maximize throughput.\n• Delivering store sales and financial objectives by removing any barriers to success.\n• Scheduling daily labor requirements that meet the needs of the business and provide great customer service experiences\n• Ensuring that food safety and security standards are met and adhered to consistently.\n• Maintaining food service and production levels by leading strong BOH and FOH execution.\n• Addressing performance issues quickly and respectfully by coaching, counseling, and managing any conflicts.\n• Contributing ideas, thoughts, and solutions that result in increased productivity, higher retention, and improved operations.\n\nWhat you've got:\n• 3+ years’ in a restaurant management role\n• Experience in fast casual restaurant chains (preferred)\n• Managed and developed 25+ team members per shift\n• A passion for food and restaurant operations\n• Desire to make an impact on customers and team members.\n• A can-do work ethic and the ability to take initiative on projects.\n• Ability to lead, motivate, and build an efficient team in a fast pace environment. ● Ability to champion a strong understanding and appreciation of local and organic products, and reinforce this understanding to their team.\n• Belief in and passion for the sweetlife and sweetgreen’s core values.\n• Strong leadership behaviors, approachability, and a reputation as role model.\n• sweetgreen DNA:\n• Coachable: actively looks for feedback to grow and improve\n• Self-starters: takes initiative, thinks of the big picture, relays store needs and communicates with the team\n• Customer service-oriented: Passion for the guest experience, service driven\n• Innovative: utilizes and designs business processes with the customer, community and company in mind\n• Passionate about real food: appreciation for the greater mission of farm-to-table foods ○ High-energy, and thrive in a fast-paced environment\n\nAbout our sweetlife:\n• Competitive base salary + 15% bonus potential\n• Medical, dental + vision insurance plans to suit your and your family's needs\n• Paid Vacation + Wellness time\n• 401k program\n• Paid family leave; we believe in fully supporting new parents\n• Complimentary greens\n• Free sweetgreen swag\n• An opportunity to make a real impact on the people around you, both by growing them and by connecting them to real food\n• A collaborative team of people who live our core values and have your back\n• A clear career path with opportunities for development, both personally and professionally\n\nAbout Us:\n\nsweetgreen is on a mission to build healthier communities by connecting people to real food. We passionately believe that real food should be convenient and accessible to everyone. Every day in each sweetgreen, our 3,500 team members make food from scratch, using fresh ingredients and produce delivered that morning. And in our local communities, we’re committed to leaving people better than we found them. We’re in the business of feeding people, and we’re out to change what that means\nSalary range for this role:\nStarting salary range based on experience\n$65,000—$68,000 USD\n\nsweetgreen provides equal opportunities for everyone that works for us and everyone that applies to join our team, without regard to sex or gender, gender identity, gender expression, age, race, religious creed, color, national origin, ancestry, pregnancy, physical or mental disability, medical condition, genetic information, marital status, sexual orientation, any service, past, present, or future, in the uniformed services of the United States (military or veteran status), or any other consideration protected by federal, state, or local law.\n\nCalifornia residents: Review our applicant privacy notice HERE.\n\nsweetgreen participates in the federal government's E-Verify program to determine employment eligibility. To learn more about the E-Verify program, please click here.",
+      "job_highlights": [
+        {
+          "title": "Qualifications",
+          "items": [
+            "You are a quick thinker, a problem solver, a skilled communicator and a world-class motivator",
+            "You must be able to perform the following job duties satisfactorily, with or without a reasonable accommodation",
+            "3+ years’ in a restaurant management role",
+            "Managed and developed 25+ team members per shift",
+            "A passion for food and restaurant operations",
+            "Desire to make an impact on customers and team members",
+            "A can-do work ethic and the ability to take initiative on projects",
+            "Ability to lead, motivate, and build an efficient team in a fast pace environment",
+            "Ability to champion a strong understanding and appreciation of local and organic products, and reinforce this understanding to their team",
+            "Belief in and passion for the sweetlife and sweetgreen’s core values",
+            "Strong leadership behaviors, approachability, and a reputation as role model",
+            "sweetgreen DNA:",
+            "Coachable: actively looks for feedback to grow and improve",
+            "Self-starters: takes initiative, thinks of the big picture, relays store needs and communicates with the team",
+            "Customer service-oriented: Passion for the guest experience, service driven",
+            "Innovative: utilizes and designs business processes with the customer, community and company in mind",
+            "Passionate about real food: appreciation for the greater mission of farm-to-table foods ○ High-energy, and thrive in a fast-paced environment"
+          ]
+        },
+        {
+          "title": "Benefits",
+          "items": [
+            "Competitive base salary + 15% bonus potential",
+            "Medical, dental + vision insurance plans to suit your and your family's needs",
+            "Paid Vacation + Wellness time",
+            "401k program",
+            "Paid family leave; we believe in fully supporting new parents",
+            "Complimentary greens",
+            "Free sweetgreen swag",
+            "An opportunity to make a real impact on the people around you, both by growing them and by connecting them to real food",
+            "A collaborative team of people who live our core values and have your back",
+            "A clear career path with opportunities for development, both personally and professionally",
+            "Starting salary range based on experience",
+            "$65,000—$68,000 USD"
+          ]
+        },
+        {
+          "title": "Responsibilities",
+          "items": [
+            "You lead enthusiastically, with a focus on exceptional customer service and results",
+            "Your responsibilities include everything from mentoring team members to managing all front and back of house operations to architecting the ultimate customer experience",
+            "Leading by example and being a role model for the standards and behaviors consistent with sweetgreen’s core values and culture",
+            "Proactively attracting, identifying, and hiring team members that embody the sweetgreen profile and have the ability to grow within the organization",
+            "Successfully and consistently communicating team wins, priorities, best practices and operational changes to deliver brilliant execution",
+            "Connecting with the local community by executing sweetgreen’s local marketing and community involvement initiatives",
+            "Serving as a role model for high quality, hands on, floor management - including effective deployment of labor to maximize throughput",
+            "Delivering store sales and financial objectives by removing any barriers to success",
+            "Scheduling daily labor requirements that meet the needs of the business and provide great customer service experiences",
+            "Ensuring that food safety and security standards are met and adhered to consistently",
+            "Maintaining food service and production levels by leading strong BOH and FOH execution",
+            "Addressing performance issues quickly and respectfully by coaching, counseling, and managing any conflicts",
+            "Contributing ideas, thoughts, and solutions that result in increased productivity, higher retention, and improved operations"
+          ]
+        }
+      ],
+      "extensions": [
+        "25 days ago",
+        "65K–68K a year",
+        "Full-time",
+        "No degree mentioned",
+        "Paid time off",
+        "Dental insurance",
+        "Health insurance"
+      ],
+      "detected_extensions": {
+        "posted_at": "25 days ago",
+        "salary": "65K–68K a year",
+        "schedule": "Full-time",
+        "no_degree_mentioned": true,
+        "paid_time_off": true,
+        "dental_insurance": true,
+        "health_insurance": true
+      },
+      "apply_link": "https://jobs.revolution.com/companies/sweetgreen/jobs/48905252-restaurant-manager?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+      "apply_links": [
+        {
+          "link": "https://jobs.revolution.com/companies/sweetgreen/jobs/48905252-restaurant-manager?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Revolution Job Board"
+        },
+        {
+          "link": "https://www.indeed.com/viewjob?jk=b507255842d0641a&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Indeed"
+        },
+        {
+          "link": "https://www.resume-library.com/job/view/215381082/restaurant-manager?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Resume-Library.com"
+        },
+        {
+          "link": "https://www.glassdoor.com/job-listing/restaurant-manager-sweetgreen-JV_IC1154571_KO0,18_KE19,29.htm?jl=1009707646221&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Glassdoor"
+        },
+        {
+          "link": "https://www.breakroom.cc/en-us/jobs/listing/1474146-raising-canes-restaurant-manager-253-cochituate-road?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Breakroom"
+        },
+        {
+          "link": "https://www.monster.com/job-openings/restaurant-manager-framingham-ma--c4e44478-d35f-4508-a49a-a33af0329f7e?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Monster"
+        },
+        {
+          "link": "https://jobs.redseaventures.com/companies/sweetgreen/jobs/48905252-restaurant-manager?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Red Sea Ventures Portfolio"
+        },
+        {
+          "link": "https://www.theladders.com/job-listing/-2215184915132703043/restaurant-manager.htm?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Ladders"
+        }
+      ],
+      "sharing_link": "https://www.google.com/search?ibp=htl;jobs&q=restaurant+managers+united+states&htidocid=uGQoLG1Y9JOasLa0AAAAAA%3D%3D&hl=en-US&shndl=37&shmd=H4sIAAAAAAAA_xXLsQrCQAwAUFz7CeKQVdE7EVx0clEQuugHlPQIdy1tUpKI_QK_W13e9qrPolo_yBxfiuxQI2MmhR3cpQUj1FRAGG4ieaDlubhPdorRbAj5t7xLIckYhamVOfbS2p_GCipNAzo1h-N-DhPnzer5JvKsRAwdw1Vx7DgXHLdQX76fXXLviQAAAA&shmds=v1_AQbUm97rLDVc9IJO6hvtHyTMEAGAEWDlypemmdABNWRPvWYRWA&shem=vidc&source=sh/x/job/li/m1/1#fpstate=tldetail&htivrt=jobs&htiq=restaurant+managers+united+states&htidocid=uGQoLG1Y9JOasLa0AAAAAA%3D%3D",
+      "thumbnail": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIADgAOAMBIgACEQEDEQH/xAAaAAEBAAMBAQAAAAAAAAAAAAAABQQGBwMC/8QALhAAAQQBAwMCAwkBAAAAAAAAAgABAwQFBhESIUFREzEycZEUIiRCUqGx8PEH/8QAGAEBAQEBAQAAAAAAAAAAAAAAAAECBQP/xAAZEQEAAwEBAAAAAAAAAAAAAAAAAREhEgL/2gAMAwEAAhEDEQA/ANHREXo5wiIgIiICIiAqGDw9vOZAaVAReRxcyIy4iAt7kT9mU9V9MZifCZCS1DWGzEUJR2ITZ+JxPty3dvbt1RYq9Z97R5QUZ7dPOYi+NYXKYILH3hZvDP7qdp7T9/UNo4aAgwxjylmlLiETeXdbBVxOmdU+rDgo7eMyYxlJHXmL1IpNm3dmL3b+9F9YMJbn/MctWxYkVobgyWow+M4dm7d26fs6lt8xbDn0NZOKQsNlMdl5IuskFSZnkb5N3UXP4azgciVC6URTCAk/pHyZt232fw6oaBrXrGrce+OE+cUwlKYt0CP83L5tuy89du76yzDu+/4l/wCGS0mI5tCREVYFSwOcvYG49mgYbmPCSOQeQSD4JlNRFiabZLrUYoJ2xGCx2MtWAcJLUA7ls/vx/SsXRMdoshKeNzdfFXABvR9cthnff4X7fXda6iyvU3rrkc2oqs8dvVWbx1PFwG0sgVCHnZdurC3Ft33f/FzDN33ymYu33Hh9pmKRh8M79G+iwtm8MiL69XgiItMCIiAiIsgiIqCIio//2Q=="
+    },
+    {
+      "position": 6,
+      "title": "Restaurant Manager",
+      "company_name": "The Cheesecake Factory",
+      "location": "Tigard, OR",
+      "via": "via The Cheesecake Factory Careers",
+      "description": "Compensation Range\n\n$55,000 - $70,000 / Year\n• Compensation may include base salary and geographic differential. This position is bonus eligible.\n\nJob Description\n\nYou are a seasoned restaurant leader, passionate about creating amazing dining experiences. We will utilize your talents to their fullest and provide an opportunity to advance your career. Our unique culture is one of the reasons we’ve been named to the Fortune 100 Best Companies to Work For® list since 2014. At The Cheesecake Factory, we know great things happen when passionate leaders gather around our table. Come join us!\n\nWhat we offer:\n• Comprehensive healthcare including medical, dental and vision\n• Flexible healthcare spending account\n• Employee Assistance Programs\n• Company-paid group life insurance, short term disability and long-term disability\n• Paid time off including vacation and sick time\n• 401k plan with company match\n• Quarterly Bonus program\n• 25% discount for your party when dining in as a guest\n• Eligible for up to 50% next day pay (exclusions apply)\n• Tuition assistance\n• Career growth opportunities\n\nWhat we’re looking for:\n• At least 2 years of experience as a manager in a full-service restaurant (dining plus bar)\n• Solid track record of success in previous roles, including demonstrated career growth\n• Strong interpersonal and communication skills\n• Dependable and motivated with a strong work ethic\n• Able to stand, sit, squat or walk for extended periods of time\n• Able to grasp, reach overhead, push, lift and carry up to 50 lbs\n\nWho we are:\n\nNamed to FORTUNE Magazine’s “100 Best Companies to Work For®” list every year since 2014, The Cheesecake Factory is a leader in experiential dining. We are culinary-forward and relentlessly focused on hospitality. Delicious, memorable experiences created by passionate people—this defines who we are and where we are going.\n\nWe currently own and operate 353 restaurants throughout the United States and Canada under brands including The Cheesecake Factory®, North Italia®, Flower Child® and a collection of other FRC brands. Internationally, 34 The Cheesecake Factory® restaurants operate under licensing agreements. Our bakery division operates two facilities that produce quality cheesecakes and other baked products for our restaurants, international licensees and third-party bakery customers.\n\nWe are an equal opportunity employer. We are committed to creating an inclusive and welcoming workplace for all. We welcome applicants from a wide variety of identities, ideas, perspectives, backgrounds and experiences to apply. The Cheesecake Factory offers reasonable accommodations to job applicants with disabilities.\n\n#SoCheesecake #LifeAtCheesecake",
+      "job_highlights": [
+        {
+          "title": "Qualifications",
+          "items": [
+            "At least 2 years of experience as a manager in a full-service restaurant (dining plus bar)",
+            "Solid track record of success in previous roles, including demonstrated career growth",
+            "Strong interpersonal and communication skills",
+            "Dependable and motivated with a strong work ethic",
+            "Able to stand, sit, squat or walk for extended periods of time",
+            "Able to grasp, reach overhead, push, lift and carry up to 50 lbs"
+          ]
+        },
+        {
+          "title": "Benefits",
+          "items": [
+            "$55,000 - $70,000 / Year",
+            "Compensation may include base salary and geographic differential",
+            "This position is bonus eligible",
+            "Comprehensive healthcare including medical, dental and vision",
+            "Flexible healthcare spending account",
+            "Employee Assistance Programs",
+            "Company-paid group life insurance, short term disability and long-term disability",
+            "Paid time off including vacation and sick time",
+            "401k plan with company match",
+            "Quarterly Bonus program",
+            "25% discount for your party when dining in as a guest",
+            "Eligible for up to 50% next day pay (exclusions apply)",
+            "Tuition assistance",
+            "Career growth opportunities"
+          ]
+        }
+      ],
+      "extensions": [
+        "Full-time",
+        "No degree mentioned",
+        "Paid time off",
+        "Dental insurance",
+        "Health insurance"
+      ],
+      "detected_extensions": {
+        "schedule": "Full-time",
+        "no_degree_mentioned": true,
+        "paid_time_off": true,
+        "dental_insurance": true,
+        "health_insurance": true
+      },
+      "apply_link": "https://www.cakecareers.com/main/jobs/16895?lang=en-us&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+      "apply_links": [
+        {
+          "link": "https://www.cakecareers.com/main/jobs/16895?lang=en-us&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "The Cheesecake Factory Careers"
+        },
+        {
+          "link": "https://www.indeed.com/viewjob?jk=9df9ce02f04616b3&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Indeed"
+        },
+        {
+          "link": "https://www.simplyhired.com/job/Athc-3Rq288av3izZVOAnAsHBkUNvL74UTpie3mduLC36aYKHsIE4g?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "SimplyHired"
+        },
+        {
+          "link": "https://us.bebee.com/job/6ca007370b8d844043d2182a35c04ef4?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "BeBee"
+        }
+      ],
+      "sharing_link": "https://www.google.com/search?ibp=htl;jobs&q=restaurant+managers+united+states&htidocid=nOPjpYxuE89vo4VZAAAAAA%3D%3D&hl=en-US&shndl=37&shmd=H4sIAAAAAAAA_xXLsQrCMBAAUFz7CU43uCiaiOCio6AgiFC6l0s8kmjNhdwJ9Sf8ZnV522s-k2bekii-KmaFC2YMVGEFZ3YghNVH4Awn5jDQdB9Vi-ysFRlM-C1N3nh-Ws7keLR3dvKnl4iVyoBK_Wa7Hk3JYTHrIsEhEgl5fBAc0SvXN6QMXQpYb0u4tl_EbGbHkQAAAA&shmds=v1_AQbUm94sJpKWbippbuqZKDOc99vyP54ZLG555Eyx4Sg3FCAiLg&shem=vidc&source=sh/x/job/li/m1/1#fpstate=tldetail&htivrt=jobs&htiq=restaurant+managers+united+states&htidocid=nOPjpYxuE89vo4VZAAAAAA%3D%3D",
+      "thumbnail": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAAbCAMAAAAeYLy0AAAAe1BMVEX///88AABAAAA2AAAoAAAzAAAxAAD59/c+AAAlAACRfXx3XFrWzs79/PyzpqW/tLNbNDErAADj3t2llZS4razQyMdwUlCfjo3r5+eWhIN/ZmRgPDnd19bJwL9QIx9UKidlREJIFhGHcG4fAAAZAACtnZxFDghtS0kMAABmXKC0AAACj0lEQVQ4jY1Ui46sKhBsQUUBAZGHKDjqrM75/y+8OJvs2WRn9h4Skwa67OrqUoCvRSIINjE6wj8vyTakdoXA2makBoB3/wIjc8m4Tg43AmwDh3M73V+ndvL7ZikC6ByIagHZQ0jLGvhLXGyWb7u9uenFX5FvNRfE6hnSmz5n9TfWFTK6Hj7Pn0ysftsVu/2NPcIjFDRkScyl6EgnCXGaHAcSmIDr4CDdsJsLqHjwYKc9v/uxoQ6QYqUNc7eisbTpQ7qTaArYxLuPHwkqIZK4ywuYCi1rsrcjLFtuGBuC3cbSTEMlg0qi7x821WJYpMMAiXSG4kcGnhjBerOOadguYCVAqaXIxAReszDjeKhqb1RmtFbXTDfV7T25qJaCFYHARbXpSLvDvppy4kEsWKbJ+RjuVtUmsaOciKHNLU59GNUGEz7qmR9DFqfgklJgO/DBRyBHts5IxTVKQQUBG7IuPFBraM7j+Ur7YK9xnO5St85OncnTEdF4yhyjr13wtSZUHHkq+XngHqMT1XeMmqrGuP4d2CmEqY7Zs8fhhaXosy7hXv4OzKarcO3Y4yNcm6H4YXD+1kqjCft+fPpzaB6jHsi3W13G/yv9BKKzbVvjiyWnS+VWW5zLTKjbBBCq2bAuQ1Tq51cwNLO1x4Nng4D8iNn4ok7gdpCtX4q5iKZMsEwvKhbP6fh1qUbW5zbA9LGrKMBtOyqSezin8f6C/CeQtmTsD1pnWbSvOZxn1hAdxZUh8I296vEJ9G3w/RaKRe5CtMyZ+5SK4MrsGOgQzrN6RzUZS+TYWZlV4Ilk4UXsZLrMRLAEnV4AH+8ll9eYbvTlXUDt23nbPwbi+ZMlPHmc9n1Fd6/XN26w9Nd/Mfmy1H892jIJe7igqgAAAABJRU5ErkJggg=="
+    },
+    {
+      "position": 7,
+      "title": "Restaurant Management",
+      "company_name": "Arby's",
+      "location": "Plainwell, MI",
+      "via": "via Indeed",
+      "description": "RESTAURANT MANAGEMENT OPPORTUNITIES We’re glad you’re here. You may know us as the brand with Roast Beef and Curly Fries – but we are also crafting incredible career opportunities. As a growing company, we’re always looking for top talent to join our family. By applying, you’re adding your resume to our database, and we’ll reach out to you as soon as a position is available.\n\nYou’re in the right place if you’re here for: Bonus Program* Discounted Curly Fries (and all our menu items for that matter) Free Shift Meals* Best in Class Training & Continuous Learning Advancement Opportunities Paid Time Off* 401(k) Retirement Plan* Tuition Benefits* Medical, Dental, and Vision* Champions of Hope* Cash Referral Program Journey Wellbeing Support Tool PerkSpot Discount Program Recognition Program Slip Resistant Shoes Programs Community & Charitable Involvement Igniting Dreams Grant Program Training Contests You’re also in the right place if you’re looking for a company where you can dream big, work hard, get it done, play fair, have fun, and make a difference – a company that shares your values. SOMETHING TO HANG YOUR HAT ON As a Restaurant Manager (General Manager or Assistant Manager), you will be the leader of your restaurant’s Meatcraft™. You will lead your Restaurant Management Team and Team Members through performance, engagement, and training initiatives. From local store marketing to helping reach sales and profit goals, you’ll be responsible in ensuring that your restaurant is delivering the top meats.\n\nTo qualify for this best-brand-you-ever-worked-for job, you: Have at least six months to one year of restaurant or retail management experience. Have impressive examples of providing exceptional customer service. Eligible to work in the U.S. Not sure if your experience aligns?\n\nWe encourage you to apply. Meat-lover or not, all backgrounds are welcome here. WHO WE ARE AND WHAT WE DO The Arby's brand purpose is Inspiring Smiles Through Delicious Experiences®. Arby's delivers on its purpose by celebrating the art of Meatcraft® with a variety of high-quality proteins and innovative, crave-able sides, such as Curly Fries and Jamocha shakes.\n\nArby's Fast Crafted® restaurant services feature a unique blend of quick-serve speed combined with the quality and made-for-you care of fast casual. Arby's Restaurant Group, Inc. is the franchisor of the Arby's Brand and is part of the Inspire Brands family of restaurants headquartered in Atlanta, GA. Arby’s, founded in 1964, is the second-largest sandwich restaurant brand in the world with more than 3,500 restaurants in nine countries.\n\nOur goal is to be the best in the business, and we can’t do that without great people like you. Arby’s is an equal opportunity employer. *Subject to availability and certain eligibility requirements.",
+      "extensions": [
+        "Full-time",
+        "No degree mentioned",
+        "Paid time off",
+        "Dental insurance",
+        "Health insurance"
+      ],
+      "detected_extensions": {
+        "schedule": "Full-time",
+        "no_degree_mentioned": true,
+        "paid_time_off": true,
+        "dental_insurance": true,
+        "health_insurance": true
+      },
+      "apply_link": "https://www.indeed.com/viewjob?jk=5e76ffe55a622ca9&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+      "apply_links": [
+        {
+          "link": "https://www.indeed.com/viewjob?jk=5e76ffe55a622ca9&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Indeed"
+        },
+        {
+          "link": "https://www.simplyhired.com/job/OIsqsTsmrBcP35Ng8zK-NuF192-vE5v67cZcOuHaC6o2J2RZfTlWtA?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "SimplyHired"
+        }
+      ],
+      "sharing_link": "https://www.google.com/search?ibp=htl;jobs&q=restaurant+managers+united+states&htidocid=IrObTdX8kiT0x9IWAAAAAA%3D%3D&hl=en-US&shndl=37&shmd=H4sIAAAAAAAA_xXLsQrCMBCAYVz7AoLTbYLURAQXnZxEoSC-QLmEI6mkdyEXse4-uHX5-Za_-S6a9kFa8VWQK3TIGGikmVu4iQMlLD6CMFxEQqLVKdaa9WitajJhHuvgjZfRCpOTyT7F6T-9RiyUE1bq94fdZDKHzfJc3GetMDDcEw78ppRa6K4_1RSsUIcAAAA&shmds=v1_AQbUm97vIBM46Yj-uPRUhQSuFDEq9r4dmQb0qiedj7oWHs9_oA&shem=vidc&source=sh/x/job/li/m1/1#fpstate=tldetail&htivrt=jobs&htiq=restaurant+managers+united+states&htidocid=IrObTdX8kiT0x9IWAAAAAA%3D%3D",
+      "thumbnail": "data:image/jpeg;base64,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"
+    },
+    {
+      "position": 8,
+      "title": "Restaurant Manager - Franchise",
+      "company_name": "Denny's",
+      "location": "Arcadia, CA",
+      "via": "via Careers At Denny's",
+      "description": "This job posting is for employment with an independently owned and operated franchisee.\n\nJob Requirements\n\nAs a Restaurant Manager, you will never be bored. You will be responsible for making sure the restaurant runs smoothly.\n\nResponsibilities May Include:\n\nEnsuring that the restaurant is fully and appropriately staffed at all times.\n\nMaintaining operational excellence so our restaurant is running efficiently and effectively.\n\nEnsuring that all laws, regulations, and guidelines are followed.\n\nCreating a restaurant atmosphere that both patrons and employees enjoy.\n\nThe range listed below is the typical pay range for this role.\n\nPlease note that this range represents the pay range for all positions in the job grade within which the position falls. This job posting is not a promise of any specific pay for any specific employee as the actual pay will take into account a range of factors, including location and experience.\n\nMinimum: $68,640\nMaximum: $80,000\nAdditional information\n\nThis job posting is for a position at an establishment owned and operated by an independent franchisee. This means the independent franchisee is alone responsible for all employment related matters in the restaurant including, among other things, setting any requirements for this job and all decisions concerning hiring, firing, discipline, supervision, staffing and scheduling. The Franchisor will not receive a copy of any application you submit for this job posting and will have no control over whether you receive an interview and/or are ultimately hired, does not control and is not responsible for the employment policies and practices of independent franchisees, and does not employ independent franchisees’ employees. If you are hired for this job posting, the independent franchisee will be your employer. This job posting contains some general information about what it is like to work in this position but is not a complete job description. People who work in this position perform many different tasks every day, and this posting may not list all the job's essential functions. Our brands are committed to providing equal employment opportunity for all persons regardless of age, race, creed, color, national origin, citizenship status, religion, sex, sexual orientation, gender identity, disability, genetic information, military or veteran's status, criminal background, or any other characteristic protected by Federal, State, or local law.",
+      "job_highlights": [
+        {
+          "title": "Benefits",
+          "items": [
+            "Minimum: $68,640",
+            "Maximum: $80,000"
+          ]
+        },
+        {
+          "title": "Responsibilities",
+          "items": [
+            "You will be responsible for making sure the restaurant runs smoothly",
+            "Ensuring that the restaurant is fully and appropriately staffed at all times",
+            "Maintaining operational excellence so our restaurant is running efficiently and effectively",
+            "Ensuring that all laws, regulations, and guidelines are followed",
+            "Creating a restaurant atmosphere that both patrons and employees enjoy"
+          ]
+        }
+      ],
+      "extensions": [
+        "Full-time",
+        "No degree mentioned"
+      ],
+      "detected_extensions": {
+        "schedule": "Full-time",
+        "no_degree_mentioned": true
+      },
+      "apply_link": "https://careers.dennys.com/global/en/job/P-105348/Restaurant-Manager-Franchise?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+      "apply_links": [
+        {
+          "link": "https://careers.dennys.com/global/en/job/P-105348/Restaurant-Manager-Franchise?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Careers At Denny's"
+        },
+        {
+          "link": "https://www.linkedin.com/jobs/view/restaurant-manager-franchise-at-denny-s-4119069405?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "LinkedIn"
+        }
+      ],
+      "sharing_link": "https://www.google.com/search?ibp=htl;jobs&q=restaurant+managers+united+states&htidocid=KCu88oXqxpJ26p8lAAAAAA%3D%3D&hl=en-US&shndl=37&shmd=H4sIAAAAAAAA_xWMMQoCMRAAsb0HWFhtJ4heRLhGq0NREGz8wLGJSxKJu0c2wvkHH21shplmmu-s6e6kBd8ZucANGT1l2MC5tgtRqfpVLChhdgGE4SLiEy0OoZRR98aoptbXQ4mudfIywmRlMk-x-segATONCQsNu247tSP71fxEzJ-lQmTos8NHxDUc-x8uXz2BjwAAAA&shmds=v1_AQbUm96SJyjt5zZ4QxMIfOPQIM_2gl8CnEc1OPnB-PtzPTRuxA&shem=vidc&source=sh/x/job/li/m1/1#fpstate=tldetail&htivrt=jobs&htiq=restaurant+managers+united+states&htidocid=KCu88oXqxpJ26p8lAAAAAA%3D%3D",
+      "thumbnail": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAAeCAMAAABOrS0HAAAAclBMVEX////LHiXKGCD9+Pj++/vKEhvLICfIAAD89fXLGyPvx8juxMXKDhjNLDLy09TrubrVWl7TUlbjmpz56+vehojSTVHhkpT02drXaGvOMzjMJiz45ubwzc3adXfor7Dfi43RRkrbe37loqPPOj/JABDWYWRU72BbAAACpklEQVQ4jZWU27abIBCGh1EQVMSzAsZz3v8VO9hkdzWta7dzgRPggzmQH+DGoqkuqz6Vd+t/tXiqK3zZumT/BgeII3L9mH1jtiP463c3x8VeIue53Wb/nmtMu3Ky7hYu9qeiDbY1zedSky0XXPVT9PvKsI885/n6F+htMus7Ys+qfsMEiTzPqQi30NuitK9oKyc4hkOx/D7+j8DgKl7JFTugdW18heKHD/gVQPw1USf12xMLGPYg76GRbh7DAY+VThq79pn0ULtjTsZiNyn4CHrcXuCCBjxq8lJmNVpHC0+HbCPCautgYNZZHJDvwHINazGYq08Vp4/jFJNE3cvV8ibKddOd8a5taVVcCPowXwkDThhpFo4nHR6jI/qpMhoPPYJxbh7UITcsZjE2DKNJHMCZb9nulYpBnnoZKZ8BnyFRFVIetYUG9TYIm/Akm0XZKJRZAFUzq2UOpRhQFFAAzLiH9FRJY6+VBIrPKz35GIzoJKomE2tMnwIfG6YhLmtD9zecQhlzQaNxbKD5ji6QqTZGrCFG4iMCo3xd3dVI1KHyR349ngOpRANzJnY0XeqtzIdMWMAAVhJR0om6DQ8HFh1SzderKS01BSJuq8NiBtPp6Lb5PCFJ0vbsmiTx1GZGqQ3JvmmMYeLtBRpcfoavr4lsbCUUUwFNI733cZEG0IaV02nqMezcXKDHjsacd0tx80apbz34CUy3Xh3IX/9WF+L28Q1FNpd2ANO/f1r3ckY+3EN/WnO96WC7eP6Siu/Mz6PYX/6UCKbEY/723mF+CBKv86sWxT4yxZhy435Xn7DHkVrmf+gOnaaRMYZl/alIQZtRKYWkFB9LX/Fv9oJ/SbhM60oppvBbbfWmPS6Y1Cvtu7f7b2oedDQQQvwH9DY51c+uv4d+AOVnMjHvoSHWAAAAAElFTkSuQmCC"
+    },
+    {
+      "position": 9,
+      "title": "Manager",
+      "company_name": "Buffalo Wild Wings",
+      "location": "Farmville, VA",
+      "via": "via Buffalo Wild Wings",
+      "description": "Managers\n\nWe are a high-volume Sports Bar with National Recognition. A fast-paced environment providing the ultimate sports dining experience with WINGS, BEER, SPORTS!! The Restaurant Manager provides leadership and assistance to ensure that all team members are guest-focused, team-focused, and community- connected. The Restaurant Manager will exercise knowledge of restaurant operations, manage staff resources, provide counsel, develop and coach team members and help to build sales and profits while maintaining operating standards.\n\nResponsibilities include:\n• Manages the human resource function in the restaurant ensuring recruitment, selection, orientation, training, scheduling, and performance management functions meet or exceed company specified criteria.\n• Ensures the daily execution of the Mission Statement and Core Values.\n• Complies with company policies, practices, and procedures and communicates all changes to team members\n• Ensures overall food quality and handling, safety, security, service and cleanliness standards are met.\n\nJob Requirements:\n\nWe are looking for experienced full-service restaurant managers with:\n• Minimum of 2 years’ experience with Food and Alcohol service\n• Serve Safe certification required\n• Experience with EcoSure preferred\n• The ability to pass a background and credit check\n• Knowledge of scheduling, inventory, interviewing, coaching and counseling.\n• Previous manager experience at full service operation\n• Experience dealing with alcohol sales in a full-service operation\n• Experience managing a staff of at least 35 employees\n• Average weekly volume of unit managed of at least $40,000 per week.\n\nIntegrity is at our core of our management teams. If you are a high energy person who enjoys sports and want to work with the premiere Sports Restaurant in the Country please apply.\n\nAdditional Requirements:\n• Candidates must be highly motivated, self-directed, and results driven with strong organizational skills, excellent attention to detail and professional written and verbal communication skills.\n• Proven track record of successfully managing multiple priorities in a fast-paced work environment.\n• Exercise discretion and independent action. Maintain confidential information, adhere to and enforce company policies, programs, and compliance issues.\n• Requires intermediate computer skills.\n• Authorized to work in the United States\n\nDanville Wings LLC (DBA - Buffalo Wild Wings) is an equal opportunity employer\n\nFarmville Wings LLC (DBA - Buffalo Wild Wings) is an equal opportunity employer\n\nColonial Wings LLC (DBA - Buffalo Wild Wings) is an equal opportunity employer\n\nMechanicsville Wings LLC (DBA - Buffalo Wild Wings) is an equal opportunity employer\n\nChester Wings LLC (DBA - Buffalo Wild Wings) is an equal opportunity employer\nCompany Introduction\n\nIT ALL STARTED 35 YEARS AGO WITH TWO GUYS DRIVEN BY HUNGER\nThe year was 1982.\nJim Disbrow and Scott Lowery had recently moved to Ohio from Buffalo, New York. All was fine until one day when the two were craving wings. Not just ordinary wings, but authentic Buffalo, New York-style chicken wings. With none to be found nearby, Jim and Scott had two choices: road trip to New York, or open a wing joint close to home. Lucky for us, they chose the latter. Hence, the beginning of Buffalo Wild Wings & Weck, now Buffalo Wild Wings®, the welcoming neighborhood atmosphere with a front-row seat for every sports fan that offers 21 mouth-watering signature sauces and seasonings.",
+      "job_highlights": [
+        {
+          "title": "Qualifications",
+          "items": [
+            "Minimum of 2 years’ experience with Food and Alcohol service",
+            "Serve Safe certification required",
+            "The ability to pass a background and credit check",
+            "Knowledge of scheduling, inventory, interviewing, coaching and counseling",
+            "Previous manager experience at full service operation",
+            "Experience dealing with alcohol sales in a full-service operation",
+            "Experience managing a staff of at least 35 employees",
+            "Candidates must be highly motivated, self-directed, and results driven with strong organizational skills, excellent attention to detail and professional written and verbal communication skills",
+            "Proven track record of successfully managing multiple priorities in a fast-paced work environment",
+            "Exercise discretion and independent action",
+            "Requires intermediate computer skills",
+            "Authorized to work in the United States"
+          ]
+        },
+        {
+          "title": "Benefits",
+          "items": [
+            "Average weekly volume of unit managed of at least $40,000 per week"
+          ]
+        },
+        {
+          "title": "Responsibilities",
+          "items": [
+            "The Restaurant Manager provides leadership and assistance to ensure that all team members are guest-focused, team-focused, and community- connected",
+            "The Restaurant Manager will exercise knowledge of restaurant operations, manage staff resources, provide counsel, develop and coach team members and help to build sales and profits while maintaining operating standards",
+            "Manages the human resource function in the restaurant ensuring recruitment, selection, orientation, training, scheduling, and performance management functions meet or exceed company specified criteria",
+            "Ensures the daily execution of the Mission Statement and Core Values",
+            "Complies with company policies, practices, and procedures and communicates all changes to team members",
+            "Ensures overall food quality and handling, safety, security, service and cleanliness standards are met",
+            "Maintain confidential information, adhere to and enforce company policies, programs, and compliance issues"
+          ]
+        }
+      ],
+      "extensions": [
+        "5 days ago",
+        "Full-time",
+        "No degree mentioned"
+      ],
+      "detected_extensions": {
+        "posted_at": "5 days ago",
+        "schedule": "Full-time",
+        "no_degree_mentioned": true
+      },
+      "apply_link": "https://careers.buffalowildwings.com/manager/job/AA5802C8E8159702E04FB36F49C0401F?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+      "apply_links": [
+        {
+          "link": "https://careers.buffalowildwings.com/manager/job/AA5802C8E8159702E04FB36F49C0401F?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Buffalo Wild Wings"
+        },
+        {
+          "link": "https://www.ziprecruiter.com/c/Buffalo-Wild-Wings/Job/Manager/-in-Farmville,VA?jid=649caa6353aaf38e&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "ZipRecruiter"
+        },
+        {
+          "link": "https://jooble.org/jdp/8117670716792852782?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Jooble"
+        },
+        {
+          "link": "https://www.tealhq.com/job/manager_e1e61ace-dd7e-493b-a3ed-f5a1a753d15a?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Teal"
+        }
+      ],
+      "sharing_link": "https://www.google.com/search?ibp=htl;jobs&q=restaurant+managers+united+states&htidocid=_eDBhhsrrIqfgmbhAAAAAA%3D%3D&hl=en-US&shndl=37&shmd=H4sIAAAAAAAA_xXEsQrCMBAAUFz7CQ5y4CaaiOCikw4KgquO5RKvaeSaC7konf1y9Q2v-Uya2RUTBiqwgos4UMLie5AEZ5HANN33tWbdWavKJmjFGr3xMlhJ5GS0T3H6r9UeC2XGSu1mux5NTmExP766DlngHvnxKwWFmOCEZXhHZlrC7fAFqs8gSYUAAAA&shmds=v1_AQbUm96wSl-irECu7uEiyAyBg7yO6Zm4NvVXerHuncKMqpNV_Q&shem=vidc&source=sh/x/job/li/m1/1#fpstate=tldetail&htivrt=jobs&htiq=restaurant+managers+united+states&htidocid=_eDBhhsrrIqfgmbhAAAAAA%3D%3D",
+      "thumbnail": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAMAAACfWMssAAAA8FBMVEX///8AAAD/0wAfGRv/3QD/2gD/4gD/0QD/3wAAABv/6AD/5QAAAB3/6wD/1QAfGRkAABe/v7/i4eEAAAb5+PjYxwLPvQbz8vL/7wDHxsYAAAz54AAyLBbPzs7X1td1cnQhHSdST1KurK0lHyRhUxGnjw26ogqAbRElHhCXlJVnZGQrJRSxnw9dUhYyLjKajRFxYBX/9gDewgCklwPQtQsPAA+KfQhPRgB4d4I+PlNfWhRKSEeGhodHOQDe0QA+MxdGPhZzYAAeDQAWERpBPksiITUqGwDrzwA1MD+zqgs+Oz5RRRIxIBp3bhQ5JwASAABCPX6NAAACj0lEQVRIie2VXXOaQBSGOQusy7dBWQU0+G1VAiQaaqo1JqS1iU38//+mi7TT5CKrucyM7wUzh9ln3neWcw6CcNJJn11203Wb59UPUm7QqkCucrvzAdbtgtfrU8ehg+EXgNGRaG0Mk9A3JFlCMq7XnQvoNo/h7KgSawSVsJNcXoXTcGbQCXSO4LrXVEMI4VBPvyrzm3Jsyv43GB3MGV2vJMZp6XzRGtWW31d1hEw1gbMD4BhozsnhTS2whaC16N4SVqtrqHE5F+I8JyJ3Z7WaYNuCW16ZrDY33pgLdidqziF5Nt/Xy/uVvH+hxXDONQxJAa4iFs1eQOrva1TyuZaBh9kZxtFyloNV+2GtmXtSTTxOH7R6LKmEsaZX2nltL7PtdIPztOYM3Hc5u9InCA/S/lTfje0qSw5ipigJ1dhN+5wv0gRq4p5eeSiL4g6iRVvcq6zcDmSEOaALjjQow3K5E1/Jsiylh0vGPRck8Y+mANYbkHkmpFT/yQMpcwyinWi9MbT0KUEqJ+o5DKRNtPxryIA9xSprYyLCAaveUPVvIT9foLtdpCuiqKQaMh1eny8mGrlQ/gWFKJj/epzqljKQEO6D/T7YYdc6W2dKTlrXndFN6hM11pWUlIzJ0/ucUIWeal5e9JJYsbKtPlzlHYgdfY1lyt8CI6AyTjYq1bPfBtlPWOlyq/tIbWQ8TqhmDR9hE8nJelDMk1l/1jeymh5aAU1I8j4PxdQo5svZ6lTCjxDwuTxsopqb5/SqMJTjNNa0R2gf3q0jWK80QgqOmRON5WzzN06hDnixrxbji0xi0AYEx+1yuw3ekPpqvW4QJ25Admg1/ldz7LEfzsvLjj2fjtjir1Rzzwpx+uykkz6F/gB8I0JmtPoN+AAAAABJRU5ErkJggg=="
+    },
+    {
+      "position": 10,
+      "title": "Restaurant General Manager (MA/RI)",
+      "company_name": "Desert de Oro Foods, Inc.",
+      "location": "Fall River, MA",
+      "via": "via LinkedIn",
+      "description": "“You are applying for work with a franchisee of Taco Bell, not Taco Bell Corp. or any of its affiliates. If hired, the franchisee will be your only employer. Franchisees are independent business owners who set their own wage and benefit programs that can vary among franchisees.”\n\nThe Taco Bell Restaurant General Manager is the leader of the TEAM who establishes the tone of the work environment, and the level of customer hospitality. You are responsible for the operation of the entire restaurant and building a strong team that consistently provides customers great food and a friendly experience. Key responsibilities include finding, hiring and developing employees, conducting new hire orientation and developing the training plan for each new hire. You’re also responsible for scheduling and deploying the Team correctly, addressing performance issues, assisting in the resolution of customer issues and managing the restaurant budget and financial plans. A successful candidate will have strong leadership and communication skills, a track record of people development, and a positive attitude. If you want to build a great career, Taco Bell is the place to learn, grow and succeed!\n\nJob Requirements And Essential Functions\n• High School Diploma or GED, College or University Degree preferred\n• 2-4 years supervisory experience in either a food service or retail environment, including Profit and Loss responsibility\n• Basic personal computer literacy\n• Strong preference for internal promote from Assistant General Manager position\n• Must be at least 21 years old\n• Must pass background check criteria and drug test\n• Must have reliable transportation\n• Basic business math and accounting skills, and strong analytical/decision-making skills\n• Able to sweep and mop floors, dust shelves and lift and carry out trash containers and place in an outside bin\n• Able to clean the parking lot and grounds surrounding the restaurant\n• Able to tolerate standing, walking, lifting up to 50 lbs. and stooping during 80% of shift time\n\nAlready applied? Go to TalentReef to see your application",
+      "job_highlights": [
+        {
+          "title": "Qualifications",
+          "items": [
+            "A successful candidate will have strong leadership and communication skills, a track record of people development, and a positive attitude",
+            "2-4 years supervisory experience in either a food service or retail environment, including Profit and Loss responsibility",
+            "Basic personal computer literacy",
+            "Strong preference for internal promote from Assistant General Manager position",
+            "Must be at least 21 years old",
+            "Must pass background check criteria and drug test",
+            "Must have reliable transportation",
+            "Basic business math and accounting skills, and strong analytical/decision-making skills",
+            "Able to sweep and mop floors, dust shelves and lift and carry out trash containers and place in an outside bin",
+            "Able to clean the parking lot and grounds surrounding the restaurant",
+            "Able to tolerate standing, walking, lifting up to 50 lbs",
+            "and stooping during 80% of shift time"
+          ]
+        },
+        {
+          "title": "Responsibilities",
+          "items": [
+            "You are responsible for the operation of the entire restaurant and building a strong team that consistently provides customers great food and a friendly experience",
+            "Key responsibilities include finding, hiring and developing employees, conducting new hire orientation and developing the training plan for each new hire",
+            "You’re also responsible for scheduling and deploying the Team correctly, addressing performance issues, assisting in the resolution of customer issues and managing the restaurant budget and financial plans"
+          ]
+        }
+      ],
+      "extensions": [
+        "7 days ago",
+        "Full-time"
+      ],
+      "detected_extensions": {
+        "posted_at": "7 days ago",
+        "schedule": "Full-time"
+      },
+      "apply_link": "https://www.linkedin.com/jobs/view/restaurant-general-manager-ma-ri-at-desert-de-oro-foods-inc-4219566265?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+      "apply_links": [
+        {
+          "link": "https://www.linkedin.com/jobs/view/restaurant-general-manager-ma-ri-at-desert-de-oro-foods-inc-4219566265?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "LinkedIn"
+        },
+        {
+          "link": "https://www.breakroom.cc/en-us/jobs/listing/123527-taco-bell-restaurant-general-manager-ma-ri-195-mariano?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Breakroom"
+        },
+        {
+          "link": "https://www.theladders.com/job-listing/3178887808795513231/restaurant-general-manager-ma-ri.htm?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Ladders"
+        },
+        {
+          "link": "https://jobs.vetjobs.org/fall-river-ma/restaurant-general-manager-mari/AB36D8B084AD4C4DBDCD3ACBF96072EB/job/?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Jobs | VetJobs"
+        },
+        {
+          "link": "https://www.talentify.io/job/restaurant-general-manager-mari-fall-river-massachusetts-us-taco-bell-10579144?utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Talentify"
+        },
+        {
+          "link": "https://jobabstracts.com/Job/Single/?id1=125992399&hash=167153049073103131226007074028008054253142143089202196056240197220182021029182155243034140142001061011084030051204099251228001099040033028014093&qs=0&distance=1.6768&utm_campaign=google_jobs_apply&utm_source=google_jobs_apply&utm_medium=organic",
+          "source": "Job Abstracts"
+        }
+      ],
+      "sharing_link": "https://www.google.com/search?ibp=htl;jobs&q=restaurant+managers+united+states&htidocid=er8kBiuSz1rHJA0PAAAAAA%3D%3D&hl=en-US&shndl=37&shmd=H4sIAAAAAAAA_xXMzQqCQBAAYLr6CJ3m2I_tRtChOgmhGEjgC8iow2psM7KzhS_Ue1aX7_gln0VyqkkjvgJyhIKYAnqokNFRgFWV2bpcww5u0oIShm4AYShEnKflZYhx0rO1qt643xLHznTytMLUymwf0uqfRgcMNHmM1ByO-9lM7DbbKymFCD3BPQjkIr2mUHJnYGTI0XuoxzeFFKrsC19z11-oAAAA&shmds=v1_AQbUm96Jq88zkPbxiHbnaKuAbZG1qGuu4IBtTtTLsIZDMP6Kvg&shem=vidc&source=sh/x/job/li/m1/1#fpstate=tldetail&htivrt=jobs&htiq=restaurant+managers+united+states&htidocid=er8kBiuSz1rHJA0PAAAAAA%3D%3D",
+      "thumbnail": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAMAAACfWMssAAAAYFBMVEX////p6enQ0NDT09MAAADf39+2trb7+/vMzMyNjY339/fv7++vr6/W1tbz8/PDw8OZmZmjo6N/f3+Tk5M4ODh3d3dra2tiYmJKSkpERERdXV0lJSVwcHBUVFSGhoa9vb3QomAvAAABWklEQVRIie2SyW7DMAxEaclaqH2JnTSL/f9/WSpxl4OLtD3loAcBFqkZgB4JoNPpdF4Hr/5li6f6Jv5isD4029kBqFMGFX/l8gmzTkkfRpknBCjnwxWfugReahxAyctITIxabizC7jjFF3Eax8M1a3cbx1ORQzseSmoBKbRUKMIoY0yglveebehHhtwPO7PoVW7QxpGCI4bvuVALcX0UcnFbWy1Vf0i2qMhcTIo2xZC0qDWDQcAgkwKRwfkUZQ0QKgBDIZDZNJO2GQVgzUe2MMy36BlvxnWdUULUIOSiElQI5xwKLAsUqvxyNzaY03p23K2COTCzngNGAeYqrgphig5sonuheXyReub6SMbQouABmAEWDM1HQXtKs92EcgYsKZqs5XNf3JKw3TfnjH2ux5czrRinv+NW8FZu7UYrObMtxl1A84hSDGH/2Pz8hoxRQflnL63T6XRem3diHBBVf+2UqQAAAABJRU5ErkJggg=="
+    }
+  ],
+  "pagination": {
+    "next_page_token": "eyJmYyI6IkV1SURDcUlEUVVFdFMxUm9aRmRQYlVaalprUmlNVGRrVlY5cVFXdGFVbmR0U1VaMlJWVllhbVpuV25CaWVHWjJiMWRpVG5OemFuQkZVMG8zVHpsVWFHOVBUR0pFYVd4VlExQmlSblZOY1haelZYSnRja1pqWkdWMVpWbEJVM2RXTFZoWGJFVk9PVmsyUjFkNlpXUlVTWEEzUjFSMFdIZEdhSHA2TVZsdFkyMXBlVkJvUm5relZXWTNURTlxZUdwQ05XUnBOa1poVlRaQk5tbHRVVFZUZUdocVUyVnJWa2d3Y1RWelgwNUxVMFYxVFVzM1RtRXlhMmx4ZUhwMFFtUndhMnBmVW1sM00yVnRZMWcwZFU5SmJqSjZTMTlZWXpnM2VrbGlSR2hqTW5Cd01HSmtZMlF4WkZZd1pVbDRYM2x6ZERsVlJ6bDZSUzFKY0ZCelYzbHpWVmxwYkdrMldIZEVSa1ZoUlY5MFJURkdaV1ZtYVhCdmVrTlVjbFI0TTI1UE56bDBkWEUyY1hwZmVFbEVRVk4xTUZGc2VqVjRWV3RZVkZkaE0yWXlXRGxGTnpWSk5VZHVhMjl4VDFKTVoyeFpjMjVHTnpSTmNYaHNRbUpxY3pKaFJGRlRTVGMwUnpOc1lrSlhUR2x5WVhaSmJEZ3hOWEJpUkhOelFuRXhia1JXY25SNE5qaDBRM2hpTkdoc2FsRlpkMFp0YlhoMVVXWXdOa1l5WWs5SlNHb3pSVVJvVjJwSmR4SVhTV0YzWVdGTGJscE1ZVEpGYUdKSlVIbExYM0puVVRnYUlrRkRSRmhNTkcxamJFTXhTMFpmVTA5cVltbENaMmhSYXpGa1RtNVlaR0poTjJjIiwiZmN2IjoiMyIsImVpIjoiSWF3YWFLblpMYTJFaGJJUHlLX3JnUTgiLCJnbCI6InVzIiwiaGwiOiJlbiIsInVkbSI6OCwiYXN5bmMiOiJfYmFzZWpzOiUyRnhqcyUyRl8lMkZqcyUyRmslM0R4anMucy5lbi5xa1dWbUxZMWEyYy4yMDE4Lk8lMkZhbSUzREFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBSUFBQUFBQUFBQUFBQUJBQUFGQVFBQVFBQUFBQUFBQUFDQUFDQUFBQUFBQUFCQUFBQUFBQUFHQkFBQWlDQkFBQUFBQUFJQUFBQUFBQUFEQUNBQUFJbEFBQUtBQUFBQUFBQUFBQWhBQUFBUUFBQUFBSWlBRDR2ejhaQUFBQUFBQUFBQVFBQUFBQUFJQUFJQUVBQUFBQUFBQUE0QUlBRURZR0FId0kyUVVJQUFBQUFBQUFBQUFBQWdBQUFBQUFBQVFBQUFBQUFBQUlBQUFBb0FBQUFBQUFBQUFBQUFnQUFBQUFBQUFBQUFRQUFBQUNBQUFFQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQURBQUFBQlFBUUFBX0FBQUFBQUNBQXdBQUFDUUFBQUFBSEJFRlFnQUFBQUFBQUlBOEFEd2V3Q0VGQlFBQUFBQUFBQUFBQUFBQUFDQUFCY0VjU0w4Z1FBQUFBQUFBQUFBQUFBQUFBQUFBQUVDS29JbTFCZ0FJJTJGZGclM0QwJTJGYnIlM0QxJTJGcnMlM0RBQ1Q5MG9GR3FJQlVRQjhTMEtmbWV0QmJaaEJCU0wyaXZnJTNGY2IlM0Q3Mjk0OTk0OCxfYmFzZWNzczolMkZ4anMlMkZfJTJGc3MlMkZrJTNEeGpzLnMuU3p6RVUtZE9McU0uTC5CMS5PJTJGYW0lM0RBSVJUa1NBRUFBQUFCQUFBQUNFQVVBRVFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBRUFDQUFBQUlBQUJRQUFBQUNBQUFBQUFnQkFBd0tDTUFnQUFBQ0E0QVFCU0FBQUFBT0FEQk9CVUFZQUFBQUFBQUFpQUJBQUFBQUFBQUFBZ0FJQUFBS0FDQWdBQWtnQUFJQUFBQVVJSUJBQUlBQUN3QVFBQWtBZ0FnU0FBQUVBUlVBQUFaQUFBQUFCQUFBQWdHNEJZQUFBSUFBQVlBQUE0QUFJQUFEWUFBSHdJaFFWQUFBQUFvQVFCQUFBQUFBQUFCUUFBQUFRQUFFQUVBR0VJd2dBSXFBQXdRSTRBQUFBQUFCRUFRRUFBQUFBQUFnQUtBWUFHQUNnQ0FBUUlBRHdBRUlBUEFBQUFnQVFBSWdBQUJJQUJDQUFRQUJRQ0FBSUFEd0FFQUFBQWtBQUFBQXdBQUJNQUhCRUZRZ0FBQUFBQUFBQWtBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFLQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUklMkZiciUzRDElMkZycyUzREFDVDkwb0VnTXl1SDJSZHBIdG5CNXhqWEdaWjBhQ1dORkElM0ZjYiUzRDcyOTQ5OTQ4LF9iYXNlY29tYjolMkZ4anMlMkZfJTJGanMlMkZrJTNEeGpzLnMuZW4ucWtXVm1MWTFhMmMuMjAxOC5PJTJGY2slM0R4anMucy5TenpFVS1kT0xxTS5MLkIxLk8lMkZhbSUzREFJUlRrU0FFQUFBQUJBQUFBQ0VBVUFFUUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFFQUNBQUFBSUFBQlFBQUFBQ0FBQUJBQWdGQVF3S1NNQWdBQUFDQTRDUUJTQUFBQUFPQURCT0JVQVlBQUFHQkFBQWlDQkFBQUFBQUFJQUFnQUlBQUFMQUNBZ0FJbGdBQUtBQUFBVUlJQkFBSWhBQ3dBUUFBa0FnSWlTRDR2MzhaVUFBQVpBQUFBQVJBQUFBZ0c0QllJQUVJQUFBWUFBQTQ0QUlBRURZR0FId0kzUVZJQUFBQW9BUUJBQUFBQWdBQUJRQUFBQVFBQUVBRUFHRUl3Z0FJcUFBd1FJNEFBQUFBQUJrQVFFQUFBQUFBQWdRS0FZQUdBQ2dHQUFRSUFEd0FFSUFQQUFBQWdBUUFJZ0FBQklBQkRBQVFBQlFDUUFJX0R3QUVBQUNBa3dBQUFDd0FBQk1BSEJFRlFnQUFBQUFBQUlBOEFEd2V3Q0VGQlFBQUFBQUFBQUFBQUFBQUFDQUFCY0VjU0w4Z1FBQUFBQUFBQUFBQUFBQUFBQUFBQUVDS29JbTFCZ0FJJTJGZCUzRDElMkZlZCUzRDElMkZkZyUzRDAlMkZiciUzRDElMkZ1amclM0QxJTJGcnMlM0RBQ1Q5MG9FWEdLR0hKaXhLUF9XZVQzMm85aGNqajVKWTRnJTNGY2IlM0Q3Mjk0OTk0OCxfZm10OnByb2csX2lkOmZjX0lhd2FhS25aTGEyRWhiSVB5S19yZ1E4XzIifQ=="
+  }
+}

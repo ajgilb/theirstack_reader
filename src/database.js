@@ -6,17 +6,51 @@
 import pg from 'pg';
 const { Pool } = pg;
 
-// Database configuration - using individual Supabase environment variables
-// These should be set in the Apify environment variables
-const supabaseUser = process.env.SUPABASE_USER;
-const supabasePassword = process.env.SUPABASE_PASSWORD;
-const supabaseHost = process.env.SUPABASE_HOST;
-const supabasePort = process.env.SUPABASE_PORT;
-const supabaseDatabase = process.env.SUPABASE_DATABASE;
+// Database configuration - using Supabase direct connection
+// The service role key should be set in the Apify environment variables
+const supabaseUrl = process.env.SUPABASE_URL || 'https://mbaqiwhkngfxxmlkionj.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Build connection string from environment variables or use DATABASE_URL if provided
-const connectionString = process.env.DATABASE_URL ||
-    `postgresql://${supabaseUser}:${encodeURIComponent(supabasePassword)}@${supabaseHost}:${supabasePort}/${supabaseDatabase}`;
+// Build connection string - try multiple formats to increase chances of success
+let connectionString;
+
+if (process.env.DATABASE_URL) {
+    // Use the provided DATABASE_URL if available
+    connectionString = process.env.DATABASE_URL;
+    console.info('Using provided DATABASE_URL environment variable');
+} else if (supabaseKey) {
+    // Try to construct a connection string using the service role key
+    // Format: postgresql://postgres.[SERVICE_ROLE_KEY]@[HOST]:5432/postgres
+
+    // Extract the project reference from the URL
+    const projectRef = supabaseUrl.replace('https://', '').replace('.supabase.co', '');
+
+    // Try different host formats
+    const hosts = [
+        `db.${projectRef}.supabase.co`,  // Direct connection with db prefix
+        `${projectRef}.supabase.co`,     // Direct connection without db prefix
+        'aws-0-us-west-1.pooler.supabase.com' // Connection pooling
+    ];
+
+    // Use the first host by default
+    connectionString = `postgresql://postgres.${supabaseKey}@${hosts[0]}:5432/postgres`;
+    console.info(`Constructed connection string using service role key and host: ${hosts[0]}`);
+} else {
+    // Fall back to individual connection parameters if available
+    const supabaseUser = process.env.SUPABASE_USER;
+    const supabasePassword = process.env.SUPABASE_PASSWORD;
+    const supabaseHost = process.env.SUPABASE_HOST;
+    const supabasePort = process.env.SUPABASE_PORT || '5432';
+    const supabaseDatabase = process.env.SUPABASE_DATABASE || 'postgres';
+
+    if (supabaseUser && supabasePassword && supabaseHost) {
+        connectionString = `postgresql://${supabaseUser}:${encodeURIComponent(supabasePassword)}@${supabaseHost}:${supabasePort}/${supabaseDatabase}`;
+        console.info('Constructed connection string using individual Supabase parameters');
+    } else {
+        connectionString = null;
+        console.error('No database connection parameters available');
+    }
+}
 
 let pool = null;
 
