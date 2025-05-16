@@ -998,6 +998,8 @@ async function insertJobsIntoDatabase(jobs) {
                                 }
                             }
                         }
+                    } catch (error) {
+                        console.error('Error creating or checking contacts table:', error);
                     }
 
                     try {
