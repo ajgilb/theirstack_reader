@@ -451,7 +451,7 @@ try {
         // Default is true, but we'll force it to true below
         includeHunterData = true,
         // Read testMode from input
-        testMode = false
+        testMode = true
     } = input;
 
     // Store queries in job stats
