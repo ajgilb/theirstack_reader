@@ -14,10 +14,50 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 // Build connection string - try multiple formats to increase chances of success
 let connectionString;
 
+// Extract the project reference from the URL
+const projectRef = supabaseUrl.replace('https://', '').replace('.supabase.co', '');
+
+// Define alternative connection strings to try
+const dbUser = 'google_scraper';
+const dbPassword = 'Relham12?';
+const poolerIp = '52.8.172.168'; // Resolved IP for aws-0-us-west-1.pooler.supabase.com
+const poolerPort = '6543';
+
+// Define alternative connection strings to try
+const alternativeConnections = [
+    // Working connection string with pooler IP and project reference in username (first priority)
+    `postgresql://${dbUser}.${projectRef}:${encodeURIComponent(dbPassword)}@${poolerIp}:${poolerPort}/postgres`,
+
+    // Pooler with hostname instead of IP (second priority)
+    `postgresql://${dbUser}.${projectRef}:${encodeURIComponent(dbPassword)}@aws-0-us-west-1.pooler.supabase.com:${poolerPort}/postgres`,
+
+    // Direct database with IP address (third priority)
+    `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@34.102.106.226:5432/postgres?family=4`,
+
+    // Original hostname (fourth priority)
+    `postgresql://${dbUser}:${encodeURIComponent(dbPassword)}@db.${projectRef}.supabase.co:5432/postgres?family=4`
+];
+
+console.info('Available connection options:');
+alternativeConnections.forEach((option, index) => {
+    console.info(`- Option ${index + 1}: ${option.replace(/:[^:@]+@/, ':***@')}`);
+});
+
 if (process.env.DATABASE_URL) {
     // Use the provided DATABASE_URL if available
     connectionString = process.env.DATABASE_URL;
     console.info('Using provided DATABASE_URL environment variable');
+
+    // Add ?family=4 to force IPv4 if not already present
+    if (!connectionString.includes('family=4')) {
+        connectionString += connectionString.includes('?') ? '&family=4' : '?family=4';
+        console.info('Added family=4 parameter to force IPv4 connections');
+    }
+
+    // Add the current connection string to the list of alternatives
+    if (!alternativeConnections.includes(connectionString)) {
+        alternativeConnections.unshift(connectionString);
+    }
 } else if (supabaseKey) {
     // Try to construct a connection string using the service role key
     // Format: postgresql://postgres.[SERVICE_ROLE_KEY]@[HOST]:5432/postgres
@@ -25,16 +65,21 @@ if (process.env.DATABASE_URL) {
     // Extract the project reference from the URL
     const projectRef = supabaseUrl.replace('https://', '').replace('.supabase.co', '');
 
-    // Try different host formats
+    // Try different host formats with IPv4 forced
     const hosts = [
         `db.${projectRef}.supabase.co`,  // Direct connection with db prefix
         `${projectRef}.supabase.co`,     // Direct connection without db prefix
         'aws-0-us-west-1.pooler.supabase.com' // Connection pooling
     ];
 
-    // Use the first host by default
-    connectionString = `postgresql://postgres.${supabaseKey}@${hosts[0]}:5432/postgres`;
-    console.info(`Constructed connection string using service role key and host: ${hosts[0]}`);
+    // Use the first host by default with family=4 to force IPv4
+    connectionString = `postgresql://postgres.${supabaseKey}@${hosts[0]}:5432/postgres?family=4`;
+    console.info(`Constructed connection string using service role key and host: ${hosts[0]} (IPv4 forced)`);
+
+    // Add this connection string to the alternatives if not already there
+    if (!alternativeConnections.includes(connectionString)) {
+        alternativeConnections.unshift(connectionString);
+    }
 } else {
     // Fall back to individual connection parameters if available
     const supabaseUser = process.env.SUPABASE_USER;
@@ -44,11 +89,17 @@ if (process.env.DATABASE_URL) {
     const supabaseDatabase = process.env.SUPABASE_DATABASE || 'postgres';
 
     if (supabaseUser && supabasePassword && supabaseHost) {
-        connectionString = `postgresql://${supabaseUser}:${encodeURIComponent(supabasePassword)}@${supabaseHost}:${supabasePort}/${supabaseDatabase}`;
-        console.info('Constructed connection string using individual Supabase parameters');
+        connectionString = `postgresql://${supabaseUser}:${encodeURIComponent(supabasePassword)}@${supabaseHost}:${supabasePort}/${supabaseDatabase}?family=4`;
+        console.info('Constructed connection string using individual Supabase parameters (IPv4 forced)');
+
+        // Add this connection string to the alternatives if not already there
+        if (!alternativeConnections.includes(connectionString)) {
+            alternativeConnections.unshift(connectionString);
+        }
     } else {
-        connectionString = null;
-        console.error('No database connection parameters available');
+        // Use the first alternative connection as default
+        connectionString = alternativeConnections[0];
+        console.info(`No database parameters available. Using first alternative connection: ${connectionString.replace(/:[^:@]+@/, ':***@')}`);
     }
 }
 
@@ -59,24 +110,16 @@ let pool = null;
  * @returns {Promise<boolean>} - True if connection is successful
  */
 async function initDatabase() {
-    // Check if we have all the required database credentials
-    if (!process.env.DATABASE_URL && (!supabaseUser || !supabasePassword || !supabaseHost || !supabasePort || !supabaseDatabase)) {
-        console.error('Missing database credentials. Please set DATABASE_URL or all SUPABASE_* environment variables.');
-        return false;
-    }
-
+    // Check if we have a connection string
     if (!connectionString) {
         console.error('No database connection string available');
         return false;
     }
 
     try {
-        // Log which environment variables are being used
+        // Log connection information
         console.info('Using Supabase configuration:');
-        console.info(`- Host: ${supabaseHost || 'Not set (using DATABASE_URL)'}`);
-        console.info(`- Port: ${supabasePort || 'Not set (using DATABASE_URL)'}`);
-        console.info(`- Database: ${supabaseDatabase || 'Not set (using DATABASE_URL)'}`);
-        console.info(`- User: ${supabaseUser || 'Not set (using DATABASE_URL)'}`);
+        console.info(`- Connection string: ${connectionString.replace(/:[^:@]+@/, ':***@')}`);
         // Don't log the password for security reasons
 
         // Log a sanitized version of the connection string for debugging
@@ -955,7 +998,9 @@ async function insertJobsIntoDatabase(jobs) {
                                 }
                             }
                         }
-                    } else {
+                    }
+
+                    try {
                         // Check the actual schema of the table
                         const columnInfo = await client.query(`
                             SELECT column_name, data_type, character_maximum_length
@@ -970,7 +1015,7 @@ async function insertJobsIntoDatabase(jobs) {
                             console.info(`- ${col.column_name}: ${col.data_type}${col.character_maximum_length ? `(${col.character_maximum_length})` : ''}`);
                         });
                     } catch (error) {
-                        console.error('Error creating or checking contacts table:', error);
+                        console.error('Error checking contacts table schema:', error);
                     }
 
                     for (const email of job.emails) {
