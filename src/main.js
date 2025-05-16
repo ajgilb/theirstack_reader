@@ -691,12 +691,20 @@ try {
 
     // Send completion email
     try {
-        console.log('Sending completion email...');
+        console.log('\n=== SENDING COMPLETION EMAIL ===');
+        console.log('Email configuration:');
+        console.log(`- Test mode: ${testMode}`);
+        console.log(`- Job stats: ${jobStats.processedCount} jobs processed, ${jobStats.newJobs.length} new, ${jobStats.skippedDuplicateJobs.length} duplicates, ${jobStats.skippedExcludedJobs.length} excluded`);
+
         // Pass the testMode parameter to the email function
         const emailSent = await sendCompletionEmail(jobStats, testMode);
         console.log(`Email sending ${emailSent ? 'successful' : 'failed'}`);
+        console.log('=== END OF EMAIL SENDING ===\n');
     } catch (emailError) {
-        console.error('Error sending completion email:', emailError.message);
+        console.error('Error sending completion email:', emailError);
+        if (emailError.stack) {
+            console.error('Stack trace:', emailError.stack);
+        }
     }
 
     await Actor.exit();

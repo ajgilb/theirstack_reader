@@ -18,12 +18,24 @@ let resend = null;
  * @returns {boolean} - True if initialization was successful
  */
 function initEmailClient() {
+    console.log('Initializing email client...');
+
+    // Check for RESEND_API_KEY
     const apiKey = process.env.RESEND_API_KEY;
 
     if (!apiKey) {
         console.error('RESEND_API_KEY environment variable not found. Email functionality will be disabled.');
+        console.error('Please set the RESEND_API_KEY environment variable in the Apify console.');
         return false;
     }
+
+    if (apiKey.trim() === '') {
+        console.error('RESEND_API_KEY is empty. Email functionality will be disabled.');
+        console.error('Please set a valid RESEND_API_KEY in the Apify console.');
+        return false;
+    }
+
+    console.log(`RESEND_API_KEY found (length: ${apiKey.length})`);
 
     try {
         resend = new Resend(apiKey);
@@ -31,6 +43,9 @@ function initEmailClient() {
         return true;
     } catch (error) {
         console.error('Failed to initialize email client:', error.message);
+        if (error.stack) {
+            console.error('Stack trace:', error.stack);
+        }
         return false;
     }
 }
@@ -188,7 +203,11 @@ function generateEmailHtml(stats, testMode = false) {
  * @returns {Promise<boolean>} - True if email was sent successfully
  */
 async function sendCompletionEmail(stats, testMode = false) {
+    console.log('Starting sendCompletionEmail function...');
+
+    // Initialize email client if not already initialized
     if (!resend) {
+        console.log('Email client not initialized yet, initializing now...');
         const initialized = initEmailClient();
         if (!initialized) {
             console.error('Failed to initialize email client. Cannot send completion email.');
@@ -199,12 +218,16 @@ async function sendCompletionEmail(stats, testMode = false) {
     // Format date for subject
     const today = formatDatePST(new Date()).split(',')[0];
     const subject = `${EMAIL_SUBJECT_PREFIX} ${today}${testMode ? ' [TEST MODE]' : ''}`;
+    console.log(`Email subject: "${subject}"`);
 
     // Generate email content
+    console.log('Generating email HTML content...');
     const html = generateEmailHtml(stats, testMode);
+    console.log(`Generated HTML content (length: ${html.length} characters)`);
 
     // Determine recipients based on test mode
     const recipients = testMode ? ['aj@chefsheet.com'] : RECIPIENTS;
+    console.log(`Recipients: ${recipients.join(', ')}`);
 
     if (testMode) {
         console.log('Running in TEST MODE - email will only be sent to aj@chefsheet.com');
@@ -215,14 +238,20 @@ async function sendCompletionEmail(stats, testMode = false) {
 
     for (const recipient of recipients) {
         try {
-            console.log(`Sending completion email to ${recipient}...`);
+            console.log(`Preparing to send email to ${recipient}...`);
 
-            const { data, error } = await resend.emails.send({
+            // Create email payload
+            const emailPayload = {
                 from: FROM_EMAIL,
                 to: recipient,
                 subject: subject,
                 html: html
-            });
+            };
+            console.log(`Email payload prepared for ${recipient}`);
+
+            // Send the email
+            console.log(`Sending email to ${recipient} via Resend API...`);
+            const { data, error } = await resend.emails.send(emailPayload);
 
             if (error) {
                 console.error(`Failed to send email to ${recipient}:`, error);
@@ -231,11 +260,15 @@ async function sendCompletionEmail(stats, testMode = false) {
                 console.log(`Successfully sent email to ${recipient} (ID: ${data.id})`);
             }
         } catch (error) {
-            console.error(`Exception sending email to ${recipient}:`, error.message);
+            console.error(`Exception sending email to ${recipient}:`, error);
+            if (error.stack) {
+                console.error(`Stack trace: ${error.stack}`);
+            }
             allSuccessful = false;
         }
     }
 
+    console.log(`Email sending complete. Overall success: ${allSuccessful}`);
     return allSuccessful;
 }
 
