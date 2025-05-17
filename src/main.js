@@ -502,6 +502,13 @@ try {
         // Set database connection environment variables
         if (databaseUrl) {
             console.log(`Using provided database URL: ${databaseUrl.substring(0, 20)}...`);
+
+            // Ensure the URL has the correct format for query parameters
+            if (databaseUrl.includes('&family=4') && !databaseUrl.includes('?family=4')) {
+                databaseUrl = databaseUrl.replace('&family=4', '?family=4');
+                console.log('Fixed database URL format for query parameters');
+            }
+
             process.env.DATABASE_URL = databaseUrl;
         } else if (!process.env.DATABASE_URL) {
             // Use the new database user credentials
@@ -530,6 +537,12 @@ try {
             process.env.DATABASE_URL = connectionOptions[0];
         } else {
             console.log('Using environment DATABASE_URL variable.');
+
+            // Ensure the URL has the correct format for query parameters
+            if (process.env.DATABASE_URL.includes('&family=4') && !process.env.DATABASE_URL.includes('?family=4')) {
+                process.env.DATABASE_URL = process.env.DATABASE_URL.replace('&family=4', '?family=4');
+                console.log('Fixed environment DATABASE_URL format for query parameters');
+            }
         }
 
         // Initialize the database connection

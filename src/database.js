@@ -132,8 +132,17 @@ async function initDatabase() {
         let dbConfig = {};
 
         try {
+            // Fix common URL format issues
+            let fixedConnectionString = connectionString;
+
+            // Fix &family=4 to ?family=4 if it's the first parameter
+            if (fixedConnectionString.includes('/postgres&family=4')) {
+                fixedConnectionString = fixedConnectionString.replace('/postgres&family=4', '/postgres?family=4');
+                console.info('Fixed connection string format: replaced &family=4 with ?family=4');
+            }
+
             // Parse the connection string - handle query parameters properly
-            const url = new URL(connectionString);
+            const url = new URL(fixedConnectionString);
             const database = url.pathname.substring(1); // Remove leading slash
 
             // Extract query parameters if any
