@@ -1109,7 +1109,52 @@ async function insertJobsIntoDatabase(jobs) {
     }
 }
 
+/**
+ * Fetches all existing job title + company combinations from the database
+ * @returns {Promise<Map>} - Map of title+company combinations that already exist
+ */
+async function fetchExistingJobs() {
+    if (!pool) {
+        console.error('Database not initialized');
+        return new Map();
+    }
+
+    try {
+        console.info('Fetching existing job title + company combinations from database...');
+
+        const client = await pool.connect();
+        try {
+            const query = `
+                SELECT title, company
+                FROM culinary_jobs_google
+            `;
+
+            const result = await client.query(query);
+            console.info(`Found ${result.rows.length} existing jobs in database`);
+
+            // Create a Map for efficient lookups
+            const existingJobs = new Map();
+
+            for (const row of result.rows) {
+                // Use title+company as the key
+                const key = `${row.title.toLowerCase()}|${row.company.toLowerCase()}`;
+                existingJobs.set(key, true);
+            }
+
+            console.info(`Created lookup map with ${existingJobs.size} entries`);
+            return existingJobs;
+
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error('Error fetching existing jobs:', error);
+        return new Map();
+    }
+}
+
 export {
     initDatabase,
-    insertJobsIntoDatabase
+    insertJobsIntoDatabase,
+    fetchExistingJobs
 };

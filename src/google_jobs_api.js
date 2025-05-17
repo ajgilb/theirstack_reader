@@ -111,12 +111,14 @@ async function searchJobs(query, location = '', nextPageToken = null) {
  * @param {string} query - The search query
  * @param {string} location - Optional location filter
  * @param {number} maxPages - Maximum number of pages to fetch (default: 5)
+ * @param {Map} existingJobs - Optional map of existing job title+company combinations
  * @returns {Promise<Array>} - All job listings
  */
-async function searchAllJobs(query, location = '', maxPages = 5) {
+async function searchAllJobs(query, location = '', maxPages = 5, existingJobs = null) {
     let allJobs = [];
     let nextPageToken = null;
     let currentPage = 0;
+    let skippedExistingJobs = 0;
 
     do {
         currentPage++;
@@ -128,7 +130,37 @@ async function searchAllJobs(query, location = '', maxPages = 5) {
             break;
         }
 
-        allJobs = [...allJobs, ...result.jobs];
+        // If we have a map of existing jobs, filter out jobs that already exist
+        if (existingJobs && existingJobs.size > 0) {
+            const newJobs = [];
+
+            for (const job of result.jobs) {
+                // Create a key using title+company
+                const key = `${job.title.toLowerCase()}|${job.company.toLowerCase()}`;
+
+                if (existingJobs.has(key)) {
+                    // Job already exists in database, skip it
+                    console.info(`Skipping existing job: "${job.title}" at "${job.company}" (already in database)`);
+                    skippedExistingJobs++;
+
+                    // Add a flag to indicate this job was skipped due to existing in DB
+                    job._existsInDatabase = true;
+
+                    // Still add to allJobs for tracking purposes
+                    allJobs.push(job);
+                } else {
+                    // Job doesn't exist, add it to the list of new jobs
+                    newJobs.push(job);
+                    allJobs.push(job);
+                }
+            }
+
+            console.info(`Page ${currentPage}: Found ${result.jobs.length} jobs, ${result.jobs.length - newJobs.length} already exist in database`);
+        } else {
+            // No existing jobs map, add all jobs
+            allJobs = [...allJobs, ...result.jobs];
+        }
+
         nextPageToken = result.nextPageToken;
 
         // Add a small delay between requests to avoid rate limiting
@@ -138,7 +170,7 @@ async function searchAllJobs(query, location = '', maxPages = 5) {
 
     } while (nextPageToken && currentPage < maxPages);
 
-    console.info(`Fetched a total of ${allJobs.length} jobs across ${currentPage} pages`);
+    console.info(`Fetched a total of ${allJobs.length} jobs across ${currentPage} pages (${skippedExistingJobs} already exist in database)`);
     return allJobs;
 }
 
@@ -239,11 +271,35 @@ async function processJobsForDatabase(jobs, includeHunterData = false) {
     let excludedByCompany = 0;
     let excludedByFastFood = 0;
     let excludedByRestaurantChain = 0;
+    let skippedExistingCount = 0;
 
     // Process each job sequentially to avoid rate limiting
     const processedJobs = [];
 
     for (const job of jobs) {
+        // Skip jobs that already exist in the database (marked by searchAllJobs)
+        if (job._existsInDatabase) {
+            console.info(`Skipping API calls for existing job: "${job.title}" at "${job.company}" (already in database)`);
+            skippedExistingCount++;
+
+            // Add a basic processed job for tracking purposes
+            const basicProcessedJob = {
+                title: job.title,
+                company: job.company,
+                location: job.location,
+                posted_at: job.posted_at,
+                schedule: job.schedule,
+                description: job.description,
+                apply_link: job.apply_link,
+                source: job.source,
+                scraped_at: new Date().toISOString(),
+                _existsInDatabase: true
+            };
+
+            processedJobs.push(basicProcessedJob);
+            continue;
+        }
+
         // Check if company should be excluded
         const exclusionCheck = shouldExcludeCompany(job.company);
         if (exclusionCheck.isExcluded) {
@@ -267,7 +323,7 @@ async function processJobsForDatabase(jobs, includeHunterData = false) {
         }
 
         // Log jobs that are being kept
-        console.info(`Keeping job: "${job.title}" at "${job.company}"`);
+        console.info(`Processing job: "${job.title}" at "${job.company}"`);
 
         // Extract salary information from description or highlights
         const salaryInfo = extractSalaryInfo(job);
@@ -387,6 +443,7 @@ async function processJobsForDatabase(jobs, includeHunterData = false) {
     }
 
     console.info(`Filtering results: ${excludedCount} jobs excluded (${excludedByCompany} by recruiter list, ${excludedByFastFood} by fast food list, ${excludedByRestaurantChain} by restaurant chain list)`);
+    console.info(`Skipped API calls for ${skippedExistingCount} jobs that already exist in the database`);
     console.info(`Returning ${processedJobs.length} jobs after filtering`);
 
     return processedJobs;

@@ -8,7 +8,11 @@ import { Actor } from 'apify';
 import { searchAllJobs, processJobsForDatabase } from './google_jobs_api.js';
 import { testFunction } from './test.js';
 import { sendCompletionEmail } from './email.js';
-import { initDatabase as importedInitDatabase, insertJobsIntoDatabase as importedInsertJobsIntoDatabase } from './database.js';
+import {
+    initDatabase as importedInitDatabase,
+    insertJobsIntoDatabase as importedInsertJobsIntoDatabase,
+    fetchExistingJobs
+} from './database.js';
 
 // Log test function result
 console.log('Test function result:', testFunction());
@@ -494,43 +498,6 @@ try {
         // In test mode, process enough pages to get our target number of jobs
         // Start with 1 page, but allow up to 3 pages in test mode if needed
         const pagesToProcess = testMode ? 3 : maxPagesPerQuery;
-        console.log(`Searching for jobs with query: "${query}" (${testMode ? 'test mode - up to 3 pages' : `up to ${pagesToProcess} pages`})`);
-
-        // Search for jobs
-        const jobs = await searchAllJobs(query, location, pagesToProcess);
-
-        if (jobs.length === 0) {
-            console.log(`No jobs found for query: "${query}"`);
-            continue;
-        }
-
-        console.log(`Found ${jobs.length} jobs for query: "${query}"`);
-        totalJobsFound += jobs.length;
-
-        // Filter for full-time positions if requested
-        let filteredJobs = jobs;
-        if (fullTimeOnly) {
-            filteredJobs = jobs.filter(job =>
-                job.schedule === 'Full-time' ||
-                (job.extensions && job.extensions.some(ext => ext.includes('Full-time')))
-            );
-            console.log(`Filtered to ${filteredJobs.length} full-time positions out of ${jobs.length} total jobs`);
-        }
-
-        // In test mode, only process a limited number of jobs
-        const jobsToProcess = testMode ? filteredJobs.slice(0, testModeLimit) : filteredJobs;
-        console.log(`Processing ${jobsToProcess.length} jobs${testMode ? ` (test mode - limit: ${testModeLimit})` : ''}`);
-
-        // Log the jobs we're processing
-        if (testMode) {
-            console.log('Jobs being processed:');
-            jobsToProcess.forEach((job, index) => {
-                console.log(`Job #${index + 1}: "${job.title}" at "${job.company}" in "${job.location}"`);
-            });
-        }
-
-        // Initialize database connection early to check for existing jobs
-        console.log('Initializing database connection to check for existing jobs...');
 
         // Set database connection environment variables
         if (databaseUrl) {
@@ -568,76 +535,71 @@ try {
         // Initialize the database connection
         const dbInitialized = await initDatabase();
 
-        // Filter out jobs that already exist in the database
-        let filteredJobsToProcess = jobsToProcess;
+        // Fetch existing jobs from the database to avoid unnecessary API calls
+        let existingJobs = new Map();
 
-        if (dbInitialized && pool) {
+        if (dbInitialized) {
             try {
-                console.log('Checking for existing jobs in the database...');
-                const client = await pool.connect();
-
-                try {
-                    // Create an array to store jobs that don't exist in the database
-                    const newJobs = [];
-
-                    // Check each job
-                    for (const job of jobsToProcess) {
-                        try {
-                            const checkQuery = `
-                                SELECT id FROM culinary_jobs_google
-                                WHERE title = $1 AND company = $2
-                            `;
-
-                            const result = await client.query(checkQuery, [job.title, job.company]);
-
-                            if (result.rows.length > 0) {
-                                // Job already exists
-                                console.log(`Job already exists in database: "${job.title}" at "${job.company}" (ID: ${result.rows[0].id})`);
-
-                                // Add to skipped duplicates for reporting
-                                jobStats.skippedDuplicateJobs.push(job);
-                            } else {
-                                // Job doesn't exist, add it to the list of jobs to process
-                                console.log(`Job does not exist in database: "${job.title}" at "${job.company}"`);
-                                newJobs.push(job);
-                            }
-                        } catch (error) {
-                            console.error(`Error checking if job exists: "${job.title}" at "${job.company}"`, error);
-                            // If there's an error, include the job to be safe
-                            newJobs.push(job);
-                        }
-                    }
-
-                    // Update the list of jobs to process
-                    filteredJobsToProcess = newJobs;
-                    console.log(`After checking database: ${jobsToProcess.length - newJobs.length} existing jobs filtered out, ${newJobs.length} new jobs to process`);
-
-                } finally {
-                    client.release();
-                }
+                console.log('Fetching existing jobs from the database to optimize API calls...');
+                existingJobs = await fetchExistingJobs();
+                console.log(`Fetched ${existingJobs.size} existing jobs from the database for optimization`);
             } catch (error) {
-                console.error('Error checking for existing jobs:', error);
-                // If there's an error, continue with all jobs
-                console.log('Continuing with all jobs due to database check error');
+                console.error('Error fetching existing jobs:', error);
+                console.log('Continuing without existing jobs optimization');
             }
         } else {
-            console.log('Database not initialized, continuing with all jobs');
+            console.log('Database not initialized, continuing without existing jobs optimization');
         }
 
-        // If there are no new jobs to process, skip the API calls
-        if (filteredJobsToProcess.length === 0) {
-            console.log('No new jobs to process, skipping API calls');
+        // Search for jobs, passing the existing jobs map to avoid processing jobs that already exist
+        console.log(`Searching for jobs with query: "${query}" (${testMode ? 'test mode - up to 3 pages' : `up to ${pagesToProcess} pages`}) with database optimization`);
+        const jobs = await searchAllJobs(query, location, pagesToProcess, existingJobs);
+
+        if (jobs.length === 0) {
+            console.log(`No jobs found for query: "${query}"`);
             continue;
+        }
+
+        console.log(`Found ${jobs.length} jobs for query: "${query}"`);
+        totalJobsFound += jobs.length;
+
+        // Filter for full-time positions if requested
+        let filteredJobs = jobs;
+        if (fullTimeOnly) {
+            filteredJobs = jobs.filter(job =>
+                job.schedule === 'Full-time' ||
+                (job.extensions && job.extensions.some(ext => ext.includes('Full-time')))
+            );
+            console.log(`Filtered to ${filteredJobs.length} full-time positions out of ${jobs.length} total jobs`);
+        }
+
+        // In test mode, only process a limited number of jobs
+        const jobsToProcess = testMode ? filteredJobs.slice(0, testModeLimit) : filteredJobs;
+        console.log(`Processing ${jobsToProcess.length} jobs${testMode ? ` (test mode - limit: ${testModeLimit})` : ''}`);
+
+        // Log the jobs we're processing
+        if (testMode) {
+            console.log('Jobs being processed:');
+            jobsToProcess.forEach((job, index) => {
+                console.log(`Job #${index + 1}: "${job.title}" at "${job.company}" in "${job.location}"`);
+            });
         }
 
         // Process jobs for database insertion
         // Always use forceHunterData (which is true) instead of includeHunterData
-        console.log(`Processing ${filteredJobsToProcess.length} new jobs with Hunter.io integration...`);
-        const processedJobs = await processJobsForDatabase(filteredJobsToProcess, forceHunterData);
+        console.log(`Processing ${jobsToProcess.length} jobs with Hunter.io integration...`);
+        const processedJobs = await processJobsForDatabase(jobsToProcess, forceHunterData);
 
         // Track excluded jobs for email reporting
         const excludedJobs = jobsToProcess.filter(job => job._exclusionReason);
         jobStats.skippedExcludedJobs.push(...excludedJobs);
+
+        // Track jobs that were skipped because they already exist in the database
+        const existingDbJobs = jobsToProcess.filter(job => job._existsInDatabase);
+        if (existingDbJobs.length > 0) {
+            console.log(`Found ${existingDbJobs.length} jobs that already exist in the database`);
+            jobStats.skippedDuplicateJobs.push(...existingDbJobs);
+        }
 
         // Update job processing count
         totalJobsProcessed += processedJobs.length;
