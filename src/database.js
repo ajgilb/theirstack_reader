@@ -1123,6 +1123,37 @@ async function insertJobsIntoDatabase(jobs) {
  * @returns {Promise<Map>} - Map of title+company combinations that already exist
  */
 async function fetchExistingJobs() {
+    // Fix the DATABASE_URL format if needed
+    if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('/postgres&')) {
+        console.info('Fixing DATABASE_URL format in fetchExistingJobs: replacing /postgres& with /postgres?');
+        process.env.DATABASE_URL = process.env.DATABASE_URL.replace('/postgres&', '/postgres?');
+
+        // Recreate the pool with the fixed URL if needed
+        if (!pool) {
+            console.info('Recreating database pool with fixed URL');
+            try {
+                // Use the fixed connection string
+                const fixedConnectionString = process.env.DATABASE_URL;
+
+                // Create a new pool with the fixed connection string
+                pool = new Pool({
+                    connectionString: fixedConnectionString,
+                    ssl: {
+                        rejectUnauthorized: false
+                    },
+                    // Force IPv4 to avoid connectivity issues
+                    family: 4
+                });
+
+                // Test the connection
+                await pool.query('SELECT 1');
+                console.info('Successfully connected to database with fixed URL');
+            } catch (error) {
+                console.error('Failed to recreate pool with fixed URL:', error);
+            }
+        }
+    }
+
     if (!pool) {
         console.error('Database not initialized');
         return new Map();

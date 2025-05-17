@@ -4,6 +4,7 @@
  * This actor uses the SearchAPI.io Google Jobs API to search for job listings
  * and save them to a dataset or push them to a database.
  */
+import 'dotenv/config';
 import { Actor } from 'apify';
 import { searchAllJobs, processJobsForDatabase } from './google_jobs_api.js';
 import { testFunction } from './test.js';
@@ -429,6 +430,7 @@ try {
 
     // Get input from the user
     const input = await Actor.getInput() || {};
+    
     // Extract input parameters with defaults
     const {
         queries = [
@@ -441,22 +443,25 @@ try {
             'restaurant executives united states',
             'hotel executives united states'
         ],
-        maxPagesPerQuery = 10, // Increased from 5 to 10 to get more jobs
+        maxPagesPerQuery = 10,
         location = '',
         saveToDataset = true,
-        // Read pushToDatabase from input but we'll force it to true below
         pushToDatabase: inputPushToDatabase = true,
-        databaseUrl = '',
+        databaseUrl = process.env.DATABASE_URL, // Use environment variable as default
         databaseTable = 'culinary_jobs_google',
         deduplicateJobs = true,
         fullTimeOnly = true,
         excludeFastFood = true,
         excludeRecruiters = true,
-        // Default is true, but we'll force it to true below
         includeHunterData = true,
-        // Read testMode from input
         testMode = true
     } = input;
+
+    // Log environment configuration
+    console.log('Environment Configuration:');
+    console.log(`- NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
+    console.log(`- Database URL: ${databaseUrl ? 'Set' : 'Not set'}`);
+    console.log(`- Supabase URL: ${process.env.SUPABASE_URL ? 'Set' : 'Not set'}`);
 
     // Store queries in job stats
     jobStats.queries = [...queries];
@@ -545,12 +550,35 @@ try {
             }
         }
 
+        // Fix the DATABASE_URL format if needed
+        if (process.env.DATABASE_URL) {
+            // First encode any special characters in the password
+            const urlParts = process.env.DATABASE_URL.split('@');
+            if (urlParts.length === 2) {
+                const authParts = urlParts[0].split(':');
+                if (authParts.length === 3) {
+                    const password = authParts[2];
+                    const encodedPassword = encodeURIComponent(password);
+                    process.env.DATABASE_URL = `${authParts[0]}:${authParts[1]}:${encodedPassword}@${urlParts[1]}`;
+                }
+            }
+
+            // Fix query parameter format
+            if (process.env.DATABASE_URL.includes('/postgres&')) {
+                process.env.DATABASE_URL = process.env.DATABASE_URL.replace('/postgres&', '/postgres?');
+            }
+        }
+
         // Initialize the database connection
         const dbInitialized = await initDatabase();
 
-        // If database connection fails, exit the process
+        // If database connection fails, try the REST API approach
         if (!dbInitialized) {
-            console.error('Database connection failed. Exiting process.');
+            console.error('Direct database connection failed. Trying REST API approach...');
+            console.log('Trying REST API approach...');
+
+            // Here we would implement the REST API approach, but for now we'll just fail
+            console.error('REST API approach not fully implemented. Cannot continue.');
             throw new Error('Database connection failed. Cannot continue without database access.');
         }
 
@@ -559,6 +587,13 @@ try {
 
         try {
             console.log('Fetching existing jobs from the database to optimize API calls...');
+
+            // Fix the DATABASE_URL format again just to be sure
+            if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('/postgres&')) {
+                console.log('Fixing DATABASE_URL format again: replacing /postgres& with /postgres?');
+                process.env.DATABASE_URL = process.env.DATABASE_URL.replace('/postgres&', '/postgres?');
+            }
+
             existingJobs = await fetchExistingJobs();
             console.log(`Fetched ${existingJobs.size} existing jobs from the database for optimization`);
 

@@ -7,7 +7,7 @@
     "@supabase/supabase-js": "^2.49.4",
     "apify": "^3.1.8",
     "crawlee": "^3.5.2",
-    "dotenv": "^16.3.1",
+    "dotenv": "^16.5.0",
     "node-fetch": "^3.3.2",
     "pg": "^8.11.3",
     "resend": "^2.0.0"
