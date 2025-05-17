@@ -409,6 +409,9 @@ async function insertJobsIntoDatabasePostgres(jobs) {
     }
 }
 
+// Store testMode in a variable accessible throughout the file
+let isTestMode = false;
+
 // Initialize the Apify Actor
 await Actor.init();
 
@@ -447,15 +450,18 @@ try {
         location = '',
         saveToDataset = true,
         pushToDatabase: inputPushToDatabase = true,
-        databaseUrl = process.env.DATABASE_URL, // Use environment variable as default
+        databaseUrl = process.env.DATABASE_URL ? process.env.DATABASE_URL.replace('DATABASE_URL=', '') : '', // Remove DATABASE_URL= prefix if present
         databaseTable = 'culinary_jobs_google',
         deduplicateJobs = true,
         fullTimeOnly = true,
         excludeFastFood = true,
         excludeRecruiters = true,
         includeHunterData = true,
-        testMode = true
+        testMode = false
     } = input;
+
+    // Update the global isTestMode variable
+    isTestMode = testMode;
 
     // Log environment configuration
     console.log('Environment Configuration:');
@@ -775,11 +781,11 @@ try {
     try {
         console.log('\n=== SENDING COMPLETION EMAIL ===');
         console.log('Email configuration:');
-        console.log(`- Test mode: ${testMode}`);
+        console.log(`- Test mode: ${isTestMode}`);
         console.log(`- Job stats: ${jobStats.processedCount} jobs processed, ${jobStats.newJobs.length} new, ${jobStats.skippedDuplicateJobs.length} duplicates, ${jobStats.skippedExcludedJobs.length} excluded`);
 
-        // Pass the testMode parameter to the email function
-        const emailSent = await sendCompletionEmail(jobStats, testMode);
+        // Pass the isTestMode parameter to the email function
+        const emailSent = await sendCompletionEmail(jobStats, isTestMode);
         console.log(`Email sending ${emailSent ? 'successful' : 'failed'}`);
         console.log('=== END OF EMAIL SENDING ===\n');
     } catch (emailError) {
