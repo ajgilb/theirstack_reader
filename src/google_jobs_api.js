@@ -185,7 +185,32 @@ const EXCLUDED_COMPANIES = new Set([
     "Restaurant Associates", "Source One Hospitality", "Ten Five Hospitality",
     "The Goodkind Group", "Tuttle Hospitality", "Willow Tree Recruiting",
     // Adding Washington variants
-    "washington", "washington dc", "washington d.c.", "washington d c"
+    "washington", "washington dc", "washington d.c.", "washington d c",
+    // Convenience stores and gas station chains to exclude
+    "7-Eleven", "Couche-Tard", "Circle K", "Speedway", "Casey's General Stores", "CST Brands", "Corner Store",
+    "Aplus", "MACS", "Tigermarket", "Stripes", "Aloha", "Murphy USA", "Murphy Express", "ampm",
+    "Kroger", "Turkey Hill", "Kwik Shop", "Quik Stop", "Suncor Energy", "Petro-Canada", "Neighbours", "SuperStop",
+    "GPM Investments", "Fas Mart", "Shore Stop", "Scotchman", "QuikTrip", "Chevron Corp.", "ExtraMile", "Caltex",
+    "Wawa", "Pilot Travel Centers", "Flying J", "Cumberland Farms", "Kum & Go", "Kwik Trip", "Kwik Star", "Sheetz",
+    "Holiday Stationstores", "Shell Canada Select", "Husky", "Mohawk", "TravelCenters of America", "Petro Stopping Centers",
+    "Minit Mart", "RaceTrac", "RaceWay", "Delek U.S.", "Mapco", "Love's Travel Stops & Country Stores",
+    "Stewart's Shops", "United Pacific", "We Got It!", "United Mart", "My Goods", "Allsup's Convenience Stores",
+    "Alon Brands", "Sunshine Gasoline Distributors", "Kwik Fill", "Red Apple", "E-Z Mart Stores", "Xtra Mart", "Alltown",
+    "Maverik", "SuperAmerica", "Western Refining", "Giant", "Mustang", "Sundial", "Howdy's", "Shop24",
+    "Convenient Food Mart", "CEFCO Convenience Stores", "Meijer Gas Stations", "Jacksons Food Stores",
+    "Timewise Food Stores", "Anabi Oil", "Shell", "GetGo", "United Dairy Farmers", "Thorntons", "Snack Express",
+    "Verve", "Esso", "Pioneer", "Admiral", "Royal Farms", "Terrible Herbst", "Flash Foods", "G&M Food Mart",
+    "QuickChek", "American Retail Services", "Hy-Vee Gas", "Loop Neighborhood", "GoMart Food Stores",
+    "Duchess Shoppes", "Blarney Castle", "EZ Mart", "Quality Mart", "Quality Plus", "GOGAS", "Huck's",
+    "Petroleum Mktg. Group", "E&C Enterprises Inc.", "7-Eleven Stores of Oklahoma", "Plaid Pantry", "truenorth",
+    "Little General Stores", "Town Pump Food Stores", "Star Stop", "Roadrunner Markets", "Gasamat", "Smoker Friendly",
+    "Family Fare", "Tri Star Energy", "Twice Daily", "Daily's", "Lil' Mart", "Sprint Mart", "Certified",
+    "Flash Market", "Spinx", "Bucky's Convenience Stores", "MotoMart", "Shell Express Lane", "C.N. Brown",
+    "Big Apple Food Stores", "FiveStar Food Marts", "Toot'n Totum Food Stores", "Sampson-Bladen Oil", "Han-Dee Hugo's",
+    "MFA Oil", "Break Time", "Express Mart", "Mirabito", "Quickway Food Stores", "Convenience Express",
+    "Manley's Mighty-Mart", "ABC Stores", "GATE Stores", "Krist Food Marts", "Country Fair", "Cenex Zip Trip",
+    "Southwest Georgia Oil", "Dandy Mini Marts", "Stinker Stores", "Dash In", "Weigel's Farm Stores",
+    "Family Express", "Shop Rite Inc.", "Tobacco Plus", "Enmark Station", "Enmarket"
 ].map(name => name.toLowerCase()));
 
 /**
