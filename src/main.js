@@ -548,20 +548,28 @@ try {
         // Initialize the database connection
         const dbInitialized = await initDatabase();
 
+        // If database connection fails, exit the process
+        if (!dbInitialized) {
+            console.error('Database connection failed. Exiting process.');
+            throw new Error('Database connection failed. Cannot continue without database access.');
+        }
+
         // Fetch existing jobs from the database to avoid unnecessary API calls
         let existingJobs = new Map();
 
-        if (dbInitialized) {
-            try {
-                console.log('Fetching existing jobs from the database to optimize API calls...');
-                existingJobs = await fetchExistingJobs();
-                console.log(`Fetched ${existingJobs.size} existing jobs from the database for optimization`);
-            } catch (error) {
-                console.error('Error fetching existing jobs:', error);
-                console.log('Continuing without existing jobs optimization');
+        try {
+            console.log('Fetching existing jobs from the database to optimize API calls...');
+            existingJobs = await fetchExistingJobs();
+            console.log(`Fetched ${existingJobs.size} existing jobs from the database for optimization`);
+
+            // If we can't fetch existing jobs, that's a critical error
+            if (existingJobs.size === 0) {
+                console.error('Failed to fetch existing jobs from database. This is required for optimization.');
+                throw new Error('Failed to fetch existing jobs from database. Cannot continue without this data.');
             }
-        } else {
-            console.log('Database not initialized, continuing without existing jobs optimization');
+        } catch (error) {
+            console.error('Error fetching existing jobs:', error);
+            throw new Error('Failed to fetch existing jobs from database. Cannot continue without this data.');
         }
 
         // Search for jobs, passing the existing jobs map to avoid processing jobs that already exist

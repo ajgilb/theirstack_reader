@@ -136,9 +136,14 @@ async function initDatabase() {
             let fixedConnectionString = connectionString;
 
             // Fix &family=4 to ?family=4 if it's the first parameter
-            if (fixedConnectionString.includes('/postgres&family=4')) {
-                fixedConnectionString = fixedConnectionString.replace('/postgres&family=4', '/postgres?family=4');
-                console.info('Fixed connection string format: replaced &family=4 with ?family=4');
+            if (fixedConnectionString.includes('/postgres&')) {
+                fixedConnectionString = fixedConnectionString.replace('/postgres&', '/postgres?');
+                console.info('Fixed connection string format: replaced /postgres& with /postgres?');
+            }
+
+            // Make sure the connection string is a valid URL
+            if (!fixedConnectionString.startsWith('postgresql://')) {
+                throw new Error(`Invalid connection string format: ${fixedConnectionString.substring(0, 20)}...`);
             }
 
             // Parse the connection string - handle query parameters properly
