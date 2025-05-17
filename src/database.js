@@ -129,59 +129,54 @@ async function initDatabase() {
         }
 
         // Initialize the connection pool with explicit configuration to avoid IPv6 issues
-        // Parse the connection string to extract components
         let dbConfig = {};
 
-        if (connectionString) {
-            try {
-                // Parse the connection string
-                const matches = connectionString.match(/postgresql:\/\/([^:]+)(?::([^@]+))?@([^:]+):(\d+)\/(.+)/);
+        try {
+            // Parse the connection string - handle query parameters properly
+            const url = new URL(connectionString);
+            const database = url.pathname.substring(1); // Remove leading slash
 
-                if (matches) {
-                    const [, user, password, host, port, database] = matches;
-
-                    // Log the parsed connection details (without password)
-                    console.info('Parsed connection details:');
-                    console.info(`- User: ${user}`);
-                    console.info(`- Host: ${host}`);
-                    console.info(`- Port: ${port}`);
-                    console.info(`- Database: ${database}`);
-
-                    // Create explicit configuration
-                    dbConfig = {
-                        user,
-                        password,
-                        host,
-                        port: parseInt(port, 10),
-                        database,
-                        ssl: {
-                            rejectUnauthorized: false
-                        },
-                        // Force IPv4 to avoid connectivity issues
-                        family: 4
-                    };
-                } else {
-                    console.warn('Could not parse connection string, falling back to direct usage');
-                    dbConfig = {
-                        connectionString,
-                        ssl: {
-                            rejectUnauthorized: false
-                        },
-                        // Force IPv4 to avoid connectivity issues
-                        family: 4
-                    };
-                }
-            } catch (parseError) {
-                console.error('Error parsing connection string:', parseError);
-                dbConfig = {
-                    connectionString,
-                    ssl: {
-                        rejectUnauthorized: false
-                    },
-                    // Force IPv4 to avoid connectivity issues
-                    family: 4
-                };
+            // Extract query parameters if any
+            const params = {};
+            for (const [key, value] of url.searchParams) {
+                params[key] = value;
             }
+
+            // Extract user and password from auth part
+            const auth = url.username + (url.password ? `:${url.password}` : '');
+            const [user, password] = auth.split(':');
+
+            // Log the parsed connection details (without password)
+            console.info('Parsed connection details:');
+            console.info(`- User: ${user}`);
+            console.info(`- Host: ${url.hostname}`);
+            console.info(`- Port: ${url.port}`);
+            console.info(`- Database: ${database}`);
+            console.info(`- Parameters: ${Object.keys(params).join(', ')}`);
+
+            // Create explicit configuration
+            dbConfig = {
+                user,
+                password,
+                host: url.hostname,
+                port: parseInt(url.port, 10),
+                database,
+                ssl: {
+                    rejectUnauthorized: false
+                },
+                // Force IPv4 to avoid connectivity issues
+                family: 4
+            };
+        } catch (parseError) {
+            console.error('Error parsing connection string:', parseError);
+            dbConfig = {
+                connectionString,
+                ssl: {
+                    rejectUnauthorized: false
+                },
+                // Force IPv4 to avoid connectivity issues
+                family: 4
+            };
         }
 
         // Create the connection pool with our config
