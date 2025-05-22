@@ -433,19 +433,46 @@ try {
 
     // Get input from the user
     const input = await Actor.getInput() || {};
-    
+
+    // Define the top 60 largest US cities for targeted job searches
+    const topCities = [
+        'New York NY', 'Los Angeles CA', 'Chicago IL', 'Houston TX', 'Phoenix AZ',
+        'Philadelphia PA', 'San Antonio TX', 'San Diego CA', 'Dallas TX', 'San Jose CA',
+        'Austin TX', 'Jacksonville FL', 'Fort Worth TX', 'Columbus OH', 'Indianapolis IN',
+        'Charlotte NC', 'San Francisco CA', 'Seattle WA', 'Nashville TN', 'Denver CO',
+        'Oklahoma City OK', 'El Paso TX', 'Boston MA', 'Portland OR', 'Las Vegas NV',
+        'Detroit MI', 'Memphis TN', 'Louisville KY', 'Baltimore MD', 'Milwaukee WI',
+        'Albuquerque NM', 'Tucson AZ', 'Fresno CA', 'Sacramento CA', 'Kansas City MO',
+        'Mesa AZ', 'Atlanta GA', 'Omaha NE', 'Colorado Springs CO', 'Raleigh NC',
+        'Long Beach CA', 'Virginia Beach VA', 'Miami FL', 'Oakland CA', 'Minneapolis MN',
+        'Tulsa OK', 'Bakersfield CA', 'Wichita KS', 'Arlington TX', 'Aurora CO',
+        'Tampa FL', 'New Orleans LA', 'Cleveland OH', 'Honolulu HI', 'Anaheim CA',
+        'Lexington KY', 'Stockton CA', 'Corpus Christi TX', 'Henderson NV', 'Riverside CA'
+    ];
+
+    // Define base search terms
+    const baseTerms = [
+        'restaurant chef',
+        'restaurant manager',
+        'hotel chef',
+        'hotel manager',
+        'private chef',
+        'household chef',
+        'restaurant executive',
+        'hotel executive'
+    ];
+
+    // Generate default queries by combining each base term with each city
+    const defaultQueries = [];
+    for (const term of baseTerms) {
+        for (const city of topCities) {
+            defaultQueries.push(`${term} ${city}`);
+        }
+    }
+
     // Extract input parameters with defaults
     const {
-        queries = [
-            'restaurant chefs united states',
-            'restaurant managers united states',
-            'hotel chefs united states',
-            'hotel managers united states',
-            'private chefs united states',
-            'household chefs united states',
-            'restaurant executives united states',
-            'hotel executives united states'
-        ],
+        queries = defaultQueries,
         maxPagesPerQuery = 10,
         location = '',
         saveToDataset = true,
