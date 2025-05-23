@@ -127,7 +127,7 @@ async function initDatabase() {
 
         // Create the pool with explicit configuration
         pool = new Pool({
-            user: 'google_scraper',
+            user: 'google_scraper.mbaqiwhkngfxxmlkionj',
             password: 'Relham12',
             host: '52.8.172.168',
             port: 6543,
