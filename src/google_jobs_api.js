@@ -27,6 +27,9 @@ async function searchJobs(query, location = '', nextPageToken = null) {
         // Build the API URL
         let searchUrl = `https://www.searchapi.io/api/v1/search?engine=google_jobs&q=${encodeURIComponent(query)}&api_key=${apiKey}`;
 
+        // Add cache-busting parameter to ensure fresh results
+        searchUrl += `&_cacheBust=${Date.now()}`;
+
         // Add location if provided
         if (location) {
             searchUrl += `&location=${encodeURIComponent(location)}`;
@@ -38,23 +41,42 @@ async function searchJobs(query, location = '', nextPageToken = null) {
         }
 
         console.info(`GOOGLE JOBS API: Searching for jobs with query "${query}"${location ? ` in ${location}` : ''}`);
+        console.info(`API URL: ${searchUrl.replace(apiKey, '***')}`); // Log URL without API key
 
         const response = await fetch(searchUrl);
-        const data = await response.json();
 
         if (!response.ok) {
-            console.error(`Google Jobs API error: ${data.error || response.statusText}`);
+            console.error(`Google Jobs API HTTP error: ${response.status} ${response.statusText}`);
+            const errorText = await response.text();
+            console.error(`Error response body: ${errorText}`);
+            return { jobs: [], hasMore: false };
+        }
+
+        const data = await response.json();
+
+        // Check for API-level errors in the response
+        if (data.error) {
+            console.error(`Google Jobs API error: ${data.error}`);
+            if (data.error_message) {
+                console.error(`Error message: ${data.error_message}`);
+            }
             return { jobs: [], hasMore: false };
         }
 
         // Check if we have job results
         if (!data.jobs || data.jobs.length === 0) {
             console.info(`No job results found for "${query}"`);
+            console.info(`Response structure: ${JSON.stringify(Object.keys(data), null, 2)}`);
             return { jobs: [], hasMore: false };
         }
 
         // Log the number of jobs found
         console.info(`Found ${data.jobs.length} job listings for "${query}"`);
+
+        // Log pagination info for debugging
+        if (data.pagination) {
+            console.info(`Pagination info: current page token: ${data.pagination.current_page_token || 'none'}, next page token: ${data.pagination.next_page_token || 'none'}`);
+        }
 
         // Process the jobs to extract relevant information
         const processedJobs = data.jobs.map(job => {
