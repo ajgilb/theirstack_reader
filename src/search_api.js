@@ -1,4 +1,52 @@
 /**
+ * List of domains to exclude from company website searches
+ * These are travel, review, social media, and job sites that won't have relevant business contacts
+ */
+const EXCLUDED_DOMAINS = [
+    // Travel & Review Sites
+    'tripadvisor.com', 'tripadvisor.co.uk', 'tripadvisor.ca', 'tripadvisor.fr', 'tripadvisor.de',
+    'yelp.com', 'yelp.ca', 'yelp.co.uk', 'yelp.fr',
+    'opentable.com', 'opentable.co.uk', 'opentable.ca',
+    'zomato.com', 'foursquare.com', 'urbanspoon.com', 'zagat.com',
+    'timeout.com', 'eater.com', 'thrillist.com', 'chowhound.com',
+    'menupix.com', 'grubhub.com', 'seamless.com', 'doordash.com',
+    'ubereats.com', 'postmates.com', 'caviar.com',
+
+    // Social Media Sites
+    'facebook.com', 'fb.com', 'instagram.com', 'twitter.com', 'x.com',
+    'linkedin.com', 'youtube.com', 'tiktok.com', 'pinterest.com',
+    'snapchat.com', 'whatsapp.com', 'telegram.org',
+
+    // News & Blog Sites
+    'blogspot.com', 'wordpress.com', 'medium.com', 'substack.com',
+    'tumblr.com', 'wix.com', 'squarespace.com',
+
+    // Job/Recruiting Sites
+    'indeed.com', 'glassdoor.com', 'monster.com', 'ziprecruiter.com',
+    'careerbuilder.com', 'simplyhired.com', 'snagajob.com',
+
+    // General directories and listing sites
+    'yellowpages.com', 'whitepages.com', 'superpages.com',
+    'manta.com', 'bbb.org', 'mapquest.com', 'google.com',
+    'wikipedia.org', 'wikimedia.org'
+];
+
+/**
+ * Checks if a URL should be excluded from Hunter.io searches
+ * @param {string} url - The URL to check
+ * @returns {boolean} - True if the URL should be excluded
+ */
+function shouldExcludeUrl(url) {
+    if (!url) return false;
+
+    const lowerUrl = url.toLowerCase();
+
+    return EXCLUDED_DOMAINS.some(domain => {
+        return lowerUrl.includes(domain);
+    });
+}
+
+/**
  * Uses SearchAPI.io to find the website URL for a company name.
  */
 async function getWebsiteUrlFromSearchAPI(companyName) {
@@ -43,30 +91,21 @@ async function getWebsiteUrlFromSearchAPI(companyName) {
             console.info(`Result #${index+1}: ${result.title} - ${result.link} (${result.domain})`);
         });
 
-        // Simply use the first result from SearchAPI.io
-        // SearchAPI.io already ranks results by relevance, so the first result is usually the best match
-        const firstResult = data.organic_results[0];
+        // Find the first result that isn't an excluded domain
+        for (let i = 0; i < Math.min(data.organic_results.length, 5); i++) {
+            const result = data.organic_results[i];
 
-        // Just do a basic check to avoid social media sites
-        const nonCompanySites = ['linkedin.com', 'facebook.com', 'instagram.com', 'twitter.com', 'indeed.com', 'glassdoor.com', 'yelp.com'];
-        if (nonCompanySites.some(site => firstResult.domain.includes(site))) {
-            console.info(`First result is a social media site, checking second result...`);
-
-            // If there's a second result, use that instead
-            if (data.organic_results.length > 1) {
-                const secondResult = data.organic_results[1];
-                if (!nonCompanySites.some(site => secondResult.domain.includes(site))) {
-                    console.info(`Using second result: ${secondResult.link}`);
-                    return secondResult.link;
-                }
+            if (shouldExcludeUrl(result.link)) {
+                console.info(`Skipping excluded domain result #${i+1}: ${result.link} (${result.domain})`);
+                continue;
             }
 
-            console.info(`No good alternative found for "${companyName}"`);
-            return null;
+            console.info(`Using result #${i+1}: ${result.link} (${result.domain})`);
+            return result.link;
         }
 
-        console.info(`Using first result: ${firstResult.link}`);
-        return firstResult.link;
+        console.info(`No suitable website found for "${companyName}" - all results were excluded domains`);
+        return null;
 
     } catch (error) {
         console.error(`Error during Search API call for "${companyName}": ${error.message}`);
@@ -114,5 +153,6 @@ function getDomainFromUrl(url) {
 
 export {
     getWebsiteUrlFromSearchAPI,
-    getDomainFromUrl
+    getDomainFromUrl,
+    shouldExcludeUrl
 };
