@@ -16,14 +16,14 @@
         "description": "List of search queries to run",
         "editor": "stringList",
         "default": [
-          "restaurant chefs united states",
-          "restaurant managers united states",
-          "hotel chefs united states",
-          "hotel managers united states",
-          "private chefs united states",
-          "household chefs united states",
-          "restaurant executives united states",
-          "hotel executives united states"
+          "restaurant chef New York NY",
+          "restaurant chef Los Angeles CA",
+          "restaurant chef Chicago IL",
+          "restaurant manager New York NY",
+          "restaurant manager Los Angeles CA",
+          "hotel chef New York NY",
+          "hotel chef Los Angeles CA",
+          "hotel manager New York NY"
         ]
       },
       "location": {
