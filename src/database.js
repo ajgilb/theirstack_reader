@@ -112,7 +112,7 @@ let pool = null;
 async function initDatabase() {
     try {
         console.log('Trying imported database.js implementation...');
-        
+
         // Get the database URL from environment
         const dbUrl = process.env.DATABASE_URL;
         if (!dbUrl) {
@@ -121,13 +121,13 @@ async function initDatabase() {
 
         // Remove DATABASE_URL= prefix if present
         const cleanDbUrl = dbUrl.replace('DATABASE_URL=', '');
-        
+
         console.log('Using Supabase configuration:');
         console.log(`- Connection string: ${cleanDbUrl.replace(/:[^:@]+@/, ':***@')}`);
 
         // Create the pool with explicit configuration
         pool = new Pool({
-            user: 'google_scraper.mbaqiwhkngfxxmlkionj',
+            user: 'google_scraper',
             password: 'Relham12',
             host: '52.8.172.168',
             port: 6543,
@@ -325,7 +325,7 @@ async function insertJobsIntoDatabase(jobs) {
             try {
                 // Get a new client for each attempt
                 client = await pool.connect();
-                
+
                 // Start a new transaction
                 await client.query('BEGIN');
                 console.info('Starting new transaction for job insertion');
@@ -489,7 +489,7 @@ async function insertJobsIntoDatabase(jobs) {
 
                 console.error(`Error processing job "${job.title}" at "${job.company}":`, error);
                 retryCount++;
-                
+
                 if (retryCount < maxRetries) {
                     console.info(`Retrying job insertion (attempt ${retryCount + 1} of ${maxRetries})...`);
                     await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Exponential backoff
