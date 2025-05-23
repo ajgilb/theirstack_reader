@@ -16,14 +16,14 @@
         "description": "List of search queries to run",
         "editor": "stringList",
         "default": [
-          "restaurant chef New York NY",
-          "restaurant chef Los Angeles CA",
-          "restaurant chef Chicago IL",
-          "restaurant manager New York NY",
-          "restaurant manager Los Angeles CA",
-          "hotel chef New York NY",
-          "hotel chef Los Angeles CA",
-          "hotel manager New York NY"
+          "restaurant chef jobs New York NY",
+          "restaurant chef jobs Los Angeles CA",
+          "restaurant chef jobs Chicago IL",
+          "restaurant manager jobs New York NY",
+          "restaurant manager jobs Los Angeles CA",
+          "hotel chef jobs New York NY",
+          "hotel chef jobs Los Angeles CA",
+          "hotel manager jobs New York NY"
         ]
       },
       "location": {

@@ -452,14 +452,14 @@ try {
 
     // Define base search terms
     const baseTerms = [
-        'restaurant chef',
-        'restaurant manager',
-        'hotel chef',
-        'hotel manager',
-        'private chef',
-        'household chef',
-        'restaurant executive',
-        'hotel executive'
+        'restaurant chef jobs',
+        'restaurant manager jobs',
+        'hotel chef jobs',
+        'hotel manager jobs',
+        'private chef jobs',
+        'household chef jobs',
+        'restaurant executive jobs',
+        'hotel executive jobs'
     ];
 
     // Generate default queries by combining each base term with each city
