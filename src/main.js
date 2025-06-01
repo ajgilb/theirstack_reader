@@ -485,7 +485,7 @@ try {
         excludeRecruiters = true,
         includeWebsiteData = false,
         testMode = false,
-        searchEngine = 'google'
+        searchEngine = 'bing'
     } = input;
 
     // Update the global isTestMode variable
