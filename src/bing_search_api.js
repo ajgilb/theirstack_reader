@@ -23,17 +23,55 @@ const EXCLUDED_JOB_DOMAINS = [
 ];
 
 /**
+ * List of company names to exclude from job search results
+ * These are job boards, recruiting companies, and aggregators that appear as company names
+ */
+const EXCLUDED_COMPANY_NAMES = [
+    // Job Boards (as company names)
+    'indeed', 'linkedin', 'glassdoor', 'ziprecruiter', 'monster', 'careerbuilder',
+    'simplyhired', 'snagajob', 'job.com', 'ladders', 'getwork', 'bebee',
+    'diversityjobs', 'ihirechefs', 'chefjobsnetwork', 'hcareers',
+
+    // Recruiting/Staffing Companies
+    'robert half', 'roberthalf', 'randstad', 'adecco', 'manpower', 'kelly services',
+    'kellyservices', 'robert walters', 'robertwalters', 'hays', 'michael page',
+    'michaelpage',
+
+    // Craigslist variants
+    'craigslist', 'craiglist', 'craig list', 'craigs list', 'craig\'s list',
+
+    // Other aggregators and job sites
+    'culinary agents', 'hospitality online', 'chicagotribune', 'thechefagency',
+    'the chef agency', 'maggianosjobs', 'flagshiprestaurantgroup', 'hrmdirect'
+];
+
+/**
  * Checks if a URL should be excluded from job search results
  * @param {string} url - The URL to check
  * @returns {boolean} - True if the URL should be excluded
  */
 function shouldExcludeJobUrl(url) {
     if (!url) return false;
-    
+
     const lowerUrl = url.toLowerCase();
-    
+
     return EXCLUDED_JOB_DOMAINS.some(domain => {
         return lowerUrl.includes(domain);
+    });
+}
+
+/**
+ * Checks if a company name should be excluded from job search results
+ * @param {string} companyName - The company name to check
+ * @returns {boolean} - True if the company should be excluded
+ */
+function shouldExcludeCompany(companyName) {
+    if (!companyName) return false;
+
+    const lowerCompany = companyName.toLowerCase();
+
+    return EXCLUDED_COMPANY_NAMES.some(excludedName => {
+        return lowerCompany.includes(excludedName);
     });
 }
 
@@ -256,6 +294,12 @@ async function searchJobsWithBing(query, location = '', maxResults = 10) {
             const jobLocation = extractLocation(result, location);
             const salary = extractSalary(result);
 
+            // Skip if company is a job board or recruiting site
+            if (shouldExcludeCompany(company)) {
+                console.info(`Skipping excluded company result #${i+1}: "${company}" from ${result.link}`);
+                continue;
+            }
+
             // Skip if we can't extract basic job info
             if (jobTitle === 'Unknown Position' && company === 'Unknown Company') {
                 console.info(`Skipping result #${i+1}: Unable to extract job info from "${result.title}"`);
@@ -397,10 +441,12 @@ export {
     searchJobsWithBing,
     searchAllJobsWithBing,
     shouldExcludeJobUrl,
+    shouldExcludeCompany,
     extractJobTitle,
     extractCompanyName,
     extractLocation,
     extractSalary,
     extractDomainFromUrl,
-    EXCLUDED_JOB_DOMAINS
+    EXCLUDED_JOB_DOMAINS,
+    EXCLUDED_COMPANY_NAMES
 };
