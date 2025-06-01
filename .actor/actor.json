@@ -36,9 +36,9 @@
         "title": "Max Pages Per Query",
         "type": "integer",
         "description": "Maximum number of pages to fetch per query",
-        "default": 5,
+        "default": 20,
         "minimum": 1,
-        "maximum": 20
+        "maximum": 50
       },
       "saveToDataset": {
         "title": "Save to Dataset",
@@ -102,7 +102,7 @@
         "description": "Which search engine to use for job searches",
         "enum": ["google", "bing", "both"],
         "enumTitles": ["Google Jobs API", "Bing Search API", "Both (Google + Bing)"],
-        "default": "google"
+        "default": "both"
       }
     },
     "required": ["queries"]

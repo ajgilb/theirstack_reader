@@ -465,7 +465,7 @@ try {
     // Extract input parameters with defaults
     const {
         queries = defaultQueries,
-        maxPagesPerQuery = 10,
+        maxPagesPerQuery = 20,
         location = '',
         saveToDataset = true,
         pushToDatabase: inputPushToDatabase = true,
@@ -477,7 +477,7 @@ try {
         excludeRecruiters = true,
         includeWebsiteData = false,
         testMode = false,
-        searchEngine = 'google'
+        searchEngine = 'both'
     } = input;
 
     // Update the global isTestMode variable

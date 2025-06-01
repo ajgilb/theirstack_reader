@@ -135,7 +135,7 @@ async function searchJobs(query, location = '', nextPageToken = null) {
  * @param {Map} existingJobs - Optional map of existing job title+company combinations
  * @returns {Promise<Array>} - All job listings
  */
-async function searchAllJobs(query, location = '', maxPages = 5, existingJobs = null) {
+async function searchAllJobs(query, location = '', maxPages = 20, existingJobs = null) {
     let allJobs = [];
     let nextPageToken = null;
     let currentPage = 0;
@@ -199,7 +199,7 @@ async function searchAllJobs(query, location = '', maxPages = 5, existingJobs = 
  * List of excluded companies
  */
 const EXCLUDED_COMPANIES = new Set([
-    "Alliance Personnel", "August Point Advisors", "Bon Appetit", "Capital Restaurant Associates",
+    "Alliance Personnel", "Aramark", "August Point Advisors", "Bon Appetit", "Capital Restaurant Associates",
     "Chartwells", "Compass", "CORE Recruitment", "EHS Recruiting", "Empowered Hospitality",
     "Eurest", "Gecko Hospitality", "Goodwin Recruiting", "HMG Plus - New York", "Hospitality Confidential", "LSG Sky Chefs", "Major Food Group",
     "Measured HR", "One Haus", "Patrice & Associates", "Persone NYC", "Playbook Advisors",

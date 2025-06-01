@@ -33,7 +33,7 @@ const EXCLUDED_COMPANY_NAMES = [
     'diversityjobs', 'ihirechefs', 'chefjobsnetwork', 'hcareers',
 
     // Recruiting/Staffing Companies
-    'robert half', 'roberthalf', 'randstad', 'adecco', 'manpower', 'kelly services',
+    'aramark', 'robert half', 'roberthalf', 'randstad', 'adecco', 'manpower', 'kelly services',
     'kellyservices', 'robert walters', 'robertwalters', 'hays', 'michael page',
     'michaelpage', 'gecko hospitality', 'geckohospitality', 'hospitality confidential', 'hospitalityconfidential',
 
