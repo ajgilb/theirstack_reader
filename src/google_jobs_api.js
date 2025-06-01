@@ -1,11 +1,10 @@
 /**
  * Google Jobs API integration using SearchAPI.io
  * This module provides functions to search for job listings using the Google Jobs API via SearchAPI.io
- * and enrich the data with company website URLs and email addresses from Hunter.io
+ * and enrich the data with company website URLs (email enrichment is handled by the web viewer)
  */
 
 import { getWebsiteUrlFromSearchAPI, getDomainFromUrl } from './search_api.js';
-import { findEmailsWithHunter, findEmailsByCompanyName } from './hunter_api.js';
 import { EXCLUDED_RESTAURANT_CHAINS } from './excluded_chains.js';
 
 /**
@@ -308,10 +307,10 @@ function shouldExcludeCompany(company) {
 /**
  * Extracts structured data from job listings
  * @param {Array} jobs - Array of job objects from searchJobs or searchAllJobs
- * @param {boolean} includeHunterData - Whether to include Hunter.io email data
+ * @param {boolean} includeWebsiteData - Whether to include company website data (email enrichment handled by web viewer)
  * @returns {Promise<Array>} - Array of structured job data ready for database insertion
  */
-async function processJobsForDatabase(jobs, includeHunterData = false) {
+async function processJobsForDatabase(jobs, includeWebsiteData = false) {
     console.info(`Processing ${jobs.length} jobs for database insertion...`);
 
     let excludedCount = 0;
@@ -400,13 +399,13 @@ async function processJobsForDatabase(jobs, includeHunterData = false) {
             scraped_at: new Date().toISOString(),
             company_website: null,
             company_domain: null,
-            emails: []
+            emails: [] // Email enrichment handled by web viewer
         };
 
-        // If Hunter.io integration is enabled, get company website and emails
-        if (includeHunterData) {
+        // If website data collection is enabled, get company website URL
+        if (includeWebsiteData) {
             try {
-                console.info(`Starting Hunter.io integration for ${job.company}...`);
+                console.info(`Collecting website data for ${job.company}...`);
 
                 // Get company website URL
                 const companyUrl = await getWebsiteUrlFromSearchAPI(job.company);
@@ -419,67 +418,19 @@ async function processJobsForDatabase(jobs, includeHunterData = false) {
                     if (domain) {
                         processedJob.company_domain = domain;
                         console.info(`Extracted domain for ${job.company}: ${domain}`);
-
-                        // Find emails using Hunter.io
-                        console.info(`Searching for emails using domain: ${domain}`);
-                        const emails = await findEmailsWithHunter(domain, job.company);
-                        if (emails && emails.length > 0) {
-                            processedJob.emails = emails;
-                            console.info(`Found ${emails.length} email addresses for ${job.company} using domain search`);
-
-                            // Log up to 10 emails for debugging
-                            emails.slice(0, 10).forEach((email, idx) => {
-                                console.info(`  Email #${idx+1}: ${email.email} (${email.firstName || ''} ${email.lastName || ''})${email.position ? ` - ${email.position}` : ''}`);
-                            });
-                        } else {
-                            console.info(`No email addresses found for ${job.company} using domain search`);
-
-                            // Try direct company name search as fallback
-                            console.info(`Trying direct company name search for ${job.company}`);
-                            const companyEmails = await findEmailsByCompanyName(job.company);
-                            if (companyEmails && companyEmails.length > 0) {
-                                processedJob.emails = companyEmails;
-                                console.info(`Found ${companyEmails.length} email addresses for ${job.company} using company name search`);
-
-                                // Log the emails for debugging
-                                companyEmails.forEach((email, idx) => {
-                                    console.info(`  Email #${idx+1}: ${email.email} (${email.firstName || ''} ${email.lastName || ''})${email.position ? ` - ${email.position}` : ''}`);
-                                });
-                            } else {
-                                console.info(`No email addresses found for ${job.company} using any method`);
-                            }
-                        }
                     } else {
                         console.info(`Could not extract domain from URL: ${companyUrl}`);
-
-                        // Try direct company name search as fallback
-                        console.info(`Trying direct company name search for ${job.company}`);
-                        const companyEmails = await findEmailsByCompanyName(job.company);
-                        if (companyEmails && companyEmails.length > 0) {
-                            processedJob.emails = companyEmails;
-                            console.info(`Found ${companyEmails.length} email addresses for ${job.company} using company name search`);
-                        }
                     }
                 } else {
                     console.info(`No website URL found for ${job.company}`);
-
-                    // Try direct company name search as fallback
-                    console.info(`Trying direct company name search for ${job.company}`);
-                    const companyEmails = await findEmailsByCompanyName(job.company);
-                    if (companyEmails && companyEmails.length > 0) {
-                        processedJob.emails = companyEmails;
-                        console.info(`Found ${companyEmails.length} email addresses for ${job.company} using company name search`);
-                    } else {
-                        console.info(`No email addresses found for ${job.company} using any method`);
-                    }
                 }
 
                 // Add a small delay between API calls to avoid rate limiting
                 console.info(`Adding delay before processing next job...`);
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                await new Promise(resolve => setTimeout(resolve, 1000));
 
             } catch (error) {
-                console.error(`Error enriching job data for ${job.company}: ${error.message}`);
+                console.error(`Error collecting website data for ${job.company}: ${error.message}`);
                 if (error.stack) {
                     console.error(`Stack trace: ${error.stack}`);
                 }

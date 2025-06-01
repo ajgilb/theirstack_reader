@@ -7,6 +7,7 @@
 import 'dotenv/config';
 import { Actor } from 'apify';
 import { searchAllJobs, processJobsForDatabase } from './google_jobs_api.js';
+import { searchAllJobsWithBing } from './bing_search_api.js';
 import { testFunction } from './test.js';
 import { sendCompletionEmail } from './email.js';
 import {
@@ -483,8 +484,9 @@ try {
         fullTimeOnly = true,
         excludeFastFood = true,
         excludeRecruiters = true,
-        includeHunterData = true,
-        testMode = false
+        includeWebsiteData = false,
+        testMode = false,
+        searchEngine = 'google'
     } = input;
 
     // Update the global isTestMode variable
@@ -499,8 +501,8 @@ try {
     // Store queries in job stats
     jobStats.queries = [...queries];
 
-    // Force Hunter.io integration to be enabled
-    const forceHunterData = true;
+    // Website data collection (email enrichment handled by web viewer)
+    const forceWebsiteData = false;
 
     // Force database integration to be enabled
     const forcePushToDatabase = true;
@@ -509,13 +511,14 @@ try {
     const testModeLimit = 5;
 
     console.log('Google Jobs API Actor configuration:');
+    console.log(`- Search Engine: ${searchEngine}`);
     console.log(`- Queries: ${queries.join(', ')}`);
     console.log(`- Max pages per query: ${maxPagesPerQuery}`);
     console.log(`- Location filter: ${location || 'None'}`);
     console.log(`- Full-time only: ${fullTimeOnly}`);
     console.log(`- Exclude fast food: ${excludeFastFood}`);
     console.log(`- Exclude recruiters: ${excludeRecruiters}`);
-    console.log(`- Include Hunter.io data: ${forceHunterData} (forced to true)`);
+    console.log(`- Include website data: ${forceWebsiteData} (email enrichment handled by web viewer)`);
     console.log(`- Save to dataset: ${saveToDataset}`);
     console.log(`- Push to database: ${forcePushToDatabase} (forced to true)`);
     // Always show database info since forcePushToDatabase is always true
@@ -640,9 +643,46 @@ try {
             throw new Error('Failed to fetch existing jobs from database. Cannot continue without this data.');
         }
 
-        // Search for jobs, passing the existing jobs map to avoid processing jobs that already exist
-        console.log(`Searching for jobs with query: "${query}" (${testMode ? 'test mode - up to 3 pages' : `up to ${pagesToProcess} pages`}) with database optimization`);
-        const jobs = await searchAllJobs(query, location, pagesToProcess, existingJobs);
+        // Search for jobs based on selected search engine
+        let jobs = [];
+
+        if (searchEngine === 'google') {
+            console.log(`Searching for jobs with Google Jobs API: "${query}" (${testMode ? 'test mode - up to 3 pages' : `up to ${pagesToProcess} pages`}) with database optimization`);
+            jobs = await searchAllJobs(query, location, pagesToProcess, existingJobs);
+        } else if (searchEngine === 'bing') {
+            console.log(`Searching for jobs with Bing Search API: "${query}" (${testMode ? 'test mode' : 'full search'}) with database optimization`);
+            // For Bing, we search one query at a time, so pass it as an array
+            const bingResults = testMode ? 5 : 10; // Limit results in test mode
+            jobs = await searchAllJobsWithBing([query], location, bingResults, existingJobs);
+        } else if (searchEngine === 'both') {
+            console.log(`Searching for jobs with both Google Jobs API and Bing Search API: "${query}"`);
+
+            // Search with Google Jobs first
+            console.log(`Google search for: "${query}"`);
+            const googleJobs = await searchAllJobs(query, location, pagesToProcess, existingJobs);
+
+            // Search with Bing
+            console.log(`Bing search for: "${query}"`);
+            const bingResults = testMode ? 5 : 10;
+            const bingJobs = await searchAllJobsWithBing([query], location, bingResults, existingJobs);
+
+            // Combine results and deduplicate
+            const combinedJobs = [...googleJobs, ...bingJobs];
+            const jobMap = new Map();
+
+            // Deduplicate by title + company combination
+            for (const job of combinedJobs) {
+                const key = `${job.title.toLowerCase()}|${job.company.toLowerCase()}`;
+                if (!jobMap.has(key)) {
+                    jobMap.set(key, job);
+                } else {
+                    console.info(`Deduplicating job: "${job.title}" at "${job.company}" (found in both Google and Bing)`);
+                }
+            }
+
+            jobs = Array.from(jobMap.values());
+            console.log(`Combined search results: ${googleJobs.length} from Google + ${bingJobs.length} from Bing = ${combinedJobs.length} total, ${jobs.length} after deduplication`);
+        }
 
         if (jobs.length === 0) {
             console.log(`No jobs found for query: "${query}"`);
@@ -675,9 +715,9 @@ try {
         }
 
         // Process jobs for database insertion
-        // Always use forceHunterData (which is true) instead of includeHunterData
-        console.log(`Processing ${jobsToProcess.length} jobs with Hunter.io integration...`);
-        const processedJobs = await processJobsForDatabase(jobsToProcess, forceHunterData);
+        // Website data collection disabled (email enrichment handled by web viewer)
+        console.log(`Processing ${jobsToProcess.length} jobs for database insertion...`);
+        const processedJobs = await processJobsForDatabase(jobsToProcess, forceWebsiteData);
 
         // Track excluded jobs for email reporting
         const excludedJobs = jobsToProcess.filter(job => job._exclusionReason);
