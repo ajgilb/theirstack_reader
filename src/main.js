@@ -4,7 +4,6 @@
  * This actor uses the SearchAPI.io Google Jobs API to search for job listings
  * and save them to a dataset or push them to a database.
  */
-import 'dotenv/config';
 import { Actor } from 'apify';
 import { searchAllJobs, processJobsForDatabase } from './google_jobs_api.js';
 import { searchAllJobsWithBing } from './bing_search_api.js';
