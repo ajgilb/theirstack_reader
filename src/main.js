@@ -450,25 +450,17 @@ try {
         'Lexington KY', 'Stockton CA', 'Corpus Christi TX', 'Henderson NV', 'Riverside CA'
     ];
 
-    // Define base search terms
-    const baseTerms = [
-        'restaurant chef jobs',
-        'restaurant manager jobs',
-        'hotel chef jobs',
-        'hotel manager jobs',
-        'private chef jobs',
-        'household chef jobs',
-        'restaurant executive jobs',
-        'hotel executive jobs'
+    // Define broad US-wide search terms for better coverage
+    const defaultQueries = [
+        'restaurant management jobs available United States',
+        'hotel management jobs available United States',
+        'hotel chef jobs available United States',
+        'restaurant chef jobs available United States',
+        'restaurant corporate office jobs available United States',
+        'restaurant executive jobs available United States',
+        'restaurant director jobs available United States',
+        'private chef jobs available United States'
     ];
-
-    // Generate default queries by combining each base term with each city
-    const defaultQueries = [];
-    for (const term of baseTerms) {
-        for (const city of topCities) {
-            defaultQueries.push(`${term} ${city}`);
-        }
-    }
 
     // Extract input parameters with defaults
     const {
@@ -480,7 +472,7 @@ try {
         databaseUrl = process.env.DATABASE_URL ? process.env.DATABASE_URL.replace('DATABASE_URL=', '') : '', // Remove DATABASE_URL= prefix if present
         databaseTable = 'culinary_jobs_google',
         deduplicateJobs = true,
-        fullTimeOnly = true,
+        fullTimeOnly = false,
         excludeFastFood = true,
         excludeRecruiters = true,
         includeWebsiteData = false,
