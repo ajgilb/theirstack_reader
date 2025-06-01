@@ -16,14 +16,14 @@
         "description": "List of search queries to run",
         "editor": "stringList",
         "default": [
-          "restaurant chef jobs New York NY",
-          "restaurant chef jobs Los Angeles CA",
-          "restaurant chef jobs Chicago IL",
-          "restaurant manager jobs New York NY",
-          "restaurant manager jobs Los Angeles CA",
-          "hotel chef jobs New York NY",
-          "hotel chef jobs Los Angeles CA",
-          "hotel manager jobs New York NY"
+          "restaurant management jobs available United States",
+          "hotel management jobs available United States",
+          "hotel chef jobs available United States",
+          "restaurant chef jobs available United States",
+          "restaurant corporate office jobs available United States",
+          "restaurant executive jobs available United States",
+          "restaurant director jobs available United States",
+          "private chef jobs available United States"
         ]
       },
       "location": {
@@ -102,7 +102,7 @@
         "description": "Which search engine to use for job searches",
         "enum": ["google", "bing", "both"],
         "enumTitles": ["Google Jobs API", "Bing Search API", "Both (Google + Bing)"],
-        "default": "bing"
+        "default": "google"
       }
     },
     "required": ["queries"]
