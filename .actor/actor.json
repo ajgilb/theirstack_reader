@@ -71,12 +71,7 @@
         "description": "Whether to check for and skip duplicate jobs when pushing to database",
         "default": true
       },
-      "fullTimeOnly": {
-        "title": "Full-Time Only",
-        "type": "boolean",
-        "description": "Whether to filter for full-time positions only",
-        "default": true
-      },
+
       "excludeFastFood": {
         "title": "Exclude Fast Food",
         "type": "boolean",

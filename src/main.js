@@ -472,7 +472,7 @@ try {
         databaseUrl = process.env.DATABASE_URL ? process.env.DATABASE_URL.replace('DATABASE_URL=', '') : '', // Remove DATABASE_URL= prefix if present
         databaseTable = 'culinary_jobs_google',
         deduplicateJobs = true,
-        fullTimeOnly = false,
+
         excludeFastFood = true,
         excludeRecruiters = true,
         includeWebsiteData = false,
@@ -506,7 +506,7 @@ try {
     console.log(`- Queries: ${queries.join(', ')}`);
     console.log(`- Max pages per query: ${maxPagesPerQuery}`);
     console.log(`- Location filter: ${location || 'None'}`);
-    console.log(`- Full-time only: ${fullTimeOnly}`);
+
     console.log(`- Exclude fast food: ${excludeFastFood}`);
     console.log(`- Exclude recruiters: ${excludeRecruiters}`);
     console.log(`- Include website data: ${forceWebsiteData} (URL collection enabled, email enrichment handled by web viewer)`);
@@ -683,18 +683,8 @@ try {
         console.log(`Found ${jobs.length} jobs for query: "${query}"`);
         totalJobsFound += jobs.length;
 
-        // Filter for full-time positions if requested
-        let filteredJobs = jobs;
-        if (fullTimeOnly) {
-            filteredJobs = jobs.filter(job =>
-                job.schedule === 'Full-time' ||
-                (job.extensions && job.extensions.some(ext => ext.includes('Full-time')))
-            );
-            console.log(`Filtered to ${filteredJobs.length} full-time positions out of ${jobs.length} total jobs`);
-        }
-
         // In test mode, only process a limited number of jobs
-        const jobsToProcess = testMode ? filteredJobs.slice(0, testModeLimit) : filteredJobs;
+        const jobsToProcess = testMode ? jobs.slice(0, testModeLimit) : jobs;
         console.log(`Processing ${jobsToProcess.length} jobs${testMode ? ` (test mode - limit: ${testModeLimit})` : ''}`);
 
         // Log the jobs we're processing
