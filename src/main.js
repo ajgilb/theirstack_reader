@@ -788,8 +788,14 @@ try {
             // Database connection should already be initialized
             if (dbInitialized) {
                 // Insert jobs into the database
-                const insertedCount = await insertJobsIntoDatabase(processedJobs);
-                console.log(`Successfully inserted ${insertedCount} jobs into the database (${databaseTable}).`);
+                const dbResult = await insertJobsIntoDatabase(processedJobs);
+                console.log(`Successfully inserted/updated ${dbResult.insertedCount} jobs into the database (${databaseTable}).`);
+
+                // Update job statistics for email reporting
+                jobStats.newJobs.push(...dbResult.newJobs);
+                jobStats.skippedDuplicateJobs.push(...dbResult.updatedJobs);
+
+                console.log(`Database results: ${dbResult.newJobs.length} new jobs, ${dbResult.updatedJobs.length} updated jobs`);
             } else {
                 console.error(`Failed to initialize database connection. Please check your database credentials.`);
                 console.error(`Make sure to set DATABASE_URL or all SUPABASE_* environment variables in the Apify console.`);

@@ -305,15 +305,17 @@ async function createIndexes() {
 /**
  * Inserts job data into the database
  * @param {Array} jobs - Array of job objects to insert
- * @returns {Promise<number>} - Number of jobs successfully inserted
+ * @returns {Promise<Object>} - Object with insertedCount, newJobs, and updatedJobs arrays
  */
 async function insertJobsIntoDatabase(jobs) {
     if (!pool) {
         console.error('Database not initialized');
-        return 0;
+        return { insertedCount: 0, newJobs: [], updatedJobs: [] };
     }
 
     let insertedCount = 0;
+    const newJobs = [];
+    const updatedJobs = [];
     const maxRetries = 3;
 
     for (const job of jobs) {
@@ -373,6 +375,7 @@ async function insertJobsIntoDatabase(jobs) {
                 ]);
 
                 let jobId;
+                let isNewJob = false;
                 if (checkResult.rows.length > 0) {
                     // Update existing job
                     console.info(`Updating existing job with ID: ${checkResult.rows[0].id}`);
@@ -414,8 +417,10 @@ async function insertJobsIntoDatabase(jobs) {
                         checkResult.rows[0].id
                     ]);
                     jobId = updateResult.rows[0].id;
+                    updatedJobs.push(job);
                 } else {
                     // Insert new job
+                    isNewJob = true;
                     const insertQuery = `
                         INSERT INTO culinary_jobs_google (
                             title, company, parent_company, location, salary,
@@ -446,6 +451,7 @@ async function insertJobsIntoDatabase(jobs) {
                         '' // parent_url
                     ]);
                     jobId = insertResult.rows[0].id;
+                    newJobs.push(job);
                 }
 
                 // Insert email contacts if available
@@ -507,7 +513,11 @@ async function insertJobsIntoDatabase(jobs) {
     }
 
     console.info(`Database operations completed. Successfully inserted/updated ${insertedCount} jobs.`);
-    return insertedCount;
+    return {
+        insertedCount,
+        newJobs,
+        updatedJobs
+    };
 }
 
 /**
