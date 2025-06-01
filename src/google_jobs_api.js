@@ -201,7 +201,7 @@ async function searchAllJobs(query, location = '', maxPages = 5, existingJobs = 
 const EXCLUDED_COMPANIES = new Set([
     "Alliance Personnel", "August Point Advisors", "Bon Appetit", "Capital Restaurant Associates",
     "Chartwells", "Compass", "CORE Recruitment", "EHS Recruiting", "Empowered Hospitality",
-    "Eurest", "Goodwin Recruiting", "HMG Plus - New York", "LSG Sky Chefs", "Major Food Group",
+    "Eurest", "Gecko Hospitality", "Goodwin Recruiting", "HMG Plus - New York", "LSG Sky Chefs", "Major Food Group",
     "Measured HR", "One Haus", "Patrice & Associates", "Persone NYC", "Playbook Advisors",
     "Restaurant Associates", "Source One Hospitality", "Ten Five Hospitality",
     "The Goodkind Group", "Tuttle Hospitality", "Willow Tree Recruiting",
