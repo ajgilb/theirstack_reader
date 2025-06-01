@@ -1,15 +1,22 @@
 {
-  "name": "apify-to-supabase-uploader",
+  "name": "google-jobs-api-actor",
   "version": "1.0.0",
-  "description": "Upload Apify dataset JSON to Supabase database",
+  "description": "Searches for job listings using Google Jobs API or Bing Search API via SearchAPI.io, filters results, and saves to database",
   "type": "module",
-  "main": "upload_to_supabase.js",
+  "main": "src/main.js",
   "scripts": {
-    "upload": "node upload_to_supabase.js"
+    "start": "node src/main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "apify": "^3.1.10",
+    "crawlee": "^3.5.8",
     "pg": "^8.11.3"
   },
   "author": "AJ Gilbert",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ajgilb/google_jobs_api_actor.git"
+  }
 }
