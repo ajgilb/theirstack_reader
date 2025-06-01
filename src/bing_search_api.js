@@ -35,7 +35,7 @@ const EXCLUDED_COMPANY_NAMES = [
     // Recruiting/Staffing Companies
     'robert half', 'roberthalf', 'randstad', 'adecco', 'manpower', 'kelly services',
     'kellyservices', 'robert walters', 'robertwalters', 'hays', 'michael page',
-    'michaelpage', 'gecko hospitality', 'geckohospitality',
+    'michaelpage', 'gecko hospitality', 'geckohospitality', 'hospitality confidential', 'hospitalityconfidential',
 
     // Craigslist variants (any domain or company name containing these)
     'craigslist', 'craiglist', 'craig list', 'craigs list', 'craig\'s list',

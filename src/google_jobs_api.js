@@ -201,7 +201,7 @@ async function searchAllJobs(query, location = '', maxPages = 5, existingJobs = 
 const EXCLUDED_COMPANIES = new Set([
     "Alliance Personnel", "August Point Advisors", "Bon Appetit", "Capital Restaurant Associates",
     "Chartwells", "Compass", "CORE Recruitment", "EHS Recruiting", "Empowered Hospitality",
-    "Eurest", "Gecko Hospitality", "Goodwin Recruiting", "HMG Plus - New York", "LSG Sky Chefs", "Major Food Group",
+    "Eurest", "Gecko Hospitality", "Goodwin Recruiting", "HMG Plus - New York", "Hospitality Confidential", "LSG Sky Chefs", "Major Food Group",
     "Measured HR", "One Haus", "Patrice & Associates", "Persone NYC", "Playbook Advisors",
     "Restaurant Associates", "Source One Hospitality", "Ten Five Hospitality",
     "The Goodkind Group", "Tuttle Hospitality", "Willow Tree Recruiting",
@@ -258,6 +258,20 @@ const FAST_FOOD_RESTAURANTS = new Set([
 ].map(name => name.toLowerCase()));
 
 /**
+ * Normalizes company name for better matching by removing apostrophes and extra spaces
+ * @param {string} name - Company name to normalize
+ * @returns {string} - Normalized company name
+ */
+function normalizeCompanyName(name) {
+    if (!name) return '';
+    return name.toLowerCase()
+        .replace(/'/g, '')  // Remove apostrophes
+        .replace(/'/g, '')  // Remove smart apostrophes
+        .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
+        .trim();
+}
+
+/**
  * Checks if a company should be excluded based on exclusion lists
  * @param {string} company - Company name to check
  * @returns {Object} - Object with isExcluded flag and reason
@@ -266,22 +280,28 @@ function shouldExcludeCompany(company) {
     if (!company || company === 'Unknown Company') return { isExcluded: false, reason: null };
 
     const lowerCompany = company.toLowerCase();
+    const normalizedCompany = normalizeCompanyName(company);
 
     // Check excluded companies list (recruiters, etc.)
     for (const excluded of EXCLUDED_COMPANIES) {
-        if (lowerCompany.includes(excluded)) {
+        const normalizedExcluded = normalizeCompanyName(excluded);
+        if (lowerCompany.includes(excluded) || normalizedCompany.includes(normalizedExcluded)) {
             return { isExcluded: true, reason: 'excluded_company', match: excluded };
         }
     }
 
     // Check fast food restaurants list (original list)
     for (const fastFood of FAST_FOOD_RESTAURANTS) {
-        // Use more precise matching for fast food
-        // Either exact match, or surrounded by word boundaries
+        const normalizedFastFood = normalizeCompanyName(fastFood);
+        // Use more precise matching for fast food with normalized names
         if (lowerCompany === fastFood ||
+            normalizedCompany === normalizedFastFood ||
             lowerCompany.includes(` ${fastFood} `) ||
             lowerCompany.startsWith(`${fastFood} `) ||
-            lowerCompany.endsWith(` ${fastFood}`)) {
+            lowerCompany.endsWith(` ${fastFood}`) ||
+            normalizedCompany.includes(` ${normalizedFastFood} `) ||
+            normalizedCompany.startsWith(`${normalizedFastFood} `) ||
+            normalizedCompany.endsWith(` ${normalizedFastFood}`)) {
             return { isExcluded: true, reason: 'fast_food', match: fastFood };
         }
     }
@@ -289,14 +309,18 @@ function shouldExcludeCompany(company) {
     // Check comprehensive restaurant chains list
     for (const chain of EXCLUDED_RESTAURANT_CHAINS) {
         const lowerChain = chain.toLowerCase();
-        // Use more precise matching for restaurant chains
-        // Either exact match, or surrounded by word boundaries
+        const normalizedChain = normalizeCompanyName(chain);
+        // Use more precise matching for restaurant chains with normalized names
         if (lowerCompany === lowerChain ||
+            normalizedCompany === normalizedChain ||
             lowerCompany.includes(` ${lowerChain} `) ||
             lowerCompany.startsWith(`${lowerChain} `) ||
             lowerCompany.endsWith(` ${lowerChain}`) ||
-            // Also check if company name contains the chain name (for franchises)
-            lowerCompany.includes(lowerChain)) {
+            lowerCompany.includes(lowerChain) ||
+            normalizedCompany.includes(` ${normalizedChain} `) ||
+            normalizedCompany.startsWith(`${normalizedChain} `) ||
+            normalizedCompany.endsWith(` ${normalizedChain}`) ||
+            normalizedCompany.includes(normalizedChain)) {
             return { isExcluded: true, reason: 'restaurant_chain', match: chain };
         }
     }
