@@ -107,7 +107,7 @@
         "description": "Which search engine to use for job searches",
         "enum": ["google", "bing", "both"],
         "enumTitles": ["Google Jobs API", "Bing Search API", "Both (Google + Bing)"],
-        "default": "google"
+        "default": "bing"
       }
     },
     "required": ["queries"]
