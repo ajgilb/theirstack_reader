@@ -39,6 +39,7 @@ const EXCLUDED_COMPANY_NAMES = [
 
     // Craigslist variants (any domain or company name containing these)
     'craigslist', 'craiglist', 'craig list', 'craigs list', 'craig\'s list',
+    'detroit.craigslist', 'newyork.craigslist', 'chicago.craigslist', 'losangeles.craigslist',
 
     // Other aggregators and job sites
     'culinary agents', 'hospitality online', 'chicagotribune', 'thechefagency',
@@ -73,6 +74,32 @@ function shouldExcludeCompany(companyName) {
     return EXCLUDED_COMPANY_NAMES.some(excludedName => {
         return lowerCompany.includes(excludedName);
     });
+}
+
+/**
+ * Checks if a job should be excluded because it's hourly/per hour work
+ * @param {Object} result - The search result object with title and snippet
+ * @returns {boolean} - True if the job should be excluded (is hourly)
+ */
+function shouldExcludeHourlyJob(result) {
+    if (!result) return false;
+
+    const textToCheck = `${result.title || ''} ${result.snippet || ''}`.toLowerCase();
+
+    // Patterns that indicate hourly work
+    const hourlyPatterns = [
+        'per hour',
+        'hourly rate',
+        'hourly wage',
+        'hourly pay',
+        '/hour',
+        '/hr',
+        'hour rate',
+        'hour wage',
+        'hour pay'
+    ];
+
+    return hourlyPatterns.some(pattern => textToCheck.includes(pattern));
 }
 
 /**
@@ -233,7 +260,7 @@ function extractSalary(result) {
  * @param {number} maxResults - Maximum number of results to return (default: 10)
  * @returns {Promise<Array>} - Array of job objects
  */
-async function searchJobsWithBing(query, location = '', maxResults = 50) {
+async function searchJobsWithBing(query, location = '', maxResults = 100) {
     const apiKey = process.env.SEARCH_API_KEY;
 
     if (!apiKey) {
@@ -288,6 +315,12 @@ async function searchJobsWithBing(query, location = '', maxResults = 50) {
                 continue;
             }
 
+            // Skip hourly jobs
+            if (shouldExcludeHourlyJob(result)) {
+                console.info(`Skipping hourly job result #${i+1}: "${result.title}" (contains hourly/per hour text)`);
+                continue;
+            }
+
             // Extract job information
             const jobTitle = extractJobTitle(result.title);
             const company = extractCompanyName(result);
@@ -299,6 +332,9 @@ async function searchJobsWithBing(query, location = '', maxResults = 50) {
                 console.info(`Skipping excluded company result #${i+1}: "${company}" from ${result.link}`);
                 continue;
             }
+
+            // Debug: Log company name for troubleshooting
+            console.info(`Company extracted: "${company}" from ${result.link}`);
 
             // Skip if we can't extract basic job info
             if (jobTitle === 'Unknown Position' && company === 'Unknown Company') {
@@ -363,7 +399,7 @@ function extractDomainFromUrl(url) {
  * @param {Map} existingJobs - Map of existing jobs to avoid duplicates
  * @returns {Promise<Array>} - Array of job objects
  */
-async function searchAllJobsWithBing(queries, location = '', maxResults = 50, existingJobs = null) {
+async function searchAllJobsWithBing(queries, location = '', maxResults = 100, existingJobs = null) {
     let allJobs = [];
     let skippedExistingJobs = 0;
 
@@ -442,6 +478,7 @@ export {
     searchAllJobsWithBing,
     shouldExcludeJobUrl,
     shouldExcludeCompany,
+    shouldExcludeHourlyJob,
     extractJobTitle,
     extractCompanyName,
     extractLocation,
