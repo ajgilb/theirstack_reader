@@ -643,7 +643,7 @@ try {
         } else if (searchEngine === 'bing') {
             console.log(`Searching for jobs with Bing Search API: "${query}" (${testMode ? 'test mode' : 'full search'}) with database optimization`);
             // For Bing, we search one query at a time, so pass it as an array
-            const bingResults = testMode ? 5 : 10; // Limit results in test mode
+            const bingResults = testMode ? 10 : 50; // More results for better coverage
             jobs = await searchAllJobsWithBing([query], location, bingResults, existingJobs);
         } else if (searchEngine === 'both') {
             console.log(`Searching for jobs with both Google Jobs API and Bing Search API: "${query}"`);
@@ -654,7 +654,7 @@ try {
 
             // Search with Bing
             console.log(`Bing search for: "${query}"`);
-            const bingResults = testMode ? 5 : 10;
+            const bingResults = testMode ? 10 : 50;
             const bingJobs = await searchAllJobsWithBing([query], location, bingResults, existingJobs);
 
             // Combine results and deduplicate

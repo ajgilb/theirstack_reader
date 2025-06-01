@@ -37,7 +37,7 @@ const EXCLUDED_COMPANY_NAMES = [
     'kellyservices', 'robert walters', 'robertwalters', 'hays', 'michael page',
     'michaelpage',
 
-    // Craigslist variants
+    // Craigslist variants (any domain or company name containing these)
     'craigslist', 'craiglist', 'craig list', 'craigs list', 'craig\'s list',
 
     // Other aggregators and job sites
@@ -233,7 +233,7 @@ function extractSalary(result) {
  * @param {number} maxResults - Maximum number of results to return (default: 10)
  * @returns {Promise<Array>} - Array of job objects
  */
-async function searchJobsWithBing(query, location = '', maxResults = 10) {
+async function searchJobsWithBing(query, location = '', maxResults = 50) {
     const apiKey = process.env.SEARCH_API_KEY;
 
     if (!apiKey) {
@@ -363,7 +363,7 @@ function extractDomainFromUrl(url) {
  * @param {Map} existingJobs - Map of existing jobs to avoid duplicates
  * @returns {Promise<Array>} - Array of job objects
  */
-async function searchAllJobsWithBing(queries, location = '', maxResults = 10, existingJobs = null) {
+async function searchAllJobsWithBing(queries, location = '', maxResults = 50, existingJobs = null) {
     let allJobs = [];
     let skippedExistingJobs = 0;
 
