@@ -500,8 +500,8 @@ try {
     // Store queries in job stats
     jobStats.queries = [...queries];
 
-    // Website data collection (email enrichment handled by web viewer)
-    const forceWebsiteData = false;
+    // Website data collection enabled (email enrichment handled by web viewer)
+    const forceWebsiteData = true;
 
     // Force database integration to be enabled
     const forcePushToDatabase = true;
@@ -517,7 +517,7 @@ try {
     console.log(`- Full-time only: ${fullTimeOnly}`);
     console.log(`- Exclude fast food: ${excludeFastFood}`);
     console.log(`- Exclude recruiters: ${excludeRecruiters}`);
-    console.log(`- Include website data: ${forceWebsiteData} (email enrichment handled by web viewer)`);
+    console.log(`- Include website data: ${forceWebsiteData} (URL collection enabled, email enrichment handled by web viewer)`);
     console.log(`- Save to dataset: ${saveToDataset}`);
     console.log(`- Push to database: ${forcePushToDatabase} (forced to true)`);
     // Always show database info since forcePushToDatabase is always true
