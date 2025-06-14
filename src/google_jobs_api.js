@@ -6,6 +6,7 @@
 
 import { getWebsiteUrlFromSearchAPI, getDomainFromUrl } from './search_api.js';
 import { EXCLUDED_RESTAURANT_CHAINS } from './excluded_chains.js';
+import { isSalaryCompanyName } from './bing_search_api.js';
 
 /**
  * Searches for job listings using the Google Jobs API
@@ -86,7 +87,7 @@ async function searchJobs(query, location = '', nextPageToken = null) {
             if (!companyName) {
                 // Try to extract from title (e.g., "McDonald's - Cook")
                 const titleMatch = job.title ? job.title.match(/^(.*?)\s+-\s+/) : null;
-                if (titleMatch && titleMatch[1]) {
+                if (titleMatch && titleMatch[1] && !isSalaryCompanyName(titleMatch[1])) {
                     companyName = titleMatch[1];
                 }
 
@@ -94,10 +95,16 @@ async function searchJobs(query, location = '', nextPageToken = null) {
                 if (!companyName && job.description) {
                     // Look for common patterns like "Join our team at [Company]"
                     const descMatch = job.description.match(/(?:at|with|for|join)\s+([\w\s&']+?)(?:\sin|\.|\!|\,)/i);
-                    if (descMatch && descMatch[1]) {
+                    if (descMatch && descMatch[1] && !isSalaryCompanyName(descMatch[1].trim())) {
                         companyName = descMatch[1].trim();
                     }
                 }
+            }
+
+            // Final check: if the extracted company name is a salary-related word, reset to Unknown
+            if (companyName && isSalaryCompanyName(companyName)) {
+                console.info(`Company name is a salary-related word, resetting: "${companyName}"`);
+                companyName = 'Unknown Company';
             }
 
             return {
@@ -367,6 +374,19 @@ async function processJobsForDatabase(jobs, includeWebsiteData = false) {
             };
 
             processedJobs.push(basicProcessedJob);
+            continue;
+        }
+
+        // Check if company name is a salary-related word
+        if (isSalaryCompanyName(job.company)) {
+            console.info(`Excluding job with salary-related company name: "${job.title}" at "${job.company}"`);
+            excludedCount++;
+            excludedByCompany++; // Count as excluded company for stats
+
+            // Add excluded job to the return value for tracking
+            job._exclusionReason = 'salary_company_name';
+            job._exclusionMatch = job.company;
+
             continue;
         }
 

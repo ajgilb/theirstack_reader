@@ -465,7 +465,7 @@ try {
     // Extract input parameters with defaults
     const {
         queries = defaultQueries,
-        maxPagesPerQuery = 20,
+        maxPagesPerQuery = 40,
         location = '',
         saveToDataset = true,
         pushToDatabase: inputPushToDatabase = true,

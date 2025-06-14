@@ -8,8 +8,8 @@
  * These are major job boards and sites that aggregate jobs rather than direct employers
  */
 const EXCLUDED_JOB_DOMAINS = [
-    // Major Job Boards
-    'indeed.com', 'linkedin.com', 'glassdoor.com', 'ziprecruiter.com',
+    // Major Job Boards (Indeed removed to allow Indeed listings)
+    'linkedin.com', 'glassdoor.com', 'ziprecruiter.com',
     'monster.com', 'careerbuilder.com', 'simplyhired.com', 'snagajob.com',
     'joblist.com', 'jobrapido.com', 'ihirechefs.com', 'chefjobsnetwork.com',
     
@@ -19,7 +19,10 @@ const EXCLUDED_JOB_DOMAINS = [
     
     // General directories and listing sites
     'yellowpages.com', 'whitepages.com', 'superpages.com',
-    'manta.com', 'bbb.org', 'yelp.com', 'google.com'
+    'manta.com', 'bbb.org', 'yelp.com', 'google.com',
+
+    // Fast food chains (excluded to focus on professional culinary positions)
+    'mcdonalds.com'
 ];
 
 /**
@@ -43,7 +46,10 @@ const EXCLUDED_COMPANY_NAMES = [
 
     // Other aggregators and job sites
     'culinary agents', 'hospitality online', 'chicagotribune', 'thechefagency',
-    'the chef agency', 'maggianosjobs', 'flagshiprestaurantgroup', 'hrmdirect'
+    'the chef agency', 'maggianosjobs', 'flagshiprestaurantgroup', 'hrmdirect',
+
+    // Fast food chains (excluded to focus on professional culinary positions)
+    'mcdonalds', 'mcdonald\'s', 'mcdonald', 'mc donalds'
 ];
 
 /**
@@ -138,6 +144,32 @@ function extractJobTitle(title) {
 }
 
 /**
+ * Checks if a company name is a salary-related word that should be excluded
+ * @param {string} companyName - The company name to check
+ * @returns {boolean} - True if the company name is a salary-related word
+ */
+function isSalaryCompanyName(companyName) {
+    if (!companyName || typeof companyName !== 'string') return false;
+
+    const lowerName = companyName.toLowerCase().trim();
+
+    // Simple list of salary-related words that shouldn't be company names
+    const salaryWords = [
+        'salary',
+        'pay',
+        'wage',
+        'wages',
+        'compensation',
+        'benefits',
+        'hourly',
+        'annual',
+        'competitive'
+    ];
+
+    return salaryWords.includes(lowerName);
+}
+
+/**
  * Extracts company name from search result
  * @param {Object} result - The search result object
  * @returns {string} - Extracted company name
@@ -153,12 +185,12 @@ function extractCompanyName(result) {
             .replace(/\.net$/, '')
             .replace(/^www\./, '')
             .trim();
-        
-        if (company && company.length > 2) {
+
+        if (company && company.length > 2 && !isSalaryCompanyName(company)) {
             return company;
         }
     }
-    
+
     // Try to extract from domain
     if (result.domain) {
         let company = result.domain
@@ -167,12 +199,12 @@ function extractCompanyName(result) {
             .replace(/\.org$/, '')
             .replace(/\.net$/, '')
             .trim();
-        
-        if (company && company.length > 2) {
+
+        if (company && company.length > 2 && !isSalaryCompanyName(company)) {
             return company;
         }
     }
-    
+
     // Try to extract from link
     if (result.link) {
         try {
@@ -183,8 +215,8 @@ function extractCompanyName(result) {
                 .replace(/\.org$/, '')
                 .replace(/\.net$/, '')
                 .trim();
-            
-            if (company && company.length > 2) {
+
+            if (company && company.length > 2 && !isSalaryCompanyName(company)) {
                 return company;
             }
         } catch (error) {
@@ -330,6 +362,12 @@ async function searchJobsWithBing(query, location = '', maxResults = 100) {
             // Skip if company is a job board or recruiting site
             if (shouldExcludeCompany(company)) {
                 console.info(`Skipping excluded company result #${i+1}: "${company}" from ${result.link}`);
+                continue;
+            }
+
+            // Skip if company name is a salary-related word
+            if (isSalaryCompanyName(company)) {
+                console.info(`Skipping result #${i+1}: Company name is a salary-related word: "${company}" from ${result.link}`);
                 continue;
             }
 
@@ -479,6 +517,7 @@ export {
     shouldExcludeJobUrl,
     shouldExcludeCompany,
     shouldExcludeHourlyJob,
+    isSalaryCompanyName,
     extractJobTitle,
     extractCompanyName,
     extractLocation,
