@@ -1,13 +1,14 @@
 /**
- * Google Jobs API Actor
+ * Indeed Direct Job Scraper
  *
- * This actor uses the SearchAPI.io Google Jobs API to search for job listings
- * and save them to a dataset or push them to a database.
+ * This actor is a specialized job scraping tool that directly scrapes Indeed.com
+ * for culinary and restaurant management positions. It bypasses APIs and scrapes
+ * Indeed directly to capture jobs that are not available through job APIs.
  */
 import { Actor } from 'apify';
-import { searchAllJobs, processJobsForDatabase } from './google_jobs_api.js';
-import { searchAllJobsWithBing } from './bing_search_api.js';
-import { testFunction } from './test.js';
+import { createIndeedSearchUrls, scrapeIndeedJobs } from './indeed_scraper.js';
+import { shouldExcludeCompany, isSalaryCompanyName } from './bing_search_api.js';
+import { getWebsiteUrlFromSearchAPI, getDomainFromUrl } from './search_api.js';
 import { sendCompletionEmail } from './email.js';
 import {
     initDatabase as importedInitDatabase,
@@ -15,8 +16,171 @@ import {
     fetchExistingJobs
 } from './database.js';
 
-// Log test function result
-console.log('Test function result:', testFunction());
+// Log startup message
+console.log('🚀 Indeed Direct Scraper starting up...');
+
+/**
+ * Enhance Indeed jobs with company website URLs using SearchAPI
+ * @param {Array} jobs - Array of job objects from Indeed scraping
+ * @returns {Array} Enhanced job objects with company website data
+ */
+async function enhanceJobsWithCompanyWebsites(jobs) {
+    const enhancedJobs = [];
+    let websiteFoundCount = 0;
+    let websiteNotFoundCount = 0;
+
+    console.log(`🔍 Starting website enhancement for ${jobs.length} jobs...`);
+
+    for (let i = 0; i < jobs.length; i++) {
+        const job = jobs[i];
+        console.log(`Processing job ${i + 1}/${jobs.length}: "${job.title}" at "${job.company}"`);
+
+        try {
+            // Get company website URL using SearchAPI
+            const websiteUrl = await getWebsiteUrlFromSearchAPI(job.company);
+
+            // Create enhanced job object with Indeed data + website data
+            const enhancedJob = {
+                // Core job data from Indeed
+                title: job.title || '',
+                company_name: job.company || '',
+                location: job.location || '',
+                description: job.description || '',
+                salary: job.salary || '',
+                posted_at: job.postedDate || new Date().toISOString(),
+                apply_link: job.jobLink || '',
+                job_id: job.jobId || '',
+                source: 'Indeed Direct',
+                scraped_at: job.scrapedAt || new Date().toISOString(),
+
+                // Enhanced data from SearchAPI
+                company_website: websiteUrl || null,
+                company_domain: websiteUrl ? getDomainFromUrl(websiteUrl) : null,
+
+                // Additional metadata
+                job_type: job.jobType || '',
+                schedule: job.schedule || '',
+                experience_level: job.experienceLevel || '',
+
+                // Salary parsing (if available)
+                salary_min: null,
+                salary_max: null,
+                salary_period: null,
+
+                // Skills and highlights (to be populated later if needed)
+                skills: [],
+                job_highlights: {
+                    qualifications: [],
+                    responsibilities: [],
+                    benefits: []
+                },
+
+                // Apply links array (Indeed format)
+                apply_links: job.jobLink ? [
+                    {
+                        link: job.jobLink,
+                        source: 'Indeed'
+                    }
+                ] : []
+            };
+
+            // Parse salary information if available
+            if (job.salary) {
+                const salaryInfo = parseSalaryString(job.salary);
+                enhancedJob.salary_min = salaryInfo.min;
+                enhancedJob.salary_max = salaryInfo.max;
+                enhancedJob.salary_period = salaryInfo.period;
+            }
+
+            if (websiteUrl) {
+                console.log(`✅ Found website for ${job.company}: ${websiteUrl}`);
+                websiteFoundCount++;
+            } else {
+                console.log(`❌ No website found for ${job.company}`);
+                websiteNotFoundCount++;
+            }
+
+            enhancedJobs.push(enhancedJob);
+
+            // Add delay between SearchAPI calls to avoid rate limiting
+            if (i < jobs.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+        } catch (error) {
+            console.error(`Error enhancing job for ${job.company}:`, error.message);
+
+            // Add job without website enhancement
+            const basicJob = {
+                title: job.title || '',
+                company_name: job.company || '',
+                location: job.location || '',
+                description: job.description || '',
+                salary: job.salary || '',
+                posted_at: job.postedDate || new Date().toISOString(),
+                apply_link: job.jobLink || '',
+                job_id: job.jobId || '',
+                source: 'Indeed Direct',
+                scraped_at: job.scrapedAt || new Date().toISOString(),
+                company_website: null,
+                company_domain: null,
+                job_type: job.jobType || '',
+                schedule: job.schedule || '',
+                experience_level: job.experienceLevel || '',
+                salary_min: null,
+                salary_max: null,
+                salary_period: null,
+                skills: [],
+                job_highlights: { qualifications: [], responsibilities: [], benefits: [] },
+                apply_links: job.jobLink ? [{ link: job.jobLink, source: 'Indeed' }] : []
+            };
+
+            enhancedJobs.push(basicJob);
+            websiteNotFoundCount++;
+        }
+    }
+
+    console.log(`🎯 Website enhancement completed:`);
+    console.log(`   ✅ Websites found: ${websiteFoundCount}`);
+    console.log(`   ❌ Websites not found: ${websiteNotFoundCount}`);
+    console.log(`   📊 Success rate: ${Math.round((websiteFoundCount / jobs.length) * 100)}%`);
+
+    return enhancedJobs;
+}
+
+/**
+ * Parse salary string to extract min, max, and period
+ * @param {string} salaryString - Salary string from Indeed
+ * @returns {Object} Parsed salary information
+ */
+function parseSalaryString(salaryString) {
+    if (!salaryString) return { min: null, max: null, period: null };
+
+    // Remove common prefixes and clean up
+    const cleaned = salaryString.replace(/^(From|Up to|Estimated)\s*/i, '').trim();
+
+    // Extract numbers (handle commas and dollar signs)
+    const numbers = cleaned.match(/\$?[\d,]+/g);
+    if (!numbers) return { min: null, max: null, period: null };
+
+    // Convert to actual numbers
+    const amounts = numbers.map(num => parseInt(num.replace(/[$,]/g, '')));
+
+    // Determine period
+    let period = 'year';
+    if (/hour|hr/i.test(salaryString)) period = 'hour';
+    else if (/month|mo/i.test(salaryString)) period = 'month';
+    else if (/week|wk/i.test(salaryString)) period = 'week';
+
+    // Return min/max
+    if (amounts.length === 1) {
+        return { min: amounts[0], max: amounts[0], period };
+    } else if (amounts.length >= 2) {
+        return { min: Math.min(...amounts), max: Math.max(...amounts), period };
+    }
+
+    return { min: null, max: null, period };
+}
 
 // Import the PostgreSQL client
 import pg from 'pg';
@@ -429,7 +593,7 @@ const jobStats = {
 };
 
 try {
-    console.log('Starting Google Jobs API Actor...');
+    console.log('Starting Indeed Job Scraper...');
 
     // Get input from the user
     const input = await Actor.getInput() || {};
@@ -450,34 +614,35 @@ try {
         'Lexington KY', 'Stockton CA', 'Corpus Christi TX', 'Henderson NV', 'Riverside CA'
     ];
 
-    // Define broad US-wide search terms for better coverage
-    const defaultQueries = [
-        'restaurant management jobs available United States',
-        'hotel management jobs available United States',
-        'hotel chef jobs available United States',
-        'restaurant chef jobs available United States',
-        'restaurant corporate office jobs available United States',
-        'restaurant executive jobs available United States',
-        'restaurant director jobs available United States',
-        'private chef jobs available United States'
+    // Define job types for direct Indeed scraping
+    const defaultJobTypes = [
+        'restaurant manager',
+        'executive chef',
+        'sous chef',
+        'kitchen manager',
+        'culinary director',
+        'food service manager',
+        'private chef',
+        'restaurant chef'
     ];
 
-    // Extract input parameters with defaults
+    // Extract input parameters with defaults for Indeed scraping
     const {
-        queries = defaultQueries,
-        maxPagesPerQuery = 40,
-        location = '',
+        jobTypes = defaultJobTypes,
+        location = 'United States',
+        salaryMin = 55000,
+        maxPages = 5,
         saveToDataset = true,
         pushToDatabase: inputPushToDatabase = true,
-        databaseUrl = process.env.DATABASE_URL ? process.env.DATABASE_URL.replace('DATABASE_URL=', '') : '', // Remove DATABASE_URL= prefix if present
-        databaseTable = 'culinary_jobs_google',
+        databaseUrl = process.env.DATABASE_URL ? process.env.DATABASE_URL.replace('DATABASE_URL=', '') : '',
+        databaseTable = 'indeed_jobs',
         deduplicateJobs = true,
 
         excludeFastFood = true,
         excludeRecruiters = true,
-        includeWebsiteData = false,
         testMode = false,
-        searchEngine = 'both'
+        useProxy = true,
+        maxConcurrency = 2
     } = input;
 
     // Update the global isTestMode variable
@@ -634,186 +799,184 @@ try {
             throw new Error('Failed to fetch existing jobs from database. Cannot continue without this data.');
         }
 
-        // Search for jobs based on selected search engine
+        // Direct Indeed scraping for job types
         let jobs = [];
 
-        if (searchEngine === 'google') {
-            console.log(`Searching for jobs with Google Jobs API: "${query}" (${testMode ? 'test mode - up to 3 pages' : `up to ${pagesToProcess} pages`}) with database optimization`);
-            jobs = await searchAllJobs(query, location, pagesToProcess, existingJobs);
-        } else if (searchEngine === 'bing') {
-            console.log(`Searching for jobs with Bing Search API: "${query}" (${testMode ? 'test mode' : 'full search'}) with database optimization`);
-            // For Bing, we search one query at a time, so pass it as an array
-            const bingResults = testMode ? 20 : 100; // No practical limit, best filtering
-            jobs = await searchAllJobsWithBing([query], location, bingResults, existingJobs);
-        } else if (searchEngine === 'both') {
-            console.log(`Searching for jobs with both Google Jobs API and Bing Search API: "${query}"`);
+        console.log(`🚀 Starting Indeed direct scraping for job types: ${jobTypes.join(', ')}`);
+        console.log(`📍 Location: ${location}`);
+        console.log(`💰 Minimum salary: $${salaryMin.toLocaleString()}`);
+        console.log(`📄 Max pages per job type: ${maxPages}`);
 
-            // Search with Google Jobs first
-            console.log(`Google search for: "${query}"`);
-            const googleJobs = await searchAllJobs(query, location, pagesToProcess, existingJobs);
+        // Create Indeed search URLs
+        const indeedUrls = createIndeedSearchUrls({
+            jobTypes,
+            location,
+            salaryMin,
+            maxPages
+        });
 
-            // Search with Bing
-            console.log(`Bing search for: "${query}"`);
-            const bingResults = testMode ? 20 : 100;
-            const bingJobs = await searchAllJobsWithBing([query], location, bingResults, existingJobs);
+        console.log(`📋 Generated ${indeedUrls.length} Indeed URLs to scrape`);
 
-            // Combine results and deduplicate
-            const combinedJobs = [...googleJobs, ...bingJobs];
-            const jobMap = new Map();
+        // Scrape jobs from Indeed
+        const scrapedJobs = await scrapeIndeedJobs(indeedUrls, {
+            maxConcurrency,
+            useProxy,
+            headless: true
+        });
 
-            // Deduplicate by title + company combination
-            for (const job of combinedJobs) {
-                const key = `${job.title.toLowerCase()}|${job.company.toLowerCase()}`;
-                if (!jobMap.has(key)) {
-                    jobMap.set(key, job);
-                } else {
-                    console.info(`Deduplicating job: "${job.title}" at "${job.company}" (found in both Google and Bing)`);
-                }
+        console.log(`✅ Scraped ${scrapedJobs.length} jobs from Indeed`);
+
+        // Filter out jobs that already exist in database
+        const newJobs = [];
+        let skippedExisting = 0;
+
+        for (const job of scrapedJobs) {
+            const jobKey = `${job.title.toLowerCase()}|${job.company.toLowerCase()}`;
+            if (existingJobs && existingJobs.has(jobKey)) {
+                console.log(`Skipping existing job: "${job.title}" at "${job.company}" (already in database)`);
+                skippedExisting++;
+                continue;
             }
-
-            jobs = Array.from(jobMap.values());
-            console.log(`Combined search results: ${googleJobs.length} from Google + ${bingJobs.length} from Bing = ${combinedJobs.length} total, ${jobs.length} after deduplication`);
+            newJobs.push(job);
         }
+
+        console.log(`📊 Job filtering results: ${scrapedJobs.length} scraped, ${skippedExisting} already exist, ${newJobs.length} new jobs to process`);
+        jobs = newJobs;
 
         if (jobs.length === 0) {
-            console.log(`No jobs found for query: "${query}"`);
-            continue;
-        }
+            console.log(`No new jobs found after filtering`);
+            console.log(`Indeed Direct Scraper completed with no new jobs.`);
+        } else {
+            console.log(`📝 Processing ${jobs.length} new jobs from Indeed...`);
+            totalJobsFound += jobs.length;
 
-        console.log(`Found ${jobs.length} jobs for query: "${query}"`);
-        totalJobsFound += jobs.length;
+            // In test mode, only process a limited number of jobs
+            const jobsToProcess = testMode ? jobs.slice(0, testModeLimit) : jobs;
+            console.log(`Processing ${jobsToProcess.length} jobs${testMode ? ` (test mode - limit: ${testModeLimit})` : ''}`);
 
-        // In test mode, only process a limited number of jobs
-        const jobsToProcess = testMode ? jobs.slice(0, testModeLimit) : jobs;
-        console.log(`Processing ${jobsToProcess.length} jobs${testMode ? ` (test mode - limit: ${testModeLimit})` : ''}`);
-
-        // Log the jobs we're processing
-        if (testMode) {
-            console.log('Jobs being processed:');
-            jobsToProcess.forEach((job, index) => {
-                console.log(`Job #${index + 1}: "${job.title}" at "${job.company}" in "${job.location}"`);
-            });
-        }
-
-        // Process jobs for database insertion
-        // Website data collection disabled (email enrichment handled by web viewer)
-        console.log(`Processing ${jobsToProcess.length} jobs for database insertion...`);
-        const processedJobs = await processJobsForDatabase(jobsToProcess, forceWebsiteData);
-
-        // Track excluded jobs for email reporting
-        const excludedJobs = jobsToProcess.filter(job => job._exclusionReason);
-        jobStats.skippedExcludedJobs.push(...excludedJobs);
-
-        // Track jobs that were skipped because they already exist in the database
-        const existingDbJobs = jobsToProcess.filter(job => job._existsInDatabase);
-        if (existingDbJobs.length > 0) {
-            console.log(`Found ${existingDbJobs.length} jobs that already exist in the database`);
-            jobStats.skippedDuplicateJobs.push(...existingDbJobs);
-        }
-
-        // Update job processing count
-        totalJobsProcessed += processedJobs.length;
-        jobStats.processedCount += processedJobs.length;
-
-        // Save to Apify dataset if requested
-        if (saveToDataset) {
-            await Actor.pushData(processedJobs);
-            console.log(`Saved ${processedJobs.length} jobs to Apify dataset`);
-            totalJobsSaved += processedJobs.length;
-        }
-
-        // Display job data in logs
-        console.log(`\n=== Job Data for Query: "${query}" ===`);
-        console.log(`Found ${processedJobs.length} jobs after filtering`);
-
-        // Display a summary of each job
-        processedJobs.forEach((job, index) => {
-            console.log(`\nJob #${index + 1}:`);
-            console.log(`Title: ${job.title}`);
-            console.log(`Company: ${job.company}`);
-            console.log(`Location: ${job.location}`);
-            console.log(`Posted: ${job.posted_at}`);
-            console.log(`Schedule: ${job.schedule}`);
-            console.log(`Experience Level: ${job.experience_level}`);
-
-            // Display salary information if available
-            if (job.salary_min || job.salary_max) {
-                const salaryMin = job.salary_min ? `$${job.salary_min.toLocaleString()}` : 'Not specified';
-                const salaryMax = job.salary_max ? `$${job.salary_max.toLocaleString()}` : 'Not specified';
-                console.log(`Salary: ${salaryMin}${job.salary_max ? ` - ${salaryMax}` : ''} ${job.salary_period}`);
-            } else {
-                console.log(`Salary: Not specified`);
-            }
-
-            // Display skills if available
-            if (job.skills && job.skills.length > 0) {
-                console.log(`Skills: ${job.skills.join(', ')}`);
-            } else {
-                console.log(`Skills: None detected`);
-            }
-
-            // Display apply link
-            console.log(`Apply Link: ${job.apply_link}`);
-
-            // Display company website and domain if available
-            if (job.company_website) {
-                console.log(`Company Website: ${job.company_website}`);
-            }
-            if (job.company_domain) {
-                console.log(`Company Domain: ${job.company_domain}`);
-            }
-
-            // Display emails if available
-            if (job.emails && job.emails.length > 0) {
-                console.log(`Emails Found: ${job.emails.length}`);
-                // Display up to 20 emails
-                job.emails.slice(0, 20).forEach((email, idx) => {
-                    console.log(`  Email #${idx+1}: ${email.email} (${email.firstName || ''} ${email.lastName || ''})${email.position ? ` - ${email.position}` : ''}`);
+            // Log the jobs we're processing
+            if (testMode) {
+                console.log('Jobs being processed:');
+                jobsToProcess.forEach((job, index) => {
+                    console.log(`Job #${index + 1}: "${job.title}" at "${job.company}" in "${job.location}"`);
                 });
             }
 
-            // Display a short excerpt of the description
-            const shortDescription = job.description.length > 150
-                ? job.description.substring(0, 150) + '...'
-                : job.description;
-            console.log(`Description: ${shortDescription}`);
-        });
+            // Enhance jobs with company website URLs using SearchAPI
+            console.log(`🔍 Enhancing ${jobsToProcess.length} jobs with company website URLs...`);
+            const enhancedJobs = await enhanceJobsWithCompanyWebsites(jobsToProcess);
 
-        console.log(`\n=== End of Job Data for Query: "${query}" ===`);
+            console.log(`✅ Enhanced ${enhancedJobs.length} jobs with company data`);
+            const processedJobs = enhancedJobs;
 
-        // Database integration - always enabled
-        if (forcePushToDatabase) {
-            console.log(`Pushing ${processedJobs.length} jobs to database...`);
+            // Track excluded jobs for email reporting
+            const excludedJobs = jobsToProcess.filter(job => job._exclusionReason);
+            jobStats.skippedExcludedJobs.push(...excludedJobs);
 
-            // Database connection should already be initialized
-            if (dbInitialized) {
-                // Insert jobs into the database
-                const dbResult = await insertJobsIntoDatabase(processedJobs);
-                console.log(`Successfully inserted/updated ${dbResult.insertedCount} jobs into the database (${databaseTable}).`);
+            // Track jobs that were skipped because they already exist in the database
+            const existingDbJobs = jobsToProcess.filter(job => job._existsInDatabase);
+            if (existingDbJobs.length > 0) {
+                console.log(`Found ${existingDbJobs.length} jobs that already exist in the database`);
+                jobStats.skippedDuplicateJobs.push(...existingDbJobs);
+            }
 
-                // Update job statistics for email reporting
-                jobStats.newJobs.push(...dbResult.newJobs);
-                jobStats.skippedDuplicateJobs.push(...dbResult.updatedJobs);
+            // Update job processing count
+            totalJobsProcessed += processedJobs.length;
+            jobStats.processedCount += processedJobs.length;
 
-                console.log(`Database results: ${dbResult.newJobs.length} new jobs, ${dbResult.updatedJobs.length} updated jobs`);
-            } else {
-                console.error(`Failed to initialize database connection. Please check your database credentials.`);
-                console.error(`Make sure to set DATABASE_URL or all SUPABASE_* environment variables in the Apify console.`);
+            // Save to Apify dataset if requested
+            if (saveToDataset) {
+                await Actor.pushData(processedJobs);
+                console.log(`Saved ${processedJobs.length} jobs to Apify dataset`);
+                totalJobsSaved += processedJobs.length;
+            }
+
+            // Display job data in logs
+            console.log(`\n=== Job Data from Indeed Direct Scraping ===`);
+            console.log(`Found ${processedJobs.length} jobs after filtering and enhancement`);
+
+            // Display a summary of each job
+            processedJobs.forEach((job, index) => {
+                console.log(`\nJob #${index + 1}:`);
+                console.log(`Title: ${job.title}`);
+                console.log(`Company: ${job.company_name}`);
+                console.log(`Location: ${job.location}`);
+                console.log(`Posted: ${job.posted_at}`);
+                console.log(`Schedule: ${job.schedule}`);
+                console.log(`Experience Level: ${job.experience_level}`);
+
+                // Display salary information if available
+                if (job.salary_min || job.salary_max) {
+                    const salaryMin = job.salary_min ? `$${job.salary_min.toLocaleString()}` : 'Not specified';
+                    const salaryMax = job.salary_max ? `$${job.salary_max.toLocaleString()}` : 'Not specified';
+                    console.log(`Salary: ${salaryMin}${job.salary_max ? ` - ${salaryMax}` : ''} ${job.salary_period}`);
+                } else {
+                    console.log(`Salary: Not specified`);
+                }
+
+                // Display skills if available
+                if (job.skills && job.skills.length > 0) {
+                    console.log(`Skills: ${job.skills.join(', ')}`);
+                } else {
+                    console.log(`Skills: None detected`);
+                }
+
+                // Display apply link
+                console.log(`Apply Link: ${job.apply_link}`);
+
+                // Display company website and domain if available
+                if (job.company_website) {
+                    console.log(`Company Website: ${job.company_website}`);
+                }
+                if (job.company_domain) {
+                    console.log(`Company Domain: ${job.company_domain}`);
+                }
+
+                // Display emails if available
+                if (job.emails && job.emails.length > 0) {
+                    console.log(`Emails Found: ${job.emails.length}`);
+                    // Display up to 20 emails
+                    job.emails.slice(0, 20).forEach((email, idx) => {
+                        console.log(`  Email #${idx+1}: ${email.email} (${email.firstName || ''} ${email.lastName || ''})${email.position ? ` - ${email.position}` : ''}`);
+                    });
+                }
+
+                // Display a short excerpt of the description
+                const shortDescription = job.description.length > 150
+                    ? job.description.substring(0, 150) + '...'
+                    : job.description;
+                console.log(`Description: ${shortDescription}`);
+            });
+
+            console.log(`\n=== End of Job Data from Indeed Direct Scraping ===`);
+
+            // Database integration - always enabled
+            if (forcePushToDatabase) {
+                console.log(`💾 Pushing ${processedJobs.length} jobs to database...`);
+
+                // Database connection should already be initialized
+                if (dbInitialized) {
+                    // Insert jobs into the database
+                    const dbResult = await insertJobsIntoDatabase(processedJobs);
+                    console.log(`✅ Successfully inserted/updated ${dbResult.insertedCount} jobs into the database (${databaseTable}).`);
+
+                    // Update job statistics for email reporting
+                    jobStats.newJobs.push(...dbResult.newJobs);
+                    jobStats.skippedDuplicateJobs.push(...dbResult.updatedJobs);
+
+                    console.log(`📊 Database results: ${dbResult.newJobs.length} new jobs, ${dbResult.updatedJobs.length} updated jobs`);
+                } else {
+                    console.error(`❌ Failed to initialize database connection. Please check your database credentials.`);
+                    console.error(`Make sure to set DATABASE_URL or all SUPABASE_* environment variables in the Apify console.`);
+                }
             }
         }
 
-        // Add a delay between queries to avoid rate limits
-        if (queries.indexOf(query) < queries.length - 1) {
-            console.log('Waiting 5 seconds before next query...');
-            await new Promise(resolve => setTimeout(resolve, 5000));
-        }
-    }
-
-    console.log(`Google Jobs API Actor completed.`);
-    console.log(`Found ${totalJobsFound} jobs, processed ${totalJobsProcessed} jobs, saved ${totalJobsSaved} jobs.`);
+    console.log(`🎉 Indeed Direct Scraper completed successfully!`);
+    console.log(`📊 Summary: Found ${totalJobsFound} jobs, processed ${totalJobsProcessed} jobs, saved ${totalJobsSaved} jobs.`);
 
 } catch (error) {
-    console.error(`Error in Google Jobs API Actor: ${error.message}`);
+    console.error(`Error in Indeed Direct Scraper: ${error.message}`);
     throw error;
 } finally {
     // Calculate end time and duration
