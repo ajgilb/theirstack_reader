@@ -94,7 +94,7 @@ async function handleCloudflareChallenge(page) {
             const maxAttempts = 9; // 45 seconds total
 
             while (attempts < maxAttempts) {
-                await page.waitForTimeout(5000);
+                await new Promise(resolve => setTimeout(resolve, 5000));
                 attempts++;
 
                 try {
@@ -109,7 +109,7 @@ async function handleCloudflareChallenge(page) {
                     if (!stillChallenge) {
                         console.log(`✅ Cloudflare challenge resolved after ${attempts * 5} seconds`);
                         // Additional wait to ensure page is fully loaded
-                        await page.waitForTimeout(3000);
+                        await new Promise(resolve => setTimeout(resolve, 3000));
                         return true;
                     }
 
@@ -334,26 +334,36 @@ async function scrapeIndeedJobs(urls, options = {}) {
 
         launchContext: {
             launchOptions: {
-                headless,
+                headless: headless === false ? false : 'new', // Use new headless mode
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
                     '--disable-dev-shm-usage',
-                    '--disable-accelerated-2d-canvas',
-                    '--no-first-run',
-                    '--no-zygote',
-                    '--disable-gpu',
                     '--disable-blink-features=AutomationControlled',
                     '--disable-features=VizDisplayCompositor',
                     '--disable-web-security',
                     '--disable-features=site-per-process',
-                    '--single-process',
                     '--disable-background-timer-throttling',
                     '--disable-backgrounding-occluded-windows',
-                    '--disable-renderer-backgrounding'
+                    '--disable-renderer-backgrounding',
+                    '--disable-ipc-flooding-protection',
+                    '--disable-hang-monitor',
+                    '--disable-client-side-phishing-detection',
+                    '--disable-popup-blocking',
+                    '--disable-prompt-on-repost',
+                    '--disable-sync',
+                    '--metrics-recording-only',
+                    '--no-first-run',
+                    '--safebrowsing-disable-auto-update',
+                    '--enable-automation',
+                    '--password-store=basic',
+                    '--use-mock-keychain'
                 ],
                 // Explicitly set executable path for Apify environment
-                executablePath: process.env.APIFY_CHROME_EXECUTABLE_PATH || undefined
+                executablePath: process.env.APIFY_CHROME_EXECUTABLE_PATH || undefined,
+                // Additional stealth options
+                ignoreDefaultArgs: ['--enable-automation'],
+                ignoreHTTPSErrors: true
             }
         },
 
@@ -370,7 +380,7 @@ async function scrapeIndeedJobs(urls, options = {}) {
                         waitUntil: 'networkidle2',
                         timeout: 30000
                     });
-                    await page.waitForTimeout(3000 + Math.random() * 2000);
+                    await new Promise(resolve => setTimeout(resolve, 3000 + Math.random() * 2000));
                     console.log('✅ Session warmed up successfully');
                 } catch (error) {
                     console.log('⚠️  Warmup failed:', error.message);
@@ -379,24 +389,46 @@ async function scrapeIndeedJobs(urls, options = {}) {
             }
 
             try {
-                // Enhanced stealth setup for each page
+                // Enhanced stealth setup for each page (2025 techniques)
                 await page.evaluateOnNewDocument(() => {
-                    // Override the `plugins` property to use a custom getter.
+                    // Remove webdriver property completely
+                    Object.defineProperty(navigator, 'webdriver', {
+                        get: () => undefined,
+                    });
+
+                    // Mock realistic plugins array
                     Object.defineProperty(navigator, 'plugins', {
-                        get: function() {
-                            return [1, 2, 3, 4, 5];
-                        },
+                        get: () => [
+                            { name: 'Chrome PDF Plugin', filename: 'internal-pdf-viewer' },
+                            { name: 'Chrome PDF Viewer', filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai' },
+                            { name: 'Native Client', filename: 'internal-nacl-plugin' }
+                        ],
                     });
 
-                    // Override the `languages` property to use a custom getter.
+                    // Mock languages
                     Object.defineProperty(navigator, 'languages', {
-                        get: function() {
-                            return ['en-US', 'en'];
-                        },
+                        get: () => ['en-US', 'en'],
                     });
 
-                    // Override the `webdriver` property to remove it entirely.
-                    delete Object.getPrototypeOf(navigator).webdriver;
+                    // Mock permissions
+                    const originalQuery = window.navigator.permissions.query;
+                    window.navigator.permissions.query = (parameters) => (
+                        parameters.name === 'notifications' ?
+                            Promise.resolve({ state: Notification.permission }) :
+                            originalQuery(parameters)
+                    );
+
+                    // Remove automation indicators
+                    delete window.chrome.runtime.onConnect;
+                    delete window.chrome.runtime.onMessage;
+
+                    // Mock chrome object
+                    window.chrome = {
+                        runtime: {},
+                        loadTimes: function() {},
+                        csi: function() {},
+                        app: {}
+                    };
                 });
 
                 // Set realistic headers and user agent for Cloudflare bypass
@@ -439,22 +471,7 @@ async function scrapeIndeedJobs(urls, options = {}) {
                     });
                 });
 
-                // Pre-navigation setup to avoid immediate blocking
-                console.log('🔧 Setting up anti-detection measures...');
-
-                // First, visit Google to establish a "human" session
-                try {
-                    await page.goto('https://www.google.com', {
-                        waitUntil: 'networkidle2',
-                        timeout: 30000
-                    });
-                    await page.waitForTimeout(2000 + Math.random() * 3000);
-                    console.log('✅ Established session via Google');
-                } catch (error) {
-                    console.log('⚠️  Could not visit Google first:', error.message);
-                }
-
-                // Navigate to Indeed with proper referrer
+                // Navigate directly to Indeed (Google warm-up is ineffective per 2025 guide)
                 console.log(`🌐 Navigating to Indeed: ${request.url}`);
                 await page.goto(request.url, {
                     waitUntil: 'networkidle2',
@@ -471,7 +488,7 @@ async function scrapeIndeedJobs(urls, options = {}) {
                 }
 
                 // Wait for job results to load
-                await page.waitForTimeout(3000);
+                await new Promise(resolve => setTimeout(resolve, 3000));
 
                 // Look for job elements using multiple selectors
                 const jobSelectors = [
@@ -537,7 +554,7 @@ async function scrapeIndeedJobs(urls, options = {}) {
                 // Add longer delay between requests to avoid rate limiting
                 const delay = 5000 + Math.random() * 5000; // 5-10 seconds
                 console.log(`⏱️  Waiting ${Math.round(delay/1000)}s before next request...`);
-                await page.waitForTimeout(delay);
+                await new Promise(resolve => setTimeout(resolve, delay));
 
             } catch (error) {
                 console.error(`❌ Error processing URL ${request.url}:`, error.message);
