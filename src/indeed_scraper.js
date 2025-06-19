@@ -63,30 +63,63 @@ async function handleCloudflareChallenge(page) {
         const title = await page.title();
         console.log(`📋 Page title: ${title}`);
 
-        // Check if we hit Cloudflare
-        if (title.includes('Just a moment') || title.includes('Cloudflare') || title.includes('Attention Required')) {
-            console.log('🛡️  Cloudflare challenge detected, waiting...');
+        // Enhanced Cloudflare detection
+        const cloudflareIndicators = [
+            'Just a moment',
+            'Checking your browser',
+            'Please wait',
+            'DDoS protection',
+            'Cloudflare',
+            'Ray ID',
+            'Attention Required',
+            'Verify you are human',
+            'Security check'
+        ];
 
-            // Wait for Cloudflare challenge to complete (up to 20 seconds)
+        const isCloudflareChallenge = cloudflareIndicators.some(indicator =>
+            title.toLowerCase().includes(indicator.toLowerCase())
+        );
+
+        // Also check page content for Cloudflare indicators
+        const bodyText = await page.evaluate(() => document.body.textContent || '').catch(() => '');
+        const hasCloudflareContent = cloudflareIndicators.some(indicator =>
+            bodyText.toLowerCase().includes(indicator.toLowerCase())
+        );
+
+        if (isCloudflareChallenge || hasCloudflareContent) {
+            console.log('🛡️  Cloudflare challenge detected, waiting for resolution...');
+
+            // Wait longer for challenge to complete (up to 45 seconds)
             let attempts = 0;
-            const maxAttempts = 20;
+            const maxAttempts = 9; // 45 seconds total
 
             while (attempts < maxAttempts) {
-                await page.waitForTimeout(1000);
-                const currentTitle = await page.title();
-
-                if (!currentTitle.includes('Just a moment') &&
-                    !currentTitle.includes('Cloudflare') &&
-                    !currentTitle.includes('Attention Required')) {
-                    console.log('✅ Cloudflare challenge passed!');
-                    return true;
-                }
-
+                await page.waitForTimeout(5000);
                 attempts++;
-                console.log(`⏳ Waiting for Cloudflare... (${attempts}/${maxAttempts})`);
+
+                try {
+                    const currentTitle = await page.title();
+                    const currentBody = await page.evaluate(() => document.body.textContent || '').catch(() => '');
+
+                    const stillChallenge = cloudflareIndicators.some(indicator =>
+                        currentTitle.toLowerCase().includes(indicator.toLowerCase()) ||
+                        currentBody.toLowerCase().includes(indicator.toLowerCase())
+                    );
+
+                    if (!stillChallenge) {
+                        console.log(`✅ Cloudflare challenge resolved after ${attempts * 5} seconds`);
+                        // Additional wait to ensure page is fully loaded
+                        await page.waitForTimeout(3000);
+                        return true;
+                    }
+
+                    console.log(`⏳ Waiting for Cloudflare... (${attempts * 5}s)`);
+                } catch (error) {
+                    console.log(`⚠️  Error checking challenge status: ${error.message}`);
+                }
             }
 
-            console.log('❌ Cloudflare challenge timeout');
+            console.log('❌ Cloudflare challenge not resolved within timeout');
             return false;
         }
 
@@ -280,12 +313,13 @@ async function handleIndeedPageLoad(page) {
  */
 async function scrapeIndeedJobs(urls, options = {}) {
     const {
-        maxConcurrency = 2, // Keep low to avoid rate limiting
+        maxConcurrency = 1, // Use 1 to avoid Cloudflare detection
         useProxy = true,
         headless = true
     } = options;
 
     console.log(`🚀 Starting Indeed scraping for ${urls.length} URLs...`);
+    console.log(`🛡️  Anti-Cloudflare mode: concurrency=${maxConcurrency}, proxy=${useProxy}`);
 
     const allJobs = [];
     let processedUrls = 0;
@@ -326,25 +360,106 @@ async function scrapeIndeedJobs(urls, options = {}) {
         maxConcurrency,
 
         async requestHandler({ page, request }) {
-            console.log(`📄 Processing URL ${++processedUrls}/${urls.length}: ${request.url}`);
+            console.log(`📄 Processing URL ${++processedUrls}/${urls.length + 1}: ${request.url}`);
+
+            // Handle warmup request differently
+            if (request.userData?.isWarmup) {
+                console.log('🔥 Warming up session...');
+                try {
+                    await page.goto(request.url, {
+                        waitUntil: 'networkidle2',
+                        timeout: 30000
+                    });
+                    await page.waitForTimeout(3000 + Math.random() * 2000);
+                    console.log('✅ Session warmed up successfully');
+                } catch (error) {
+                    console.log('⚠️  Warmup failed:', error.message);
+                }
+                return; // Don't scrape data from warmup
+            }
 
             try {
-                // Set realistic headers and user agent
-                await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+                // Enhanced stealth setup for each page
+                await page.evaluateOnNewDocument(() => {
+                    // Override the `plugins` property to use a custom getter.
+                    Object.defineProperty(navigator, 'plugins', {
+                        get: function() {
+                            return [1, 2, 3, 4, 5];
+                        },
+                    });
 
-                await page.setExtraHTTPHeaders({
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                    'Accept-Language': 'en-US,en;q=0.5',
-                    'Accept-Encoding': 'gzip, deflate',
-                    'DNT': '1',
-                    'Connection': 'keep-alive',
-                    'Upgrade-Insecure-Requests': '1'
+                    // Override the `languages` property to use a custom getter.
+                    Object.defineProperty(navigator, 'languages', {
+                        get: function() {
+                            return ['en-US', 'en'];
+                        },
+                    });
+
+                    // Override the `webdriver` property to remove it entirely.
+                    delete Object.getPrototypeOf(navigator).webdriver;
                 });
 
-                // Navigate to page
+                // Set realistic headers and user agent for Cloudflare bypass
+                await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+
+                await page.setExtraHTTPHeaders({
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Cache-Control': 'max-age=0',
+                    'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+                    'Sec-Ch-Ua-Mobile': '?0',
+                    'Sec-Ch-Ua-Platform': '"Windows"',
+                    'Sec-Fetch-Dest': 'document',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'none',
+                    'Sec-Fetch-User': '?1',
+                    'Upgrade-Insecure-Requests': '1',
+                    'Referer': 'https://www.google.com/'
+                });
+
+                // Remove automation indicators
+                await page.evaluateOnNewDocument(() => {
+                    Object.defineProperty(navigator, 'webdriver', {
+                        get: () => undefined,
+                    });
+
+                    // Remove chrome automation indicators
+                    delete window.chrome.runtime.onConnect;
+                    delete window.chrome.runtime.onMessage;
+
+                    // Mock plugins
+                    Object.defineProperty(navigator, 'plugins', {
+                        get: () => [1, 2, 3, 4, 5],
+                    });
+
+                    // Mock languages
+                    Object.defineProperty(navigator, 'languages', {
+                        get: () => ['en-US', 'en'],
+                    });
+                });
+
+                // Pre-navigation setup to avoid immediate blocking
+                console.log('🔧 Setting up anti-detection measures...');
+
+                // First, visit Google to establish a "human" session
+                try {
+                    await page.goto('https://www.google.com', {
+                        waitUntil: 'networkidle2',
+                        timeout: 30000
+                    });
+                    await page.waitForTimeout(2000 + Math.random() * 3000);
+                    console.log('✅ Established session via Google');
+                } catch (error) {
+                    console.log('⚠️  Could not visit Google first:', error.message);
+                }
+
+                // Navigate to Indeed with proper referrer
+                console.log(`🌐 Navigating to Indeed: ${request.url}`);
                 await page.goto(request.url, {
                     waitUntil: 'networkidle2',
-                    timeout: 60000
+                    timeout: 60000,
+                    referer: 'https://www.google.com/'
                 });
 
                 // Handle Cloudflare challenge
@@ -419,8 +534,10 @@ async function scrapeIndeedJobs(urls, options = {}) {
                 console.log(`✅ Extracted ${pageJobs.length} valid jobs from page`);
                 allJobs.push(...pageJobs);
 
-                // Add delay between requests to be respectful
-                await page.waitForTimeout(2000 + Math.random() * 3000);
+                // Add longer delay between requests to avoid rate limiting
+                const delay = 5000 + Math.random() * 5000; // 5-10 seconds
+                console.log(`⏱️  Waiting ${Math.round(delay/1000)}s before next request...`);
+                await page.waitForTimeout(delay);
 
             } catch (error) {
                 console.error(`❌ Error processing URL ${request.url}:`, error.message);
@@ -434,8 +551,18 @@ async function scrapeIndeedJobs(urls, options = {}) {
         }
     });
 
-    // Add all URLs to the crawler
-    await crawler.addRequests(urls.map(url => ({ url })));
+    // Warm up session by visiting Indeed homepage first
+    console.log('🔥 Warming up session with Indeed homepage...');
+    await crawler.addRequests([{
+        url: 'https://www.indeed.com',
+        userData: { isWarmup: true }
+    }]);
+
+    // Add all scraping URLs to the crawler
+    await crawler.addRequests(urls.map(url => ({
+        url,
+        userData: { isWarmup: false }
+    })));
 
     // Run the crawler
     await crawler.run();
