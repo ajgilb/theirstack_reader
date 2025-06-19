@@ -10,11 +10,76 @@ import { PuppeteerCrawler, Dataset } from 'crawlee';
 import { shouldExcludeCompany, isSalaryCompanyName } from './bing_search_api.js';
 
 /**
- * Create Indeed search URLs with proper parameters
- * @param {Object} params - Search parameters
- * @returns {Array} Array of Indeed URLs
+ * Perform human-like search on Indeed homepage
+ * @param {Object} page - Puppeteer page object
+ * @param {string} jobType - Job type to search for
+ * @param {string} location - Location to search in
+ * @param {number} salaryMin - Minimum salary filter
+ * @returns {boolean} Success status
  */
-function createIndeedSearchUrls(params = {}) {
+async function performIndeedSearch(page, jobType, location, salaryMin) {
+    try {
+        console.log(`🔍 Performing human-like search for "${jobType}" in "${location}"`);
+
+        // Go to Indeed homepage first
+        await page.goto('https://www.indeed.com', {
+            waitUntil: 'networkidle2',
+            timeout: 30000
+        });
+
+        // Wait for page to load and handle any popups
+        await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
+
+        // Find and fill the job search form
+        const whatInput = await page.$('#text-input-what');
+        const whereInput = await page.$('#text-input-where');
+
+        if (!whatInput || !whereInput) {
+            console.log('❌ Could not find search form inputs');
+            return false;
+        }
+
+        // Clear and fill the "what" field (job title)
+        await whatInput.click({ clickCount: 3 }); // Select all
+        await whatInput.type(jobType, { delay: 100 + Math.random() * 100 });
+
+        // Add human-like delay
+        await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
+
+        // Clear and fill the "where" field (location)
+        await whereInput.click({ clickCount: 3 }); // Select all
+        await whereInput.type(location, { delay: 100 + Math.random() * 100 });
+
+        // Add another human-like delay
+        await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
+
+        // Click the search button
+        const searchButton = await page.$('.yosegi-InlineWhatWhere-primaryButton');
+        if (!searchButton) {
+            console.log('❌ Could not find search button');
+            return false;
+        }
+
+        await searchButton.click();
+
+        // Wait for search results to load
+        await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 });
+
+        console.log('✅ Search performed successfully');
+        return true;
+
+    } catch (error) {
+        console.error('❌ Error performing search:', error.message);
+        return false;
+    }
+}
+
+/**
+ * Create search tasks for human-like interaction
+ * @param {Object} params - Search parameters
+ * @returns {Array} Array of search tasks
+ */
+function createIndeedSearchTasks(params = {}) {
     const {
         location = 'United States',
         salaryMin = 55000,
@@ -31,26 +96,22 @@ function createIndeedSearchUrls(params = {}) {
         ]
     } = params;
 
-    const baseUrl = 'https://www.indeed.com/jobs';
-    const urls = [];
+    const tasks = [];
 
     jobTypes.forEach(jobType => {
-        // Create URLs for multiple pages per job type
+        // Create search tasks for each job type
         for (let page = 0; page < maxPages; page++) {
-            const searchParams = new URLSearchParams({
-                q: jobType,
-                l: location,
-                salaryType: `$${salaryMin.toLocaleString()}`,
-                from: 'searchOnDesktopSerp',
-                sort: 'date',
-                start: page * 10 // Indeed shows 10 jobs per page
+            tasks.push({
+                jobType,
+                location,
+                salaryMin,
+                pageNumber: page,
+                isFirstPage: page === 0
             });
-
-            urls.push(`${baseUrl}?${searchParams.toString()}`);
         }
     });
 
-    return urls;
+    return tasks;
 }
 
 /**
@@ -306,20 +367,20 @@ async function handleIndeedPageLoad(page) {
 }
 
 /**
- * Main Indeed scraping function with Cloudflare bypass
- * @param {Array} urls - Array of Indeed URLs to scrape
+ * Main Indeed scraping function with human-like interaction
+ * @param {Array} searchTasks - Array of search tasks to perform
  * @param {Object} options - Scraping options
  * @returns {Array} Array of job objects
  */
-async function scrapeIndeedJobs(urls, options = {}) {
+async function scrapeIndeedJobs(searchTasks, options = {}) {
     const {
         maxConcurrency = 1, // Use 1 to avoid Cloudflare detection
         useProxy = true,
         headless = true
     } = options;
 
-    console.log(`🚀 Starting Indeed scraping for ${urls.length} URLs...`);
-    console.log(`🛡️  Anti-Cloudflare mode: concurrency=${maxConcurrency}, proxy=${useProxy}`);
+    console.log(`🚀 Starting Indeed scraping for ${searchTasks.length} search tasks...`);
+    console.log(`🛡️  Human-like interaction mode: concurrency=${maxConcurrency}, proxy=${useProxy}`);
 
     const allJobs = [];
     let processedUrls = 0;
@@ -370,13 +431,14 @@ async function scrapeIndeedJobs(urls, options = {}) {
         maxConcurrency,
 
         async requestHandler({ page, request }) {
-            console.log(`📄 Processing URL ${++processedUrls}/${urls.length + 1}: ${request.url}`);
+            const task = request.userData;
+            console.log(`📄 Processing search task ${++processedUrls}/${searchTasks.length}: "${task.jobType}" (page ${task.pageNumber + 1})`);
 
             // Handle warmup request differently
-            if (request.userData?.isWarmup) {
+            if (task?.isWarmup) {
                 console.log('🔥 Warming up session...');
                 try {
-                    await page.goto(request.url, {
+                    await page.goto('https://www.indeed.com', {
                         waitUntil: 'networkidle2',
                         timeout: 30000
                     });
@@ -471,13 +533,39 @@ async function scrapeIndeedJobs(urls, options = {}) {
                     });
                 });
 
-                // Navigate directly to Indeed (Google warm-up is ineffective per 2025 guide)
-                console.log(`🌐 Navigating to Indeed: ${request.url}`);
-                await page.goto(request.url, {
-                    waitUntil: 'networkidle2',
-                    timeout: 60000,
-                    referer: 'https://www.google.com/'
-                });
+                // Perform human-like search interaction
+                if (task.isFirstPage) {
+                    // For first page, perform search via homepage
+                    const searchSuccess = await performIndeedSearch(page, task.jobType, task.location, task.salaryMin);
+                    if (!searchSuccess) {
+                        console.log('❌ Failed to perform search, skipping task');
+                        failedUrls++;
+                        return;
+                    }
+                } else {
+                    // For subsequent pages, navigate to next page using pagination
+                    console.log(`🔄 Navigating to page ${task.pageNumber + 1} for "${task.jobType}"`);
+
+                    // Look for "Next" button or page number
+                    try {
+                        const nextButton = await page.$('a[aria-label="Next Page"]') ||
+                                         await page.$('a[aria-label="Next"]') ||
+                                         await page.$('.np:last-child a');
+
+                        if (nextButton) {
+                            await nextButton.click();
+                            await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 });
+                        } else {
+                            console.log('❌ No next page button found, skipping');
+                            failedUrls++;
+                            return;
+                        }
+                    } catch (error) {
+                        console.log('❌ Error navigating to next page:', error.message);
+                        failedUrls++;
+                        return;
+                    }
+                }
 
                 // Handle Cloudflare challenge
                 const cloudflareSuccess = await handleCloudflareChallenge(page);
@@ -568,17 +656,17 @@ async function scrapeIndeedJobs(urls, options = {}) {
         }
     });
 
-    // Warm up session by visiting Indeed homepage first
-    console.log('🔥 Warming up session with Indeed homepage...');
+    // Add warmup task
+    console.log('🔥 Adding session warmup task...');
     await crawler.addRequests([{
         url: 'https://www.indeed.com',
         userData: { isWarmup: true }
     }]);
 
-    // Add all scraping URLs to the crawler
-    await crawler.addRequests(urls.map(url => ({
-        url,
-        userData: { isWarmup: false }
+    // Add all search tasks to the crawler
+    await crawler.addRequests(searchTasks.map((task, index) => ({
+        url: `https://www.indeed.com/search-task-${index}`, // Dummy URL for task identification
+        userData: task
     })));
 
     // Run the crawler
@@ -640,7 +728,8 @@ async function testIndeedScraping(testParams = {}) {
 }
 
 export {
-    createIndeedSearchUrls,
+    createIndeedSearchTasks,
+    performIndeedSearch,
     scrapeIndeedJobs,
     extractIndeedJobData,
     handleCloudflareChallenge,

@@ -6,7 +6,7 @@
  * Indeed directly to capture jobs that are not available through job APIs.
  */
 import { Actor } from 'apify';
-import { createIndeedSearchUrls, scrapeIndeedJobs } from './indeed_scraper.js';
+import { scrapeIndeedJobs } from './indeed_scraper.js';
 import { shouldExcludeCompany, isSalaryCompanyName } from './bing_search_api.js';
 import { getWebsiteUrlFromSearchAPI, getDomainFromUrl } from './search_api.js';
 import { sendCompletionEmail } from './email.js';
@@ -795,19 +795,20 @@ try {
     console.log(`💰 Minimum salary: $${salaryMin.toLocaleString()}`);
     console.log(`📄 Max pages per job type: ${maxPages}`);
 
-    // Create Indeed search URLs
-    const indeedUrls = createIndeedSearchUrls({
+    // Create Indeed search tasks for human-like interaction
+    const { createIndeedSearchTasks } = await import('./indeed_scraper.js');
+    const searchTasks = createIndeedSearchTasks({
         jobTypes,
         location,
         salaryMin,
         maxPages
     });
 
-    console.log(`📋 Generated ${indeedUrls.length} Indeed URLs to scrape`);
+    console.log(`📋 Generated ${searchTasks.length} Indeed search tasks`);
 
-    // Scrape jobs from Indeed
-    const scrapedJobs = await scrapeIndeedJobs(indeedUrls, {
-        maxConcurrency,
+    // Scrape jobs from Indeed with human-like interaction
+    const scrapedJobs = await scrapeIndeedJobs(searchTasks, {
+        maxConcurrency: 1, // Use very low concurrency to avoid triggering Cloudflare
         useProxy,
         headless: true
     });
