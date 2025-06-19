@@ -1,4 +1,4 @@
-FROM apify/actor-node:20
+FROM apify/actor-node-puppeteer-chrome:20
 
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json ./

@@ -310,8 +310,16 @@ async function scrapeIndeedJobs(urls, options = {}) {
                     '--no-zygote',
                     '--disable-gpu',
                     '--disable-blink-features=AutomationControlled',
-                    '--disable-features=VizDisplayCompositor'
-                ]
+                    '--disable-features=VizDisplayCompositor',
+                    '--disable-web-security',
+                    '--disable-features=site-per-process',
+                    '--single-process',
+                    '--disable-background-timer-throttling',
+                    '--disable-backgrounding-occluded-windows',
+                    '--disable-renderer-backgrounding'
+                ],
+                // Explicitly set executable path for Apify environment
+                executablePath: process.env.APIFY_CHROME_EXECUTABLE_PATH || undefined
             }
         },
 
