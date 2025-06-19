@@ -267,6 +267,93 @@ async function handleCloudflareChallenge(page) {
 }
 
 /**
+ * Extract detailed job data from Indeed job detail page
+ * @param {Object} page - Puppeteer page object
+ * @returns {Object} Extracted job data
+ */
+async function extractDetailedJobData(page) {
+    try {
+        const jobData = await page.evaluate(() => {
+            // Helper function to get text content
+            const getText = (selector) => {
+                const element = document.querySelector(selector);
+                return element ? element.textContent.trim() : '';
+            };
+
+            // Helper function to get attribute
+            const getAttr = (selector, attr) => {
+                const element = document.querySelector(selector);
+                return element ? element.getAttribute(attr) : '';
+            };
+
+            // Extract job title - your specific selector
+            let title = getText('h1[data-testid="jobsearch-JobInfoHeader-title"]') ||
+                       getText('h1.jobsearch-JobInfoHeader-title') ||
+                       getText('.jobsearch-JobInfoHeader-title span') ||
+                       getText('h1') ||
+                       getText('[data-testid="jobsearch-JobInfoHeader-title"] span');
+
+            // Clean up title (remove " - job post" suffix)
+            if (title.includes(' - job post')) {
+                title = title.replace(' - job post', '');
+            }
+
+            // Extract company name - your specific selector
+            const company = getText('a[aria-label*="(opens in a new tab)"]') ||
+                           getText('[data-testid="inlineHeader-companyName"]') ||
+                           getText('.jobsearch-InlineCompanyRating a') ||
+                           getText('.jobsearch-CompanyInfoWithoutHeaderImage a') ||
+                           getText('[data-testid="companyName"]');
+
+            // Extract location
+            const location = getText('[data-testid="job-location"]') ||
+                           getText('.jobsearch-JobInfoHeader-subtitle div:last-child') ||
+                           getText('.jobsearch-CompanyInfoWithoutHeaderImage div:last-child');
+
+            // Extract salary - your specific selector
+            const salary = getText('.css-1oc7tea.eu4oa1w0') ||
+                          getText('[data-testid="job-compensation"]') ||
+                          getText('.jobsearch-JobDescriptionSection-sectionItem .icl-u-lg-mr--sm') ||
+                          getText('.salary');
+
+            // Extract job description
+            const description = getText('[data-testid="jobsearch-jobDescriptionText"]') ||
+                              getText('.jobsearch-jobDescriptionText') ||
+                              getText('#jobDescriptionText');
+
+            // Get current URL for the job posting
+            const jobUrl = window.location.href;
+
+            // Extract job ID from URL or data attributes
+            const urlMatch = jobUrl.match(/jk=([^&]+)/);
+            const jobId = urlMatch ? urlMatch[1] : '';
+
+            // Extract company URL if available
+            const companyLink = getAttr('a[aria-label*="(opens in a new tab)"]', 'href') ||
+                               getAttr('[data-testid="inlineHeader-companyName"] a', 'href');
+
+            return {
+                title: title || 'No title found',
+                company: company || 'No company found',
+                location: location || 'No location found',
+                salary: salary || '',
+                description: description ? description.substring(0, 500) : '', // Limit description length
+                jobId: jobId || '',
+                jobUrl: jobUrl,
+                companyUrl: companyLink ? `https://www.indeed.com${companyLink}` : '',
+                source: 'Indeed Direct',
+                scrapedAt: new Date().toISOString()
+            };
+        });
+
+        return jobData;
+    } catch (error) {
+        console.error('Error extracting detailed job data:', error);
+        return null;
+    }
+}
+
+/**
  * Extract job data from Indeed job card element using current Indeed selectors
  * @param {Object} page - Puppeteer page object
  * @param {Object} jobElement - Job element handle
@@ -744,13 +831,22 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
 
                 console.log(`🎯 Found ${jobElements.length} job listings using selector: ${usedSelector}`);
 
-                // Extract job data
+                // Click through each job to get detailed information
                 const pageJobs = [];
                 for (let i = 0; i < jobElements.length; i++) {
                     try {
-                        const jobData = await extractIndeedJobData(page, jobElements[i]);
+                        console.log(`🔍 Processing job ${i + 1}/${jobElements.length}`);
 
-                        if (jobData && jobData.title !== 'No title found' && jobData.company !== 'No company found') {
+                        // Click the job to open details
+                        await jobElements[i].click();
+
+                        // Wait for job details to load
+                        await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
+
+                        // Extract detailed job data from the job details page
+                        const jobData = await extractDetailedJobData(page);
+
+                        if (jobData && jobData.title && jobData.company) {
                             // Apply filtering logic
                             const exclusionCheck = shouldExcludeCompany(jobData.company);
                             if (exclusionCheck.isExcluded) {
@@ -764,9 +860,25 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
                             }
 
                             pageJobs.push(jobData);
+                            console.log(`✅ Extracted job: "${jobData.title}" at "${jobData.company}" - ${jobData.salary || 'No salary'}`);
+                        } else {
+                            console.log(`⚠️  Could not extract complete data for job ${i + 1}`);
                         }
+
+                        // Go back to results page for next job
+                        await page.goBack();
+                        await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+
                     } catch (error) {
-                        console.error(`❌ Error extracting job ${i + 1}:`, error.message);
+                        console.error(`❌ Error processing job ${i + 1}:`, error.message);
+
+                        // Try to get back to results page if we're lost
+                        try {
+                            await page.goBack();
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                        } catch (e) {
+                            console.log('⚠️  Could not go back, continuing...');
+                        }
                     }
                 }
 
@@ -866,6 +978,7 @@ export {
     performIndeedSearch,
     scrapeIndeedJobs,
     extractIndeedJobData,
+    extractDetailedJobData,
     handleCloudflareChallenge,
     testIndeedScraping
 };
