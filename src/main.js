@@ -654,9 +654,6 @@ try {
     console.log(`- Database URL: ${databaseUrl ? 'Set' : 'Not set'}`);
     console.log(`- Supabase URL: ${process.env.SUPABASE_URL ? 'Set' : 'Not set'}`);
 
-    // Store queries in job stats
-    jobStats.queries = [...queries];
-
     // Website data collection enabled (email enrichment handled by web viewer)
     const forceWebsiteData = true;
 
@@ -666,38 +663,29 @@ try {
     // Number of jobs to process in test mode (only used when testMode is true)
     const testModeLimit = 5;
 
-    console.log('Google Jobs API Actor configuration:');
-    console.log(`- Search Engine: ${searchEngine}`);
-    console.log(`- Queries: ${queries.join(', ')}`);
-    console.log(`- Max pages per query: ${maxPagesPerQuery}`);
-    console.log(`- Location filter: ${location || 'None'}`);
+    console.log('Indeed Direct Scraper configuration:');
+    console.log(`- Job Types: ${jobTypes.join(', ')}`);
+    console.log(`- Location: ${location}`);
+    console.log(`- Minimum Salary: $${salaryMin.toLocaleString()}`);
+    console.log(`- Max pages per job type: ${maxPages}`);
+    console.log(`- Max concurrency: ${maxConcurrency}`);
+    console.log(`- Use proxy: ${useProxy}`);
 
     console.log(`- Exclude fast food: ${excludeFastFood}`);
     console.log(`- Exclude recruiters: ${excludeRecruiters}`);
     console.log(`- Include website data: ${forceWebsiteData} (URL collection enabled, email enrichment handled by web viewer)`);
     console.log(`- Save to dataset: ${saveToDataset}`);
     console.log(`- Push to database: ${forcePushToDatabase} (forced to true)`);
-    // Always show database info since forcePushToDatabase is always true
     console.log(`- Database table: ${databaseTable}`);
     console.log(`- Deduplicate jobs: ${deduplicateJobs}`);
-    console.log(`- Test mode: ${testMode}${testMode ? ` (limit: ${testModeLimit} jobs per query, email only to aj@chefsheet.com)` : ''}`);
+    console.log(`- Test mode: ${testMode}${testMode ? ` (limit: ${testModeLimit} jobs per job type, email only to aj@chefsheet.com)` : ''}`);
 
     let totalJobsFound = 0;
     let totalJobsProcessed = 0;
     let totalJobsSaved = 0;
 
-    // In test mode, only process the first query
-    const queriesToProcess = testMode ? queries.slice(0, 1) : queries;
-    console.log(`Processing ${queriesToProcess.length} queries${testMode ? ' (test mode - only first query)' : ''}`);
-
-    // Process each query
-    for (const query of queriesToProcess) {
-        // In test mode, process enough pages to get our target number of jobs
-        // Start with 1 page, but allow up to 3 pages in test mode if needed
-        const pagesToProcess = testMode ? 3 : maxPagesPerQuery;
-
-        // Set database connection environment variables
-        if (databaseUrl) {
+    // Set database connection environment variables
+    if (databaseUrl) {
             console.log(`Using provided database URL: ${databaseUrl.substring(0, 20)}...`);
 
             // Ensure the URL has the correct format for query parameters
@@ -732,135 +720,135 @@ try {
             // Use the first option by default
             console.log('No database URL provided. Using default DATABASE_URL with new user credentials.');
             process.env.DATABASE_URL = connectionOptions[0];
-        } else {
-            console.log('Using environment DATABASE_URL variable.');
+    } else {
+        console.log('Using environment DATABASE_URL variable.');
 
-            // Ensure the URL has the correct format for query parameters
-            if (process.env.DATABASE_URL.includes('&family=4') && !process.env.DATABASE_URL.includes('?family=4')) {
-                process.env.DATABASE_URL = process.env.DATABASE_URL.replace('&family=4', '?family=4');
-                console.log('Fixed environment DATABASE_URL format for query parameters');
+        // Ensure the URL has the correct format for query parameters
+        if (process.env.DATABASE_URL.includes('&family=4') && !process.env.DATABASE_URL.includes('?family=4')) {
+            process.env.DATABASE_URL = process.env.DATABASE_URL.replace('&family=4', '?family=4');
+            console.log('Fixed environment DATABASE_URL format for query parameters');
+        }
+    }
+
+    // Fix the DATABASE_URL format if needed
+    if (process.env.DATABASE_URL) {
+        // First encode any special characters in the password
+        const urlParts = process.env.DATABASE_URL.split('@');
+        if (urlParts.length === 2) {
+            const authParts = urlParts[0].split(':');
+            if (authParts.length === 3) {
+                const password = authParts[2];
+                const encodedPassword = encodeURIComponent(password);
+                process.env.DATABASE_URL = `${authParts[0]}:${authParts[1]}:${encodedPassword}@${urlParts[1]}`;
             }
         }
 
-        // Fix the DATABASE_URL format if needed
-        if (process.env.DATABASE_URL) {
-            // First encode any special characters in the password
-            const urlParts = process.env.DATABASE_URL.split('@');
-            if (urlParts.length === 2) {
-                const authParts = urlParts[0].split(':');
-                if (authParts.length === 3) {
-                    const password = authParts[2];
-                    const encodedPassword = encodeURIComponent(password);
-                    process.env.DATABASE_URL = `${authParts[0]}:${authParts[1]}:${encodedPassword}@${urlParts[1]}`;
-                }
-            }
+        // Fix query parameter format
+        if (process.env.DATABASE_URL.includes('/postgres&')) {
+            process.env.DATABASE_URL = process.env.DATABASE_URL.replace('/postgres&', '/postgres?');
+        }
+    }
 
-            // Fix query parameter format
-            if (process.env.DATABASE_URL.includes('/postgres&')) {
-                process.env.DATABASE_URL = process.env.DATABASE_URL.replace('/postgres&', '/postgres?');
-            }
+    // Initialize the database connection
+    const dbInitialized = await initDatabase();
+
+    // If database connection fails, try the REST API approach
+    if (!dbInitialized) {
+        console.error('Direct database connection failed. Trying REST API approach...');
+        console.log('Trying REST API approach...');
+
+        // Here we would implement the REST API approach, but for now we'll just fail
+        console.error('REST API approach not fully implemented. Cannot continue.');
+        throw new Error('Database connection failed. Cannot continue without database access.');
+    }
+
+    // Fetch existing jobs from the database to avoid unnecessary API calls
+    let existingJobs = new Map();
+
+    try {
+        console.log('Fetching existing jobs from the database to optimize API calls...');
+
+        // Fix the DATABASE_URL format again just to be sure
+        if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('/postgres&')) {
+            console.log('Fixing DATABASE_URL format again: replacing /postgres& with /postgres?');
+            process.env.DATABASE_URL = process.env.DATABASE_URL.replace('/postgres&', '/postgres?');
         }
 
-        // Initialize the database connection
-        const dbInitialized = await initDatabase();
+        existingJobs = await fetchExistingJobs();
+        console.log(`Fetched ${existingJobs.size} existing jobs from the database for optimization`);
 
-        // If database connection fails, try the REST API approach
-        if (!dbInitialized) {
-            console.error('Direct database connection failed. Trying REST API approach...');
-            console.log('Trying REST API approach...');
-
-            // Here we would implement the REST API approach, but for now we'll just fail
-            console.error('REST API approach not fully implemented. Cannot continue.');
-            throw new Error('Database connection failed. Cannot continue without database access.');
-        }
-
-        // Fetch existing jobs from the database to avoid unnecessary API calls
-        let existingJobs = new Map();
-
-        try {
-            console.log('Fetching existing jobs from the database to optimize API calls...');
-
-            // Fix the DATABASE_URL format again just to be sure
-            if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('/postgres&')) {
-                console.log('Fixing DATABASE_URL format again: replacing /postgres& with /postgres?');
-                process.env.DATABASE_URL = process.env.DATABASE_URL.replace('/postgres&', '/postgres?');
-            }
-
-            existingJobs = await fetchExistingJobs();
-            console.log(`Fetched ${existingJobs.size} existing jobs from the database for optimization`);
-
-            // If we can't fetch existing jobs, that's a critical error
-            if (existingJobs.size === 0) {
-                console.error('Failed to fetch existing jobs from database. This is required for optimization.');
-                throw new Error('Failed to fetch existing jobs from database. Cannot continue without this data.');
-            }
-        } catch (error) {
-            console.error('Error fetching existing jobs:', error);
+        // If we can't fetch existing jobs, that's a critical error
+        if (existingJobs.size === 0) {
+            console.error('Failed to fetch existing jobs from database. This is required for optimization.');
             throw new Error('Failed to fetch existing jobs from database. Cannot continue without this data.');
         }
+    } catch (error) {
+        console.error('Error fetching existing jobs:', error);
+        throw new Error('Failed to fetch existing jobs from database. Cannot continue without this data.');
+    }
 
-        // Direct Indeed scraping for job types
-        let jobs = [];
+    // Direct Indeed scraping for job types
+    let jobs = [];
 
-        console.log(`🚀 Starting Indeed direct scraping for job types: ${jobTypes.join(', ')}`);
-        console.log(`📍 Location: ${location}`);
-        console.log(`💰 Minimum salary: $${salaryMin.toLocaleString()}`);
-        console.log(`📄 Max pages per job type: ${maxPages}`);
+    console.log(`🚀 Starting Indeed direct scraping for job types: ${jobTypes.join(', ')}`);
+    console.log(`📍 Location: ${location}`);
+    console.log(`💰 Minimum salary: $${salaryMin.toLocaleString()}`);
+    console.log(`📄 Max pages per job type: ${maxPages}`);
 
-        // Create Indeed search URLs
-        const indeedUrls = createIndeedSearchUrls({
-            jobTypes,
-            location,
-            salaryMin,
-            maxPages
-        });
+    // Create Indeed search URLs
+    const indeedUrls = createIndeedSearchUrls({
+        jobTypes,
+        location,
+        salaryMin,
+        maxPages
+    });
 
-        console.log(`📋 Generated ${indeedUrls.length} Indeed URLs to scrape`);
+    console.log(`📋 Generated ${indeedUrls.length} Indeed URLs to scrape`);
 
-        // Scrape jobs from Indeed
-        const scrapedJobs = await scrapeIndeedJobs(indeedUrls, {
-            maxConcurrency,
-            useProxy,
-            headless: true
-        });
+    // Scrape jobs from Indeed
+    const scrapedJobs = await scrapeIndeedJobs(indeedUrls, {
+        maxConcurrency,
+        useProxy,
+        headless: true
+    });
 
-        console.log(`✅ Scraped ${scrapedJobs.length} jobs from Indeed`);
+    console.log(`✅ Scraped ${scrapedJobs.length} jobs from Indeed`);
 
-        // Filter out jobs that already exist in database
-        const newJobs = [];
-        let skippedExisting = 0;
+    // Filter out jobs that already exist in database
+    const newJobs = [];
+    let skippedExisting = 0;
 
-        for (const job of scrapedJobs) {
-            const jobKey = `${job.title.toLowerCase()}|${job.company.toLowerCase()}`;
-            if (existingJobs && existingJobs.has(jobKey)) {
-                console.log(`Skipping existing job: "${job.title}" at "${job.company}" (already in database)`);
-                skippedExisting++;
-                continue;
-            }
-            newJobs.push(job);
+    for (const job of scrapedJobs) {
+        const jobKey = `${job.title.toLowerCase()}|${job.company.toLowerCase()}`;
+        if (existingJobs && existingJobs.has(jobKey)) {
+            console.log(`Skipping existing job: "${job.title}" at "${job.company}" (already in database)`);
+            skippedExisting++;
+            continue;
         }
+        newJobs.push(job);
+    }
 
-        console.log(`📊 Job filtering results: ${scrapedJobs.length} scraped, ${skippedExisting} already exist, ${newJobs.length} new jobs to process`);
-        jobs = newJobs;
+    console.log(`📊 Job filtering results: ${scrapedJobs.length} scraped, ${skippedExisting} already exist, ${newJobs.length} new jobs to process`);
+    jobs = newJobs;
 
-        if (jobs.length === 0) {
-            console.log(`No new jobs found after filtering`);
-            console.log(`Indeed Direct Scraper completed with no new jobs.`);
-        } else {
-            console.log(`📝 Processing ${jobs.length} new jobs from Indeed...`);
-            totalJobsFound += jobs.length;
+    if (jobs.length === 0) {
+        console.log(`No new jobs found after filtering`);
+        console.log(`Indeed Direct Scraper completed with no new jobs.`);
+    } else {
+        console.log(`📝 Processing ${jobs.length} new jobs from Indeed...`);
+        totalJobsFound += jobs.length;
 
-            // In test mode, only process a limited number of jobs
-            const jobsToProcess = testMode ? jobs.slice(0, testModeLimit) : jobs;
-            console.log(`Processing ${jobsToProcess.length} jobs${testMode ? ` (test mode - limit: ${testModeLimit})` : ''}`);
+        // In test mode, only process a limited number of jobs
+        const jobsToProcess = testMode ? jobs.slice(0, testModeLimit) : jobs;
+        console.log(`Processing ${jobsToProcess.length} jobs${testMode ? ` (test mode - limit: ${testModeLimit})` : ''}`);
 
-            // Log the jobs we're processing
-            if (testMode) {
-                console.log('Jobs being processed:');
-                jobsToProcess.forEach((job, index) => {
-                    console.log(`Job #${index + 1}: "${job.title}" at "${job.company}" in "${job.location}"`);
-                });
-            }
+        // Log the jobs we're processing
+        if (testMode) {
+            console.log('Jobs being processed:');
+            jobsToProcess.forEach((job, index) => {
+                console.log(`Job #${index + 1}: "${job.title}" at "${job.company}" in "${job.location}"`);
+            });
+        }
 
             // Enhance jobs with company website URLs using SearchAPI
             console.log(`🔍 Enhancing ${jobsToProcess.length} jobs with company website URLs...`);
@@ -971,7 +959,6 @@ try {
                 }
             }
         }
-    }
 
     console.log(`🎉 Indeed Direct Scraper completed successfully!`);
     console.log(`📊 Summary: Found ${totalJobsFound} jobs, processed ${totalJobsProcessed} jobs, saved ${totalJobsSaved} jobs.`);
