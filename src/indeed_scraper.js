@@ -65,7 +65,21 @@ async function performIndeedSearch(page, jobType, location, salaryMin) {
         // Wait for search results to load
         await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 });
 
-        console.log('✅ Search performed successfully');
+        // Verify we reached results page
+        const currentTitle = await page.title();
+        const currentUrl = page.url();
+
+        console.log(`✅ Search performed successfully - Title: ${currentTitle}`);
+        console.log(`🌐 Results URL: ${currentUrl}`);
+
+        // Check if we have job results
+        const hasJobs = await page.$('[data-jk], .job_seen_beacon').catch(() => null);
+        if (hasJobs) {
+            console.log('🎯 Job results detected on page');
+        } else {
+            console.log('⚠️  No job results detected yet');
+        }
+
         return true;
 
     } catch (error) {
@@ -122,7 +136,7 @@ function createIndeedSearchTasks(params = {}) {
 async function handleCloudflareChallenge(page) {
     try {
         const initialTitle = await page.title().catch(() => '');
-        const initialUrl = await page.url().catch(() => '');
+        const initialUrl = page.url();
         console.log(`📋 Page title: ${initialTitle}`);
         console.log(`🌐 Current URL: ${initialUrl}`);
 
@@ -174,7 +188,7 @@ async function handleCloudflareChallenge(page) {
                 attempts++;
 
                 try {
-                    const currentUrl = await page.url();
+                    const currentUrl = page.url();
                     const currentTitle = await page.title();
 
                     // Check if URL changed (indicates successful navigation)
@@ -617,22 +631,42 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
                         return;
                     }
                 } else {
-                    // For subsequent pages, navigate to next page using pagination
-                    console.log(`🔄 Navigating to page ${task.pageNumber + 1} for "${task.jobType}"`);
+                    // For subsequent pages, check if pagination is available
+                    console.log(`🔄 Checking for page ${task.pageNumber + 1} for "${task.jobType}"`);
+
+                    // First check if there are enough results to warrant pagination
+                    const totalResults = await page.evaluate(() => {
+                        // Look for results count indicator
+                        const countElement = document.querySelector('[data-testid="searchcount-text"], .jobsearch-JobCountAndSortPane-jobCount');
+                        if (countElement) {
+                            const text = countElement.textContent;
+                            const match = text.match(/(\d+)/);
+                            return match ? parseInt(match[1]) : 0;
+                        }
+                        return 0;
+                    });
+
+                    const expectedMinResults = (task.pageNumber + 1) * 10; // Indeed shows ~10 jobs per page
+
+                    if (totalResults < expectedMinResults) {
+                        console.log(`✅ Only ${totalResults} total results, no page ${task.pageNumber + 1} needed`);
+                        return; // Skip this page, not enough results
+                    }
 
                     // Look for "Next" button or page number
                     try {
                         const nextButton = await page.$('a[aria-label="Next Page"]') ||
                                          await page.$('a[aria-label="Next"]') ||
-                                         await page.$('.np:last-child a');
+                                         await page.$('.np:last-child a') ||
+                                         await page.$('nav[role="navigation"] a:last-child');
 
                         if (nextButton) {
+                            console.log(`🔄 Navigating to page ${task.pageNumber + 1}`);
                             await nextButton.click();
                             await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 });
                         } else {
-                            console.log('❌ No next page button found, skipping');
-                            failedUrls++;
-                            return;
+                            console.log(`✅ No more pages available after page ${task.pageNumber}`);
+                            return; // No more pages, this is normal
                         }
                     } catch (error) {
                         console.log('❌ Error navigating to next page:', error.message);
@@ -669,9 +703,9 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
                 // Wait for job results to load
                 await new Promise(resolve => setTimeout(resolve, 3000));
 
-                // Look for job elements using multiple selectors
+                // Look for job elements using your confirmed selectors
                 const jobSelectors = [
-                    '[data-jk]',
+                    '[data-jk]', // Primary selector from your HTML
                     '.job_seen_beacon',
                     '.slider_container .slider_item',
                     '.jobsearch-SerpJobCard',
@@ -697,9 +731,18 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
 
                 if (jobElements.length === 0) {
                     console.log('❌ No job elements found on page');
+
+                    // Debug: Check what's actually on the page
+                    const pageTitle = await page.title();
+                    const pageUrl = page.url();
+                    console.log(`🔍 Debug - Page title: ${pageTitle}`);
+                    console.log(`🔍 Debug - Page URL: ${pageUrl}`);
+
                     failedUrls++;
                     return;
                 }
+
+                console.log(`🎯 Found ${jobElements.length} job listings using selector: ${usedSelector}`);
 
                 // Extract job data
                 const pageJobs = [];
