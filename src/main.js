@@ -971,6 +971,7 @@ try {
                 }
             }
         }
+    }
 
     console.log(`🎉 Indeed Direct Scraper completed successfully!`);
     console.log(`📊 Summary: Found ${totalJobsFound} jobs, processed ${totalJobsProcessed} jobs, saved ${totalJobsSaved} jobs.`);
