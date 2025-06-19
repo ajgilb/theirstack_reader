@@ -115,68 +115,128 @@ function createIndeedSearchTasks(params = {}) {
 }
 
 /**
- * Handle Cloudflare challenges and page loading
+ * Robust Cloudflare challenge detection and handling with multiple strategies
  * @param {Object} page - Puppeteer page object
  * @returns {boolean} Success status
  */
 async function handleCloudflareChallenge(page) {
     try {
-        const title = await page.title();
-        console.log(`📋 Page title: ${title}`);
+        const initialTitle = await page.title().catch(() => '');
+        const initialUrl = await page.url().catch(() => '');
+        console.log(`📋 Page title: ${initialTitle}`);
+        console.log(`🌐 Current URL: ${initialUrl}`);
 
         // Enhanced Cloudflare detection
         const cloudflareIndicators = [
-            'Just a moment',
-            'Checking your browser',
-            'Please wait',
-            'DDoS protection',
-            'Cloudflare',
-            'Ray ID',
-            'Attention Required',
-            'Verify you are human',
-            'Security check'
+            'just a moment',
+            'checking your browser',
+            'please wait',
+            'ddos protection',
+            'cloudflare',
+            'ray id',
+            'attention required',
+            'verify you are human',
+            'security check',
+            'browser check',
+            'challenge'
         ];
 
         const isCloudflareChallenge = cloudflareIndicators.some(indicator =>
-            title.toLowerCase().includes(indicator.toLowerCase())
+            initialTitle.toLowerCase().includes(indicator)
         );
 
         // Also check page content for Cloudflare indicators
         const bodyText = await page.evaluate(() => document.body.textContent || '').catch(() => '');
         const hasCloudflareContent = cloudflareIndicators.some(indicator =>
-            bodyText.toLowerCase().includes(indicator.toLowerCase())
+            bodyText.toLowerCase().includes(indicator)
         );
 
-        if (isCloudflareChallenge || hasCloudflareContent) {
-            console.log('🛡️  Cloudflare challenge detected, waiting for resolution...');
+        if (!isCloudflareChallenge && !hasCloudflareContent) {
+            // Check if we're already on a results page
+            const hasJobResults = await page.$('[data-jk], .job_seen_beacon, .jobsearch-SerpJobCard').catch(() => null);
+            if (hasJobResults) {
+                console.log('✅ Already on results page, no challenge detected');
+                return true;
+            }
+        }
 
-            // Wait longer for challenge to complete (up to 45 seconds)
+        if (isCloudflareChallenge || hasCloudflareContent) {
+            console.log('🛡️  Cloudflare challenge detected, implementing robust detection...');
+
+            // Strategy 1: Wait for URL change (most reliable)
+            console.log('🔍 Strategy 1: Monitoring URL changes...');
             let attempts = 0;
-            const maxAttempts = 9; // 45 seconds total
+            const maxAttempts = 12; // 60 seconds total
+            let lastUrl = initialUrl;
 
             while (attempts < maxAttempts) {
                 await new Promise(resolve => setTimeout(resolve, 5000));
                 attempts++;
 
                 try {
+                    const currentUrl = await page.url();
                     const currentTitle = await page.title();
-                    const currentBody = await page.evaluate(() => document.body.textContent || '').catch(() => '');
 
-                    const stillChallenge = cloudflareIndicators.some(indicator =>
-                        currentTitle.toLowerCase().includes(indicator.toLowerCase()) ||
-                        currentBody.toLowerCase().includes(indicator.toLowerCase())
-                    );
-
-                    if (!stillChallenge) {
-                        console.log(`✅ Cloudflare challenge resolved after ${attempts * 5} seconds`);
-                        // Additional wait to ensure page is fully loaded
-                        await new Promise(resolve => setTimeout(resolve, 3000));
+                    // Check if URL changed (indicates successful navigation)
+                    if (currentUrl !== lastUrl && !currentUrl.includes('challenge')) {
+                        console.log(`✅ URL changed from challenge page: ${currentUrl}`);
+                        await new Promise(resolve => setTimeout(resolve, 2000)); // Let page settle
                         return true;
                     }
 
-                    console.log(`⏳ Waiting for Cloudflare... (${attempts * 5}s)`);
+                    // Strategy 2: Check for Indeed-specific selectors
+                    const jobResultsSelector = await page.$('[data-jk], .job_seen_beacon, .jobsearch-SerpJobCard, #searchform').catch(() => null);
+                    if (jobResultsSelector) {
+                        console.log(`✅ Indeed results page detected after ${attempts * 5} seconds`);
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        return true;
+                    }
+
+                    // Strategy 3: Check title change
+                    const titleChanged = !cloudflareIndicators.some(indicator =>
+                        currentTitle.toLowerCase().includes(indicator)
+                    );
+
+                    if (titleChanged && (currentTitle.includes('Indeed') || currentTitle.includes('jobs'))) {
+                        console.log(`✅ Title changed to Indeed page: ${currentTitle}`);
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        return true;
+                    }
+
+                    // Strategy 4: Check for CAPTCHA and handle if needed
+                    const captchaFrame = await page.$('iframe[src*="captcha"], iframe[src*="challenge"]').catch(() => null);
+                    if (captchaFrame) {
+                        console.log('🤖 CAPTCHA detected - this requires manual intervention or CAPTCHA solver');
+                        // For now, we'll wait longer for manual solving
+                        await new Promise(resolve => setTimeout(resolve, 10000));
+                        continue;
+                    }
+
+                    console.log(`⏳ Challenge still active... (${attempts * 5}s) - Title: ${currentTitle.substring(0, 50)}`);
+                    lastUrl = currentUrl;
+
                 } catch (error) {
-                    console.log(`⚠️  Error checking challenge status: ${error.message}`);
+                    console.log(`⚠️  Error during challenge detection: ${error.message}`);
+
+                    // If we get frame detachment errors, the page might be transitioning
+                    if (error.message.includes('detached') || error.message.includes('destroyed')) {
+                        console.log('🔄 Page transitioning, waiting for stabilization...');
+                        await new Promise(resolve => setTimeout(resolve, 3000));
+
+                        // Try to check if we're now on a valid page
+                        try {
+                            const newTitle = await page.title();
+                            const hasResults = await page.$('[data-jk], .job_seen_beacon, #searchform').catch(() => null);
+
+                            if (hasResults || !cloudflareIndicators.some(indicator =>
+                                newTitle.toLowerCase().includes(indicator))) {
+                                console.log('✅ Page stabilized after transition');
+                                return true;
+                            }
+                        } catch (e) {
+                            console.log('⚠️  Still transitioning...');
+                        }
+                    }
                 }
             }
 
@@ -184,9 +244,10 @@ async function handleCloudflareChallenge(page) {
             return false;
         }
 
+        console.log('✅ No Cloudflare challenge detected');
         return true;
     } catch (error) {
-        console.error('Error handling Cloudflare:', error);
+        console.error('❌ Error in Cloudflare challenge handler:', error.message);
         return false;
     }
 }
@@ -387,11 +448,24 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
     let failedUrls = 0;
 
     const crawler = new PuppeteerCrawler({
-        // Use Apify proxy for anti-bot protection
+        // Use Apify proxy for anti-bot protection with session rotation
         proxyConfiguration: useProxy ? await Actor.createProxyConfiguration({
             groups: ['RESIDENTIAL'],
             countryCode: 'US'
         }) : undefined,
+
+        // Enable session pool for better proxy/session management
+        sessionPoolOptions: {
+            maxPoolSize: 10,
+            sessionOptions: {
+                maxUsageCount: 5, // Retire sessions after 5 uses
+                maxErrorScore: 3, // Retire sessions after 3 errors
+            },
+        },
+
+        // Retry configuration for failed requests
+        maxRequestRetries: 2,
+        requestHandlerTimeoutSecs: 120, // Increase timeout for Cloudflare challenges
 
         launchContext: {
             launchOptions: {
@@ -431,8 +505,8 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
         maxConcurrency,
 
         async requestHandler({ page, request }) {
-            const task = request.userData;
-            console.log(`📄 Processing search task ${++processedUrls}/${searchTasks.length}: "${task.jobType}" (page ${task.pageNumber + 1})`);
+            const task = request.userData || {};
+            console.log(`📄 Processing search task ${++processedUrls}/${searchTasks.length}: "${task.jobType || 'unknown'}" (page ${(task.pageNumber || 0) + 1})`);
 
             // Handle warmup request differently
             if (task?.isWarmup) {
@@ -567,12 +641,29 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
                     }
                 }
 
-                // Handle Cloudflare challenge
+                // Handle Cloudflare challenge with retry logic
                 const cloudflareSuccess = await handleCloudflareChallenge(page);
                 if (!cloudflareSuccess) {
-                    console.log('❌ Failed to bypass Cloudflare, skipping URL');
-                    failedUrls++;
-                    return;
+                    console.log('❌ Failed to bypass Cloudflare on first attempt');
+
+                    // Implement retry with new session strategy
+                    if (request.retryCount < 2) { // Allow up to 2 retries
+                        console.log(`🔄 Retrying with new session (attempt ${request.retryCount + 1}/3)`);
+
+                        // Close current page to force new session
+                        try {
+                            await page.close();
+                        } catch (e) {
+                            console.log('⚠️  Error closing page:', e.message);
+                        }
+
+                        // Throw error to trigger retry with new session
+                        throw new Error('Cloudflare challenge failed - retrying with new session');
+                    } else {
+                        console.log('❌ Max retries exceeded, skipping task');
+                        failedUrls++;
+                        return;
+                    }
                 }
 
                 // Wait for job results to load
