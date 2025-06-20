@@ -1,0 +1,12 @@
+{
+  "visualMonitoring": true,
+  "testMode": true,
+  "maxPages": 1,
+  "jobTypes": ["restaurant manager"],
+  "location": "United States",
+  "salaryMin": 55000,
+  "maxConcurrency": 1,
+  "useProxy": true,
+  "saveToDataset": true,
+  "pushToDatabase": false
+}

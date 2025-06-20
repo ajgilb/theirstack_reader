@@ -598,9 +598,9 @@ try {
     // Get input from the user
     const input = await Actor.getInput() || {};
 
-    // Extract visual monitoring option
-    const visualMonitoring = input.visualMonitoring !== undefined ? input.visualMonitoring : true; // Default to visible browser
-    console.log(`🖥️  Visual monitoring: ${visualMonitoring ? 'ENABLED (visible browser)' : 'DISABLED (headless)'}`);
+    // Extract visual monitoring option - Default to headless for Apify Cloud compatibility
+    const visualMonitoring = input.visualMonitoring !== undefined ? input.visualMonitoring : false; // Default to headless
+    console.log(`🖥️  Browser mode: ${visualMonitoring ? 'HEADFUL (visible browser - may not work on Apify Cloud)' : 'HEADLESS (optimized for cloud)'}`);
 
     // Define the top 60 largest US cities for targeted job searches
     const topCities = [

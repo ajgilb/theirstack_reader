@@ -1,0 +1,292 @@
+{
+  "usableSessionsCount": 4,
+  "retiredSessionsCount": 1,
+  "sessions": [
+    {
+      "id": "session_odEFrDOrUN",
+      "cookieJar": {
+        "version": "tough-cookie@5.1.2",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2025-06-20T20:49:26.562Z",
+      "createdAt": "2025-06-20T19:59:26.562Z",
+      "usageCount": 0,
+      "maxUsageCount": 5,
+      "errorScore": 0
+    },
+    {
+      "id": "session_UtedQVDlT7",
+      "cookieJar": {
+        "version": "tough-cookie@5.1.2",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2025-06-20T20:49:26.566Z",
+      "createdAt": "2025-06-20T19:59:26.566Z",
+      "usageCount": 3,
+      "maxUsageCount": 5,
+      "errorScore": 7
+    },
+    {
+      "id": "session_sLiGdHRW0f",
+      "cookieJar": {
+        "version": "tough-cookie@5.1.2",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2025-06-20T20:49:34.502Z",
+      "createdAt": "2025-06-20T19:59:34.502Z",
+      "usageCount": 0,
+      "maxUsageCount": 5,
+      "errorScore": 0
+    },
+    {
+      "id": "session_6r3EB7bDAc",
+      "cookieJar": {
+        "version": "tough-cookie@5.1.2",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": [
+          {
+            "key": "cf_clearance",
+            "value": "ngE2nVGWzbQ4pg7YuOkE0B5ZIgyn9FMppjAomXk5a9A-1750449581-1.2.1.1-vsDNH7TDZfF2JxqEwak_nwM25IizeOJmO2km6LVhpq7ytAi8GIw3_xKaU.NsGac5wUK65zv3CrKvDI8PjGmE9YN9.TS9wv5ZY59P4idQZvyftBbaY.ADTgJAygFzW3JKguD19YTbx1_9JChjMI5vvsHtBQLrfWvpfMq8_AqHq9Ny2W749eEqjx3jmLcoGIP35Q8yJA2y7CDdalhJ.A3XB2QEyjmrkeb1iTWaEqqCb35JqkzkaDh5fXspGYPTJ0T.VwheYInV4OljiCnxzhyWLIScgepU20ltjag2Le.nYnhF6qyT4JUHZa3s_REpHpyYq9Fb8fJkNpuR1FS.yeOQMCTpMKI22m5TEKHhH_NoFMs",
+            "expires": "2026-06-20T19:59:41.670Z",
+            "domain": "indeed.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2025-06-20T19:59:42.095Z",
+            "lastAccessed": "2025-06-20T20:00:36.018Z"
+          },
+          {
+            "key": "INDEED_CSRF_TOKEN",
+            "value": "gtD4zv2xVxzAlnGc28CQP0xYetPT3fWC",
+            "expires": "2025-06-20T20:49:42.094Z",
+            "domain": "www.indeed.com",
+            "path": "/",
+            "secure": true,
+            "hostOnly": true,
+            "creation": "2025-06-20T19:59:42.101Z",
+            "lastAccessed": "2025-06-20T20:00:36.018Z"
+          },
+          {
+            "key": "ctkgen",
+            "value": "1",
+            "expires": "2025-06-20T20:02:38.599Z",
+            "domain": "www.indeed.com",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2025-06-20T19:59:42.102Z",
+            "lastAccessed": "2025-06-20T20:00:25.181Z"
+          },
+          {
+            "key": "JSESSIONID",
+            "value": "node01m4d68kghcgpx1a8hkdbc2jc7w17203575.node0",
+            "expires": "2025-06-20T20:49:42.094Z",
+            "domain": "www.indeed.com",
+            "path": "/",
+            "secure": true,
+            "hostOnly": true,
+            "creation": "2025-06-20T19:59:42.102Z",
+            "lastAccessed": "2025-06-20T20:00:36.018Z"
+          },
+          {
+            "key": "CTK",
+            "value": "1iu7epoe122u0000",
+            "expires": "2026-07-25T20:00:29.092Z",
+            "domain": "indeed.com",
+            "path": "/",
+            "secure": true,
+            "hostOnly": false,
+            "creation": "2025-06-20T19:59:42.102Z",
+            "lastAccessed": "2025-06-20T20:00:36.018Z"
+          },
+          {
+            "key": "_cfuvid",
+            "value": "aD5BfFPy6JLpXYhSRjxjVUMO4TsrYFtuOc0n5Mb06s0-1750449577964-0.0.1.1-604800000",
+            "expires": "2025-06-20T20:49:42.094Z",
+            "domain": "indeed.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2025-06-20T19:59:42.105Z",
+            "lastAccessed": "2025-06-20T20:00:36.018Z"
+          },
+          {
+            "key": "__cf_bm",
+            "value": "XnoG2fmUJLeanx27K5xDdt8FmH2.KRX7HKcj5T.6W2k-1750449577-1.0.1.1-05.12JfYPsTt3PgtbvjAkUCsKDJ0G1LPP0EsjX3KfLU0MQV42EoL7yFwPubV8nvB0lObEeZo3fkjFjki36g85V3ZQxKpuKZfVgvsgCuVNqE",
+            "expires": "2025-06-20T20:29:38.067Z",
+            "domain": "indeed.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2025-06-20T19:59:42.105Z",
+            "lastAccessed": "2025-06-20T20:00:36.018Z"
+          },
+          {
+            "key": "FPLC",
+            "value": "Oea%2FfX6yySo11xDSAIIo3EWC%2B0emI1g9bC1pybcQ7T2yUCxOzhRNXl0ippaGzMlNSSVslECxdJNPmdp7EGap9wtv8nE1x32bhUz7mNBnI0rYNVPc54ZgwAV%2FXeXJJg%3D%3D",
+            "expires": "2025-06-21T16:00:34.042Z",
+            "domain": "indeed.com",
+            "path": "/",
+            "secure": true,
+            "hostOnly": false,
+            "creation": "2025-06-20T20:00:36.017Z",
+            "lastAccessed": "2025-06-20T20:00:36.017Z"
+          },
+          {
+            "key": "FPID",
+            "value": "FPID2.2.BGa5dqhM5sjguiuwJa7ecmJ3aAz0UZnhE9qQXbGgFmI%3D.1750449634",
+            "expires": "2026-07-25T20:00:34.042Z",
+            "domain": "indeed.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2025-06-20T20:00:36.017Z",
+            "lastAccessed": "2025-06-20T20:00:36.017Z"
+          },
+          {
+            "key": "SURF",
+            "value": "z1ESX02kzKlfxG0VLm0QCJl5XEXHgEyl",
+            "expires": "2025-06-27T20:00:33.800Z",
+            "domain": "indeed.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2025-06-20T20:00:36.018Z",
+            "lastAccessed": "2025-06-20T20:00:36.018Z"
+          },
+          {
+            "key": "_ga_LYNT3BTHPG",
+            "value": "GS2.1.s1750449633$o1$g0$t1750449633$j60$l0$h1862059312",
+            "expires": "2026-07-25T20:00:33.634Z",
+            "domain": "indeed.com",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2025-06-20T20:00:36.018Z",
+            "lastAccessed": "2025-06-20T20:00:36.018Z"
+          },
+          {
+            "key": "_ga",
+            "value": "GA1.1.1385041412.1750449634",
+            "expires": "2026-07-25T20:00:33.635Z",
+            "domain": "indeed.com",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2025-06-20T20:00:36.018Z",
+            "lastAccessed": "2025-06-20T20:00:36.018Z"
+          },
+          {
+            "key": "CSRF",
+            "value": "7lviHIvmULz06PhohXBNIX7FiRVREfZ6",
+            "expires": "2025-06-20T20:50:36.017Z",
+            "domain": "indeed.com",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2025-06-20T20:00:36.018Z",
+            "lastAccessed": "2025-06-20T20:00:36.018Z"
+          },
+          {
+            "key": "indeed_rcc",
+            "value": "LV",
+            "expires": "2026-07-25T20:00:32.247Z",
+            "domain": "www.indeed.com",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2025-06-20T20:00:36.018Z",
+            "lastAccessed": "2025-06-20T20:00:36.018Z"
+          },
+          {
+            "key": "RF",
+            "value": "\"TFTzyBUJoNr6YttPP3kyivpZ6-9J49o-Uk3iY6QNQqKE2fh7FyVgtY9aPS7z5WFAIfnXQL1BI5o=\"",
+            "expires": "2025-09-18T19:59:42.759Z",
+            "domain": "indeed.com",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2025-06-20T20:00:36.018Z",
+            "lastAccessed": "2025-06-20T20:00:36.018Z"
+          },
+          {
+            "key": "cf_chl_rc_m",
+            "value": "2",
+            "expires": "2025-06-20T21:00:14.000Z",
+            "domain": "www.indeed.com",
+            "path": "/",
+            "secure": true,
+            "hostOnly": true,
+            "creation": "2025-06-20T20:00:36.018Z",
+            "lastAccessed": "2025-06-20T20:00:36.018Z"
+          },
+          {
+            "key": "LV",
+            "value": "LA=1750449582:CV=1750449582:TS=1750449582",
+            "expires": "2026-07-25T20:00:32.247Z",
+            "domain": "www.indeed.com",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2025-06-20T20:00:36.018Z",
+            "lastAccessed": "2025-06-20T20:00:36.018Z"
+          }
+        ]
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2025-06-20T20:49:34.505Z",
+      "createdAt": "2025-06-20T19:59:34.505Z",
+      "usageCount": 2,
+      "maxUsageCount": 5,
+      "errorScore": 0
+    },
+    {
+      "id": "session_Dfw7irxzR8",
+      "cookieJar": {
+        "version": "tough-cookie@5.1.2",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2025-06-20T20:50:24.912Z",
+      "createdAt": "2025-06-20T20:00:24.912Z",
+      "usageCount": 0,
+      "maxUsageCount": 5,
+      "errorScore": 0
+    }
+  ]
+}

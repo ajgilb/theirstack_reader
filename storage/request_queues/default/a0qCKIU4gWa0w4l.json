@@ -1,0 +1,9 @@
+{
+	"id": "a0qCKIU4gWa0w4l",
+	"json": "{\"id\":\"a0qCKIU4gWa0w4l\",\"url\":\"https://www.indeed.com/search-task-27\",\"uniqueKey\":\"https://www.indeed.com/search-task-27\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"jobType\":\"executive chef\",\"location\":\"United States\",\"salaryMin\":55000,\"pageNumber\":2,\"isFirstPage\":false}}",
+	"method": "GET",
+	"orderNo": 1750449681020,
+	"retryCount": 0,
+	"uniqueKey": "https://www.indeed.com/search-task-27",
+	"url": "https://www.indeed.com/search-task-27"
+}

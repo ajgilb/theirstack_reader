@@ -1,0 +1,42 @@
+{
+  "requestsFinished": 2,
+  "requestsFailed": 0,
+  "requestsRetries": 1,
+  "requestsFailedPerMinute": 0,
+  "requestsFinishedPerMinute": 2,
+  "requestMinDurationMillis": 18025,
+  "requestMaxDurationMillis": 50345,
+  "requestTotalFailedDurationMillis": 0,
+  "requestTotalFinishedDurationMillis": 68370,
+  "crawlerStartedAt": "2025-06-20T19:59:26.400Z",
+  "crawlerFinishedAt": "2025-06-20T20:00:43.391Z",
+  "statsPersistedAt": "2025-06-20T20:00:43.391Z",
+  "crawlerRuntimeMillis": 77223,
+  "crawlerLastStartTimestamp": 1750449566168,
+  "requestRetryHistogram": [
+    1,
+    1
+  ],
+  "statsId": 0,
+  "requestAvgFailedDurationMillis": null,
+  "requestAvgFinishedDurationMillis": 34185,
+  "requestTotalDurationMillis": 68370,
+  "requestsTotal": 2,
+  "requestsWithStatusCode": {
+    "200": 1,
+    "403": 1,
+    "404": 1
+  },
+  "errors": {},
+  "retryErrors": {
+    "/Users/ajgilbert2/Library/Mobile Documents/com~apple~CloudDocs/Biz Dev/google_jobs_api_actor/node_modules/@crawlee/basic/internals/basic-crawler.js:778:19": {
+      "missing error code": {
+        "Error": {
+          "Request blocked - received 403 status code.": {
+            "count": 1
+          }
+        }
+      }
+    }
+  }
+}

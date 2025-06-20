@@ -1,0 +1,9 @@
+{
+	"id": "XM2wk971UyrUyAW",
+	"json": "{\"id\":\"XM2wk971UyrUyAW\",\"url\":\"https://www.indeed.com/search-task-13\",\"uniqueKey\":\"https://www.indeed.com/search-task-13\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"jobType\":\"culinary director\",\"location\":\"United States\",\"salaryMin\":55000,\"pageNumber\":3,\"isFirstPage\":false}}",
+	"method": "GET",
+	"orderNo": 1750449861188,
+	"retryCount": 0,
+	"uniqueKey": "https://www.indeed.com/search-task-13",
+	"url": "https://www.indeed.com/search-task-13"
+}

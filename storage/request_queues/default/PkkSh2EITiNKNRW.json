@@ -1,0 +1,9 @@
+{
+	"id": "PkkSh2EITiNKNRW",
+	"json": "{\"id\":\"PkkSh2EITiNKNRW\",\"url\":\"https://www.indeed.com/search-task-0\",\"loadedUrl\":\"https://www.indeed.com/search-task-0\",\"uniqueKey\":\"https://www.indeed.com/search-task-0\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"jobType\":\"restaurant manager\",\"location\":\"United States\",\"salaryMin\":55000,\"pageNumber\":0,\"isFirstPage\":true,\"__crawlee\":{\"state\":4}},\"handledAt\":\"2025-06-20T20:00:24.837Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://www.indeed.com/search-task-0",
+	"url": "https://www.indeed.com/search-task-0"
+}

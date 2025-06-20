@@ -30,36 +30,46 @@ async function performIndeedSearch(page, jobType, location, salaryMin) {
         // Wait for page to load and handle any popups
         await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
 
-        // Find and fill the job search form
+        // Find and fill the job search form using your exact selectors
         const whatInput = await page.$('#text-input-what');
         const whereInput = await page.$('#text-input-where');
 
-        if (!whatInput || !whereInput) {
-            console.log('❌ Could not find search form inputs');
+        if (!whatInput) {
+            console.log('❌ Could not find "what" input field (#text-input-what)');
             return false;
         }
 
-        // Clear and fill the "what" field (job title)
-        await whatInput.click({ clickCount: 3 }); // Select all
+        // Clear and fill the "what" field (job title) - your exact selector
+        console.log(`📝 Filling job title: "${jobType}"`);
+        await whatInput.click({ clickCount: 3 }); // Select all existing text
         await whatInput.type(jobType, { delay: 100 + Math.random() * 100 });
 
         // Add human-like delay
         await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
 
-        // Clear and fill the "where" field (location)
-        await whereInput.click({ clickCount: 3 }); // Select all
-        await whereInput.type(location, { delay: 100 + Math.random() * 100 });
+        // Handle location field - it might default to US, but let's fill it anyway
+        if (whereInput) {
+            console.log(`📍 Filling location: "${location}"`);
+            await whereInput.click({ clickCount: 3 }); // Select all
+            await whereInput.type(location, { delay: 100 + Math.random() * 100 });
 
-        // Add another human-like delay
-        await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
+            // Add another human-like delay
+            await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
+        } else {
+            console.log('⚠️  Location field not found, proceeding with default location');
+        }
 
-        // Click the search button
-        const searchButton = await page.$('.yosegi-InlineWhatWhere-primaryButton');
+        // Click the search button using your exact selector
+        const searchButton = await page.$('button.yosegi-InlineWhatWhere-primaryButton') ||
+                            await page.$('.yosegi-InlineWhatWhere-primaryButton') ||
+                            await page.$('button[type="submit"]');
+
         if (!searchButton) {
             console.log('❌ Could not find search button');
             return false;
         }
 
+        console.log('🔍 Clicking search button');
         await searchButton.click();
 
         // Wait for search results to load
@@ -632,8 +642,13 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
             launchOptions: {
                 // Use headful mode for better Cloudflare bypass and visual monitoring
                 headless: false,
-                // Enable live view in Apify
+                // Enable live view in Apify with VNC
                 devtools: false, // Keep false for production
+                // Force display for Apify Live View
+                env: {
+                    ...process.env,
+                    DISPLAY: ':99'
+                },
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
@@ -776,6 +791,9 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
                     });
                 });
 
+                // Always start from Indeed homepage and perform search
+                console.log(`🏠 Starting from Indeed homepage for "${task.jobType}" (page ${task.pageNumber + 1})`);
+
                 // Add random delay between different job type searches to appear more human
                 if (task.isFirstPage && processedUrls > 1) {
                     const searchDelay = 3000 + Math.random() * 7000; // 3-10 seconds between job type searches
@@ -783,58 +801,47 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
                     await new Promise(resolve => setTimeout(resolve, searchDelay));
                 }
 
-                // Perform human-like search interaction
-                if (task.isFirstPage) {
-                    // For first page, perform search via homepage
-                    console.log(`🔍 Starting search for "${task.jobType}" (randomized order)`);
-                    const searchSuccess = await performIndeedSearch(page, task.jobType, task.location, task.salaryMin);
-                    if (!searchSuccess) {
-                        console.log('❌ Failed to perform search, skipping task');
-                        failedUrls++;
-                        return;
-                    }
-                } else {
-                    // For subsequent pages, check if pagination is available
-                    console.log(`🔄 Checking for page ${task.pageNumber + 1} for "${task.jobType}"`);
+                // Navigate to Indeed homepage first
+                console.log(`🌐 Navigating to Indeed homepage: ${request.url}`);
+                await page.goto(request.url, {
+                    waitUntil: 'networkidle2',
+                    timeout: 30000
+                });
 
-                    // First check if there are enough results to warrant pagination
-                    const totalResults = await page.evaluate(() => {
-                        // Look for results count indicator
-                        const countElement = document.querySelector('[data-testid="searchcount-text"], .jobsearch-JobCountAndSortPane-jobCount');
-                        if (countElement) {
-                            const text = countElement.textContent;
-                            const match = text.match(/(\d+)/);
-                            return match ? parseInt(match[1]) : 0;
+                // Perform search via homepage form
+                console.log(`🔍 Performing search for "${task.jobType}" in "${task.location}"`);
+                const searchSuccess = await performIndeedSearch(page, task.jobType, task.location, task.salaryMin);
+                if (!searchSuccess) {
+                    console.log('❌ Failed to perform search, skipping task');
+                    failedUrls++;
+                    return;
+                }
+
+                // If this is not the first page, navigate to the specific page
+                if (!task.isFirstPage) {
+                    console.log(`🔄 Navigating to page ${task.pageNumber + 1} for "${task.jobType}"`);
+
+                    // Navigate through pagination to reach the desired page
+                    for (let currentPage = 1; currentPage < task.pageNumber + 1; currentPage++) {
+                        try {
+                            const nextButton = await page.$('a[aria-label="Next Page"]') ||
+                                             await page.$('a[aria-label="Next"]') ||
+                                             await page.$('.np:last-child a') ||
+                                             await page.$('nav[role="navigation"] a:last-child');
+
+                            if (nextButton) {
+                                console.log(`🔄 Clicking to page ${currentPage + 1}`);
+                                await nextButton.click();
+                                await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 });
+                                await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for page to settle
+                            } else {
+                                console.log(`✅ No more pages available, stopping at page ${currentPage}`);
+                                break;
+                            }
+                        } catch (error) {
+                            console.log(`❌ Error navigating to page ${currentPage + 1}:`, error.message);
+                            break;
                         }
-                        return 0;
-                    });
-
-                    const expectedMinResults = (task.pageNumber + 1) * 10; // Indeed shows ~10 jobs per page
-
-                    if (totalResults < expectedMinResults) {
-                        console.log(`✅ Only ${totalResults} total results, no page ${task.pageNumber + 1} needed`);
-                        return; // Skip this page, not enough results
-                    }
-
-                    // Look for "Next" button or page number
-                    try {
-                        const nextButton = await page.$('a[aria-label="Next Page"]') ||
-                                         await page.$('a[aria-label="Next"]') ||
-                                         await page.$('.np:last-child a') ||
-                                         await page.$('nav[role="navigation"] a:last-child');
-
-                        if (nextButton) {
-                            console.log(`🔄 Navigating to page ${task.pageNumber + 1}`);
-                            await nextButton.click();
-                            await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 });
-                        } else {
-                            console.log(`✅ No more pages available after page ${task.pageNumber}`);
-                            return; // No more pages, this is normal
-                        }
-                    } catch (error) {
-                        console.log('❌ Error navigating to next page:', error.message);
-                        failedUrls++;
-                        return;
                     }
                 }
 
@@ -1008,9 +1015,9 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
         userData: { isWarmup: true }
     }]);
 
-    // Add all search tasks to the crawler
+    // Add all search tasks to the crawler - all start from Indeed homepage
     await crawler.addRequests(searchTasks.map((task, index) => ({
-        url: `https://www.indeed.com/search-task-${index}`, // Dummy URL for task identification
+        url: 'https://www.indeed.com/', // Always start from Indeed homepage
         userData: task
     })));
 

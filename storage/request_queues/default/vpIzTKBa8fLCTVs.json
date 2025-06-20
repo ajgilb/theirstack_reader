@@ -1,0 +1,9 @@
+{
+	"id": "vpIzTKBa8fLCTVs",
+	"json": "{\"id\":\"vpIzTKBa8fLCTVs\",\"url\":\"https://www.indeed.com/search-task-39\",\"uniqueKey\":\"https://www.indeed.com/search-task-39\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"jobType\":\"kitchen manager\",\"location\":\"United States\",\"salaryMin\":55000,\"pageNumber\":4,\"isFirstPage\":false}}",
+	"method": "GET",
+	"orderNo": 1750449681038,
+	"retryCount": 0,
+	"uniqueKey": "https://www.indeed.com/search-task-39",
+	"url": "https://www.indeed.com/search-task-39"
+}

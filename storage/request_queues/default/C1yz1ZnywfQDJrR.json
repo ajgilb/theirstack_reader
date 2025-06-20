@@ -1,0 +1,9 @@
+{
+	"id": "C1yz1ZnywfQDJrR",
+	"json": "{\"id\":\"C1yz1ZnywfQDJrR\",\"url\":\"https://www.indeed.com/search-task-4\",\"loadedUrl\":\"https://www.indeed.com/search-task-4\",\"uniqueKey\":\"https://www.indeed.com/search-task-4\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"jobType\":\"private chef\",\"location\":\"United States\",\"salaryMin\":55000,\"pageNumber\":4,\"isFirstPage\":false,\"__crawlee\":{\"state\":4}},\"handledAt\":\"2025-06-20T20:01:37.347Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://www.indeed.com/search-task-4",
+	"url": "https://www.indeed.com/search-task-4"
+}
