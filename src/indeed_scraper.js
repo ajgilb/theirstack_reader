@@ -229,20 +229,38 @@ async function handleCloudflareChallenge(page) {
                 console.log('⚠️  Could not take challenge screenshot:', e.message);
             }
 
-            // Add human-like activity during challenge (your suggestion #7)
-            console.log('🤖 Adding human-like activity during challenge...');
+            // Add enhanced human-like activity during challenge
+            console.log('🤖 Adding enhanced human-like activity during challenge...');
             try {
-                // Simulate human mouse movement
-                await page.mouse.move(100, 100);
-                await new Promise(resolve => setTimeout(resolve, 500));
-                await page.mouse.move(200, 150);
-                await new Promise(resolve => setTimeout(resolve, 300));
+                // Multiple realistic mouse movements
+                const movements = [
+                    [100, 100], [250, 150], [400, 200], [300, 300], [150, 250]
+                ];
 
-                // Simulate scrolling
+                for (const [x, y] of movements) {
+                    await page.mouse.move(x, y);
+                    await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
+                }
+
+                // Realistic scrolling behavior
                 await page.evaluate(() => {
-                    window.scrollTo(0, 100);
+                    window.scrollTo(0, 50);
                 });
                 await new Promise(resolve => setTimeout(resolve, 500));
+
+                await page.evaluate(() => {
+                    window.scrollTo(0, 150);
+                });
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                await page.evaluate(() => {
+                    window.scrollTo(0, 0);
+                });
+                await new Promise(resolve => setTimeout(resolve, 400));
+
+                // Simulate reading behavior - pause at different parts of page
+                await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+
             } catch (e) {
                 console.log('⚠️  Could not simulate human activity:', e.message);
             }
@@ -287,12 +305,41 @@ async function handleCloudflareChallenge(page) {
                         return true;
                     }
 
-                    // Strategy 4: Check for CAPTCHA and handle if needed
-                    const captchaFrame = await page.$('iframe[src*="captcha"], iframe[src*="challenge"]').catch(() => null);
-                    if (captchaFrame) {
-                        console.log('🤖 CAPTCHA detected - this requires manual intervention or CAPTCHA solver');
-                        // For now, we'll wait longer for manual solving
-                        await new Promise(resolve => setTimeout(resolve, 10000));
+                    // Strategy 4: Enhanced CAPTCHA detection and handling
+                    const captchaFrame = await page.$('iframe[src*="captcha"], iframe[src*="challenge"], iframe[src*="cf-challenge"]').catch(() => null);
+                    const captchaCheckbox = await page.$('input[type="checkbox"]').catch(() => null);
+                    const captchaButton = await page.$('button:contains("Verify"), button:contains("I\'m human")').catch(() => null);
+
+                    if (captchaFrame || captchaCheckbox || captchaButton) {
+                        console.log('🤖 CAPTCHA/Human verification detected!');
+
+                        // Try to click "I'm human" checkbox if present
+                        if (captchaCheckbox) {
+                            console.log('✅ Attempting to click human verification checkbox...');
+                            try {
+                                await captchaCheckbox.click();
+                                await new Promise(resolve => setTimeout(resolve, 3000));
+                                console.log('✅ Clicked verification checkbox');
+                            } catch (e) {
+                                console.log('❌ Could not click checkbox:', e.message);
+                            }
+                        }
+
+                        // Try to click verification button if present
+                        if (captchaButton) {
+                            console.log('✅ Attempting to click verification button...');
+                            try {
+                                await captchaButton.click();
+                                await new Promise(resolve => setTimeout(resolve, 3000));
+                                console.log('✅ Clicked verification button');
+                            } catch (e) {
+                                console.log('❌ Could not click button:', e.message);
+                            }
+                        }
+
+                        // Wait longer for manual solving or automatic resolution
+                        console.log('⏳ Waiting 15 seconds for CAPTCHA resolution...');
+                        await new Promise(resolve => setTimeout(resolve, 15000));
                         continue;
                     }
 
