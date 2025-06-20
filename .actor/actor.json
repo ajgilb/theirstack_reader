@@ -31,6 +31,7 @@
         "title": "Location",
         "type": "string",
         "description": "Location to search for jobs (e.g., 'United States', 'New York')",
+        "editor": "textfield",
         "default": "United States"
       },
       "salaryMin": {
@@ -86,6 +87,7 @@
         "title": "Database Table",
         "type": "string",
         "description": "Name of the database table to insert jobs into",
+        "editor": "textfield",
         "default": "indeed_jobs"
       },
       "deduplicateJobs": {
@@ -111,6 +113,12 @@
         "title": "Test Mode",
         "type": "boolean",
         "description": "Run in test mode (process fewer jobs and only send email to primary recipient)",
+        "default": false
+      },
+      "visualMonitoring": {
+        "title": "Visual Monitoring",
+        "type": "boolean",
+        "description": "Enable headful browser mode (visible locally, better anti-detection on cloud)",
         "default": false
       }
     },
