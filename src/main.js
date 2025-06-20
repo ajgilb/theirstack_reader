@@ -598,6 +598,10 @@ try {
     // Get input from the user
     const input = await Actor.getInput() || {};
 
+    // Extract visual monitoring option
+    const visualMonitoring = input.visualMonitoring !== undefined ? input.visualMonitoring : true; // Default to visible browser
+    console.log(`🖥️  Visual monitoring: ${visualMonitoring ? 'ENABLED (visible browser)' : 'DISABLED (headless)'}`);
+
     // Define the top 60 largest US cities for targeted job searches
     const topCities = [
         'New York NY', 'Los Angeles CA', 'Chicago IL', 'Houston TX', 'Phoenix AZ',
@@ -810,7 +814,7 @@ try {
     const scrapedJobs = await scrapeIndeedJobs(searchTasks, {
         maxConcurrency: 1, // Use very low concurrency to avoid triggering Cloudflare
         useProxy,
-        headless: true
+        headless: !visualMonitoring // Use visual monitoring setting
     });
 
     console.log(`✅ Scraped ${scrapedJobs.length} jobs from Indeed`);

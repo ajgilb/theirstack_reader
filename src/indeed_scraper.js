@@ -65,6 +65,17 @@ async function performIndeedSearch(page, jobType, location, salaryMin) {
         // Wait for search results to load
         await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 });
 
+        // Take screenshot after search
+        try {
+            await page.screenshot({
+                path: `search_results_${Date.now()}.png`,
+                fullPage: false
+            });
+            console.log('📸 Screenshot taken of search results');
+        } catch (e) {
+            console.log('⚠️  Could not take screenshot:', e.message);
+        }
+
         // Verify we reached results page
         const currentTitle = await page.title();
         const currentUrl = page.url();
@@ -196,6 +207,17 @@ async function handleCloudflareChallenge(page) {
 
         if (isCloudflareChallenge || hasCloudflareContent) {
             console.log('🛡️  Cloudflare challenge detected, implementing robust detection...');
+
+            // Take screenshot of Cloudflare challenge
+            try {
+                await page.screenshot({
+                    path: `cloudflare_challenge_${Date.now()}.png`,
+                    fullPage: true
+                });
+                console.log('📸 Screenshot: Cloudflare challenge page');
+            } catch (e) {
+                console.log('⚠️  Could not take challenge screenshot:', e.message);
+            }
 
             // Add human-like activity during challenge (your suggestion #7)
             console.log('🤖 Adding human-like activity during challenge...');
@@ -576,7 +598,7 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
     const {
         maxConcurrency = 1, // Use 1 to avoid Cloudflare detection
         useProxy = true,
-        headless = true
+        headless = false // Force headful mode for visual monitoring
     } = options;
 
     console.log(`🚀 Starting Indeed scraping for ${searchTasks.length} search tasks...`);
@@ -608,8 +630,10 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
 
         launchContext: {
             launchOptions: {
-                // Use headful mode for better Cloudflare bypass (your suggestion #3)
+                // Use headful mode for better Cloudflare bypass and visual monitoring
                 headless: false,
+                // Enable live view in Apify
+                devtools: false, // Keep false for production
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
@@ -889,11 +913,34 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
                     try {
                         console.log(`🔍 Processing job ${i + 1}/${jobElements.length}`);
 
+                        // Take screenshot before clicking job
+                        try {
+                            await page.screenshot({
+                                path: `job_list_page_${Date.now()}.png`,
+                                fullPage: false
+                            });
+                            console.log(`📸 Screenshot: Job list page (job ${i + 1})`);
+                        } catch (e) {
+                            console.log('⚠️  Could not take screenshot:', e.message);
+                        }
+
                         // Click the job to open details
                         await jobElements[i].click();
+                        console.log(`👆 Clicked job ${i + 1}`);
 
                         // Wait for job details to load
                         await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
+
+                        // Take screenshot of job detail page
+                        try {
+                            await page.screenshot({
+                                path: `job_detail_${i + 1}_${Date.now()}.png`,
+                                fullPage: false
+                            });
+                            console.log(`📸 Screenshot: Job detail page (job ${i + 1})`);
+                        } catch (e) {
+                            console.log('⚠️  Could not take screenshot:', e.message);
+                        }
 
                         // Extract detailed job data from the job details page
                         const jobData = await extractDetailedJobData(page);
