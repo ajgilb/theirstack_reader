@@ -799,22 +799,19 @@ try {
     console.log(`💰 Minimum salary: $${salaryMin.toLocaleString()}`);
     console.log(`📄 Max pages per job type: ${maxPages}`);
 
-    // Create Indeed search tasks for human-like interaction
-    const { createIndeedSearchTasks } = await import('./indeed_scraper.js');
-    const searchTasks = createIndeedSearchTasks({
-        jobTypes,
+    // Simple approach: just scrape one job type at a time
+    console.log(`🎯 Starting simple Indeed scraping for: ${jobTypes[0]}`);
+
+    // Import the simple scraper function
+    const { scrapeIndeedSimple } = await import('./indeed_scraper.js');
+
+    // Scrape jobs with simple approach - just one job type, one page
+    const scrapedJobs = await scrapeIndeedSimple({
+        jobType: jobTypes[0], // Just first job type for now
         location,
         salaryMin,
-        maxPages
-    });
-
-    console.log(`📋 Generated ${searchTasks.length} Indeed search tasks`);
-
-    // Scrape jobs from Indeed with human-like interaction
-    const scrapedJobs = await scrapeIndeedJobs(searchTasks, {
-        maxConcurrency: 1, // Use very low concurrency to avoid triggering Cloudflare
         useProxy,
-        headless: !visualMonitoring // Use visual monitoring setting
+        headless: !visualMonitoring
     });
 
     console.log(`✅ Scraped ${scrapedJobs.length} jobs from Indeed`);

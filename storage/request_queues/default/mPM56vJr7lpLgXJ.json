@@ -1,9 +1,0 @@
-{
-	"id": "mPM56vJr7lpLgXJ",
-	"json": "{\"id\":\"mPM56vJr7lpLgXJ\",\"url\":\"https://www.indeed.com/search-task-16\",\"uniqueKey\":\"https://www.indeed.com/search-task-16\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"jobType\":\"restaurant chef\",\"location\":\"United States\",\"salaryMin\":55000,\"pageNumber\":1,\"isFirstPage\":false}}",
-	"method": "GET",
-	"orderNo": 1750449861188,
-	"retryCount": 0,
-	"uniqueKey": "https://www.indeed.com/search-task-16",
-	"url": "https://www.indeed.com/search-task-16"
-}

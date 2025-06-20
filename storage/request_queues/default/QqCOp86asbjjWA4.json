@@ -1,9 +1,0 @@
-{
-	"id": "QqCOp86asbjjWA4",
-	"json": "{\"id\":\"QqCOp86asbjjWA4\",\"url\":\"https://www.indeed.com/search-task-33\",\"uniqueKey\":\"https://www.indeed.com/search-task-33\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"jobType\":\"sous chef\",\"location\":\"United States\",\"salaryMin\":55000,\"pageNumber\":3,\"isFirstPage\":false}}",
-	"method": "GET",
-	"orderNo": 1750449681029,
-	"retryCount": 0,
-	"uniqueKey": "https://www.indeed.com/search-task-33",
-	"url": "https://www.indeed.com/search-task-33"
-}

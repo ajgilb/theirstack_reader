@@ -1,9 +1,0 @@
-{
-	"id": "hq60syDp0WVXsVW",
-	"json": "{\"id\":\"hq60syDp0WVXsVW\",\"url\":\"https://www.indeed.com/search-task-5\",\"uniqueKey\":\"https://www.indeed.com/search-task-5\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"jobType\":\"restaurant manager\",\"location\":\"United States\",\"salaryMin\":55000,\"pageNumber\":0,\"isFirstPage\":true}}",
-	"method": "GET",
-	"orderNo": 1750450041188,
-	"retryCount": 0,
-	"uniqueKey": "https://www.indeed.com/search-task-5",
-	"url": "https://www.indeed.com/search-task-5"
-}

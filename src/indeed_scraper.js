@@ -691,6 +691,8 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
         async requestHandler({ page, request }) {
             const task = request.userData || {};
             console.log(`📄 Processing search task ${++processedUrls}/${searchTasks.length}: "${task.jobType || 'unknown'}" (page ${(task.pageNumber || 0) + 1})`);
+            console.log(`🌐 Request URL: ${request.url}`);
+            console.log(`📋 Task data:`, JSON.stringify(task, null, 2));
 
             // Handle warmup request differently
             if (task?.isWarmup) {
@@ -1016,10 +1018,16 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
     }]);
 
     // Add all search tasks to the crawler - all start from Indeed homepage
-    await crawler.addRequests(searchTasks.map((task, index) => ({
-        url: 'https://www.indeed.com/', // Always start from Indeed homepage
-        userData: task
-    })));
+    const requests = searchTasks.map((task, index) => {
+        const request = {
+            url: 'https://www.indeed.com/', // Always start from Indeed homepage
+            userData: task
+        };
+        console.log(`📋 Adding request ${index + 1}: ${request.url} for "${task.jobType}" page ${task.pageNumber + 1}`);
+        return request;
+    });
+
+    await crawler.addRequests(requests);
 
     // Run the crawler
     await crawler.run();
@@ -1079,11 +1087,136 @@ async function testIndeedScraping(testParams = {}) {
     return jobs;
 }
 
+/**
+ * Simple Indeed scraper - just navigate to Indeed.com and perform one search
+ * @param {Object} options - Scraping options
+ * @returns {Array} Array of job objects
+ */
+async function scrapeIndeedSimple(options = {}) {
+    const {
+        jobType = 'restaurant manager',
+        location = 'United States',
+        salaryMin = 55000,
+        useProxy = true,
+        headless = false
+    } = options;
+
+    console.log(`🚀 Simple Indeed scraper starting...`);
+    console.log(`🔍 Job type: ${jobType}`);
+    console.log(`📍 Location: ${location}`);
+    console.log(`🖥️  Headless: ${headless}`);
+
+    const crawler = new PuppeteerCrawler({
+        // Use Apify proxy for anti-bot protection
+        proxyConfiguration: useProxy ? await Actor.createProxyConfiguration({
+            groups: ['RESIDENTIAL'],
+            countryCode: 'US'
+        }) : undefined,
+
+        launchContext: {
+            launchOptions: {
+                headless: headless,
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-blink-features=AutomationControlled'
+                ],
+                executablePath: process.env.APIFY_CHROME_EXECUTABLE_PATH || undefined,
+                ignoreDefaultArgs: ['--enable-automation'],
+                ignoreHTTPSErrors: true
+            }
+        },
+
+        async requestHandler({ page, request }) {
+            console.log(`🌐 Navigating to: ${request.url}`);
+
+            // Step 1: Navigate to Indeed homepage
+            await page.goto(request.url, {
+                waitUntil: 'networkidle2',
+                timeout: 30000
+            });
+
+            console.log(`✅ Loaded Indeed homepage`);
+
+            // Step 2: Perform search
+            console.log(`🔍 Performing search for "${jobType}" in "${location}"`);
+            const searchSuccess = await performIndeedSearch(page, jobType, location, salaryMin);
+
+            if (!searchSuccess) {
+                console.log('❌ Search failed');
+                return [];
+            }
+
+            console.log(`✅ Search completed successfully`);
+
+            // Step 3: Handle any Cloudflare challenges
+            const cloudflareSuccess = await handleCloudflareChallenge(page);
+            if (!cloudflareSuccess) {
+                console.log('❌ Cloudflare challenge failed');
+                return [];
+            }
+
+            // Step 4: Extract jobs from the results page
+            console.log(`📋 Extracting jobs from results page...`);
+
+            // Look for job elements
+            const jobElements = await page.$$('[data-jk]');
+            console.log(`🎯 Found ${jobElements.length} job listings`);
+
+            const jobs = [];
+
+            // Extract first few jobs for testing
+            const maxJobs = Math.min(jobElements.length, 3); // Just get 3 jobs for testing
+
+            for (let i = 0; i < maxJobs; i++) {
+                try {
+                    console.log(`🔍 Processing job ${i + 1}/${maxJobs}`);
+
+                    // Click the job
+                    await jobElements[i].click();
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+
+                    // Extract job data
+                    const jobData = await extractDetailedJobData(page);
+
+                    if (jobData && jobData.title && jobData.company) {
+                        jobs.push(jobData);
+                        console.log(`✅ Extracted: "${jobData.title}" at "${jobData.company}"`);
+                    }
+
+                    // Go back to results
+                    await page.goBack();
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+
+                } catch (error) {
+                    console.error(`❌ Error processing job ${i + 1}:`, error.message);
+                }
+            }
+
+            console.log(`📊 Extracted ${jobs.length} jobs total`);
+            return jobs;
+        }
+    });
+
+    // Add just ONE request to Indeed homepage
+    await crawler.addRequests([{
+        url: 'https://www.indeed.com/'
+    }]);
+
+    // Run the crawler
+    await crawler.run();
+
+    console.log(`🏁 Simple scraper completed`);
+    return [];
+}
+
 export {
     shuffleArray,
     createIndeedSearchTasks,
     performIndeedSearch,
     scrapeIndeedJobs,
+    scrapeIndeedSimple,
     extractIndeedJobData,
     extractDetailedJobData,
     handleCloudflareChallenge,

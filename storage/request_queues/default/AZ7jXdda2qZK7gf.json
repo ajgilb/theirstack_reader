@@ -1,9 +1,0 @@
-{
-	"id": "AZ7jXdda2qZK7gf",
-	"json": "{\"id\":\"AZ7jXdda2qZK7gf\",\"url\":\"https://www.indeed.com/search-task-21\",\"uniqueKey\":\"https://www.indeed.com/search-task-21\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"jobType\":\"food service manager\",\"location\":\"United States\",\"salaryMin\":55000,\"pageNumber\":1,\"isFirstPage\":false}}",
-	"method": "GET",
-	"orderNo": 1750449861188,
-	"retryCount": 0,
-	"uniqueKey": "https://www.indeed.com/search-task-21",
-	"url": "https://www.indeed.com/search-task-21"
-}
