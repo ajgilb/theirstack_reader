@@ -89,7 +89,21 @@ async function performIndeedSearch(page, jobType, location, salaryMin) {
 }
 
 /**
- * Create search tasks for human-like interaction
+ * Shuffle array using Fisher-Yates algorithm
+ * @param {Array} array - Array to shuffle
+ * @returns {Array} Shuffled array
+ */
+function shuffleArray(array) {
+    const shuffled = [...array]; // Create a copy
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
+/**
+ * Create search tasks for human-like interaction with randomized order
  * @param {Object} params - Search parameters
  * @returns {Array} Array of search tasks
  */
@@ -107,12 +121,18 @@ function createIndeedSearchTasks(params = {}) {
             'food service manager',
             'private chef',
             'restaurant chef'
-        ]
+        ],
+        randomizeOrder = true
     } = params;
+
+    // Randomize job types order to avoid predictable patterns
+    const processedJobTypes = randomizeOrder ? shuffleArray(jobTypes) : jobTypes;
+
+    console.log(`🎲 Job types order: ${processedJobTypes.join(', ')}`);
 
     const tasks = [];
 
-    jobTypes.forEach(jobType => {
+    processedJobTypes.forEach(jobType => {
         // Create search tasks for each job type
         for (let page = 0; page < maxPages; page++) {
             tasks.push({
@@ -177,10 +197,28 @@ async function handleCloudflareChallenge(page) {
         if (isCloudflareChallenge || hasCloudflareContent) {
             console.log('🛡️  Cloudflare challenge detected, implementing robust detection...');
 
-            // Strategy 1: Wait for URL change (most reliable)
+            // Add human-like activity during challenge (your suggestion #7)
+            console.log('🤖 Adding human-like activity during challenge...');
+            try {
+                // Simulate human mouse movement
+                await page.mouse.move(100, 100);
+                await new Promise(resolve => setTimeout(resolve, 500));
+                await page.mouse.move(200, 150);
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                // Simulate scrolling
+                await page.evaluate(() => {
+                    window.scrollTo(0, 100);
+                });
+                await new Promise(resolve => setTimeout(resolve, 500));
+            } catch (e) {
+                console.log('⚠️  Could not simulate human activity:', e.message);
+            }
+
+            // Strategy 1: Wait for URL change (most reliable) - Increased timeout (your suggestion #4)
             console.log('🔍 Strategy 1: Monitoring URL changes...');
             let attempts = 0;
-            const maxAttempts = 12; // 60 seconds total
+            const maxAttempts = 24; // 120 seconds total (increased from 60s)
             let lastUrl = initialUrl;
 
             while (attempts < maxAttempts) {
@@ -570,15 +608,15 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
 
         launchContext: {
             launchOptions: {
-                headless: headless === false ? false : 'new', // Use new headless mode
+                // Use headful mode for better Cloudflare bypass (your suggestion #3)
+                headless: false,
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
                     '--disable-dev-shm-usage',
                     '--disable-blink-features=AutomationControlled',
-                    '--disable-features=VizDisplayCompositor',
-                    '--disable-web-security',
-                    '--disable-features=site-per-process',
+                    // Remove flags that block resources (your suggestion #1)
+                    // '--disable-web-security', // Removed to allow full JS execution
                     '--disable-background-timer-throttling',
                     '--disable-backgrounding-occluded-windows',
                     '--disable-renderer-backgrounding',
@@ -591,15 +629,21 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
                     '--metrics-recording-only',
                     '--no-first-run',
                     '--safebrowsing-disable-auto-update',
-                    '--enable-automation',
                     '--password-store=basic',
-                    '--use-mock-keychain'
+                    '--use-mock-keychain',
+                    // Add flags for better Cloudflare compatibility
+                    '--disable-features=VizDisplayCompositor',
+                    '--enable-features=NetworkService,NetworkServiceLogging',
+                    '--force-color-profile=srgb',
+                    '--disable-background-networking'
                 ],
                 // Explicitly set executable path for Apify environment
                 executablePath: process.env.APIFY_CHROME_EXECUTABLE_PATH || undefined,
-                // Additional stealth options
-                ignoreDefaultArgs: ['--enable-automation'],
-                ignoreHTTPSErrors: true
+                // Enhanced stealth options (your suggestion #2)
+                ignoreDefaultArgs: ['--enable-automation', '--enable-blink-features=AutomationControlled'],
+                ignoreHTTPSErrors: true,
+                // Allow all resources to load for Cloudflare (your suggestion #1)
+                defaultViewport: { width: 1366, height: 768 }, // Common desktop resolution
             }
         },
 
@@ -708,9 +752,17 @@ async function scrapeIndeedJobs(searchTasks, options = {}) {
                     });
                 });
 
+                // Add random delay between different job type searches to appear more human
+                if (task.isFirstPage && processedUrls > 1) {
+                    const searchDelay = 3000 + Math.random() * 7000; // 3-10 seconds between job type searches
+                    console.log(`⏱️  Pausing ${Math.round(searchDelay/1000)}s before searching for "${task.jobType}"`);
+                    await new Promise(resolve => setTimeout(resolve, searchDelay));
+                }
+
                 // Perform human-like search interaction
                 if (task.isFirstPage) {
                     // For first page, perform search via homepage
+                    console.log(`🔍 Starting search for "${task.jobType}" (randomized order)`);
                     const searchSuccess = await performIndeedSearch(page, task.jobType, task.location, task.salaryMin);
                     if (!searchSuccess) {
                         console.log('❌ Failed to perform search, skipping task');
@@ -974,6 +1026,7 @@ async function testIndeedScraping(testParams = {}) {
 }
 
 export {
+    shuffleArray,
     createIndeedSearchTasks,
     performIndeedSearch,
     scrapeIndeedJobs,
