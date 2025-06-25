@@ -361,8 +361,14 @@ async function insertJobsIntoDatabase(jobs) {
                     console.info(`Generated placeholder email for empty email: ${finalContactEmail}`);
                 }
 
+                // Safety check: ensure company is not null/undefined
+                const safeCompany = job.company || 'Unknown Company';
+                if (!job.company) {
+                    console.warn(`Job has null/undefined company, using fallback: "${job.title}" -> "${safeCompany}"`);
+                }
+
                 // First check if the job already exists
-                console.info(`Checking if job already exists: "${job.title}" at "${job.company}" in "${job.location}"`);
+                console.info(`Checking if job already exists: "${job.title}" at "${safeCompany}" in "${job.location}"`);
                 const checkQuery = `
                     SELECT id FROM culinary_jobs_google
                     WHERE title = $1 AND company = $2 AND location = $3
@@ -370,7 +376,7 @@ async function insertJobsIntoDatabase(jobs) {
 
                 const checkResult = await client.query(checkQuery, [
                     job.title,
-                    job.company,
+                    safeCompany,
                     job.location
                 ]);
 
@@ -402,7 +408,7 @@ async function insertJobsIntoDatabase(jobs) {
 
                     const updateResult = await client.query(updateQuery, [
                         job.title,
-                        job.company,
+                        safeCompany,
                         '', // parent_company
                         job.location,
                         salaryStr,
@@ -433,7 +439,7 @@ async function insertJobsIntoDatabase(jobs) {
 
                     const insertResult = await client.query(insertQuery, [
                         job.title,
-                        job.company,
+                        safeCompany,
                         '', // parent_company
                         job.location,
                         salaryStr,

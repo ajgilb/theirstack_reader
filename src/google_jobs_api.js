@@ -78,8 +78,15 @@ async function searchJobs(query, location = '', nextPageToken = null) {
             console.info(`Pagination info: current page token: ${data.pagination.current_page_token || 'none'}, next page token: ${data.pagination.next_page_token || 'none'}`);
         }
 
+        // Log a sample raw job object for debugging
+        if (data.jobs.length > 0) {
+            console.info('=== SAMPLE RAW JOB DATA ===');
+            console.info(JSON.stringify(data.jobs[0], null, 2));
+            console.info('=== END SAMPLE RAW JOB DATA ===');
+        }
+
         // Process the jobs to extract relevant information
-        const processedJobs = data.jobs.map(job => {
+        const processedJobs = data.jobs.map((job, index) => {
             // Extract company name from various sources
             let companyName = job.company_name;
 
@@ -107,7 +114,16 @@ async function searchJobs(query, location = '', nextPageToken = null) {
                 companyName = 'Unknown Company';
             }
 
-            return {
+            // Debug logging for company extraction
+            if (index === 0) {
+                console.info(`=== COMPANY EXTRACTION DEBUG ===`);
+                console.info(`Raw company_name: ${JSON.stringify(job.company_name)}`);
+                console.info(`Extracted companyName: ${JSON.stringify(companyName)}`);
+                console.info(`Final company value: ${JSON.stringify(companyName || 'Unknown Company')}`);
+                console.info(`=== END COMPANY EXTRACTION DEBUG ===`);
+            }
+
+            const processedJob = {
                 title: job.title || 'Unknown Title',
                 company: companyName || 'Unknown Company',
                 location: job.location || 'Unknown Location',
@@ -120,6 +136,8 @@ async function searchJobs(query, location = '', nextPageToken = null) {
                 apply_links: job.apply_links || [],
                 source: job.via ? job.via.replace('via ', '') : 'Unknown Source'
             };
+
+            return processedJob;
         });
 
         return {
