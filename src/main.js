@@ -16,6 +16,14 @@ import {
     fetchExistingJobs
 } from './database.js';
 
+// Import RapidAPI database module for new tables
+import {
+    initDatabase as rapidApiInitDatabase,
+    createTablesIfNeeded,
+    fetchExistingJobs as rapidApiFetchExistingJobs,
+    insertJobsIntoDatabase as rapidApiInsertJobsIntoDatabase
+} from './database-rapidapi.js';
+
 // Log startup message
 console.log('🚀 Indeed Direct Scraper starting up...');
 
@@ -205,20 +213,46 @@ let insertJobsIntoDatabase = async (jobs) => {
 };
 
 // Initialize database function
-async function initDatabase() {
-    // First try the imported database.js implementation
+async function initDatabase(databaseTable = 'rapidapi_jobs') {
+    // Use RapidAPI database module for new tables
+    if (databaseTable === 'rapidapi_jobs' || databaseTable === 'rapidapi_contacts') {
+        try {
+            console.log('🚀 Using RapidAPI database module for new tables...');
+            const success = await rapidApiInitDatabase();
+            if (success) {
+                console.log('✅ Successfully connected using RapidAPI database module!');
+
+                // Create tables if needed
+                const contactsTable = databaseTable.replace('_jobs', '_contacts');
+                await createTablesIfNeeded(databaseTable, contactsTable);
+
+                // Set up the functions to use RapidAPI module
+                insertJobsIntoDatabase = async (jobs) => {
+                    return await rapidApiInsertJobsIntoDatabase(jobs, databaseTable, contactsTable);
+                };
+
+                return true;
+            }
+            console.log('RapidAPI database approach failed, falling back to legacy...');
+        } catch (error) {
+            console.error('Error with RapidAPI database approach:', error.message);
+            console.log('Falling back to legacy database...');
+        }
+    }
+
+    // Fallback to legacy database.js implementation
     try {
-        console.log('Trying imported database.js implementation...');
+        console.log('Trying legacy database.js implementation...');
         const success = await importedInitDatabase();
         if (success) {
-            console.log('Successfully connected using imported database.js!');
+            console.log('Successfully connected using legacy database.js!');
             // Use the imported implementation
             insertJobsIntoDatabase = importedInsertJobsIntoDatabase;
             return true;
         }
-        console.log('Imported database.js approach failed, falling back to REST API...');
+        console.log('Legacy database.js approach failed, falling back to REST API...');
     } catch (error) {
-        console.error('Error with imported database.js approach:', error.message);
+        console.error('Error with legacy database.js approach:', error.message);
         console.log('Falling back to REST API...');
     }
 
@@ -639,7 +673,7 @@ try {
         saveToDataset = true,
         pushToDatabase: inputPushToDatabase = true,
         databaseUrl = process.env.DATABASE_URL ? process.env.DATABASE_URL.replace('DATABASE_URL=', '') : '',
-        databaseTable = 'indeed_jobs',
+        databaseTable = 'rapidapi_jobs', // Updated to use new RapidAPI table
         deduplicateJobs = true,
 
         excludeFastFood = true,
@@ -754,7 +788,7 @@ try {
     }
 
     // Initialize the database connection
-    const dbInitialized = await initDatabase();
+    const dbInitialized = await initDatabase(databaseTable);
 
     // If database connection fails, try the REST API approach
     if (!dbInitialized) {
@@ -778,17 +812,25 @@ try {
             process.env.DATABASE_URL = process.env.DATABASE_URL.replace('/postgres&', '/postgres?');
         }
 
-        existingJobs = await fetchExistingJobs();
-        console.log(`Fetched ${existingJobs.size} existing jobs from the database for optimization`);
+        // Use appropriate fetch function based on table name
+        if (databaseTable === 'rapidapi_jobs' || databaseTable === 'rapidapi_contacts') {
+            existingJobs = await rapidApiFetchExistingJobs(databaseTable);
+        } else {
+            existingJobs = await fetchExistingJobs();
+        }
+        console.log(`Fetched ${existingJobs.size} existing jobs from ${databaseTable} for optimization`);
 
         // If we can't fetch existing jobs, that's a critical error
         if (existingJobs.size === 0) {
-            console.error('Failed to fetch existing jobs from database. This is required for optimization.');
-            throw new Error('Failed to fetch existing jobs from database. Cannot continue without this data.');
+            console.log('📋 No existing jobs found in database - this is normal for new tables like rapidapi_jobs');
+            console.log('🆕 Starting fresh with empty database optimization');
+        } else {
+            console.log(`📊 Found ${existingJobs.size} existing jobs for duplicate checking`);
         }
     } catch (error) {
-        console.error('Error fetching existing jobs:', error);
-        throw new Error('Failed to fetch existing jobs from database. Cannot continue without this data.');
+        console.error('⚠️  Error fetching existing jobs:', error.message);
+        console.log('🔄 Continuing without existing job optimization (normal for new databases)');
+        existingJobs = new Map(); // Initialize empty map to continue
     }
 
     // Direct Indeed scraping for job types

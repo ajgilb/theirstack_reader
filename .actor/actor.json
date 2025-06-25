@@ -88,7 +88,7 @@
         "type": "string",
         "description": "Name of the database table to insert jobs into",
         "editor": "textfield",
-        "default": "indeed_jobs"
+        "default": "rapidapi_jobs"
       },
       "deduplicateJobs": {
         "title": "Deduplicate Jobs",

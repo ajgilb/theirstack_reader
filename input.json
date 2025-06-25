@@ -4,5 +4,6 @@
   "location": "United States",
   "salaryMin": 55000,
   "saveToDataset": true,
-  "pushToDatabase": true
+  "pushToDatabase": true,
+  "databaseTable": "rapidapi_jobs"
 }
