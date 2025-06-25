@@ -133,16 +133,24 @@ function normalizeJobData(job, searchTerm) {
         }
     }
 
+    // Map to database schema (culinary_jobs_google table)
     return {
         title: job.title || 'No title',
         company: job.company || 'No company',
+        parent_company: null, // Will be filled by company enhancement
         location: job.location || 'No location',
-        description: job.description || job.summary || '',
         salary: salaryText,
-        salaryMin: salaryMin,
-        salaryMax: salaryMax,
-        jobUrl: job.job_url || job.url || '',
-        companyUrl: job.company_url || '',
+        contact_name: null, // Will be filled by contact enhancement
+        contact_title: null, // Will be filled by contact enhancement
+        email: null, // Will be filled by contact enhancement
+        url: job.job_url || job.url || '', // This is the job URL (apply_link)
+        job_details: job.description || job.summary || '',
+        linkedin: null, // Will be filled by company enhancement
+        domain: null, // Will be filled by company enhancement
+        company_size: null, // Will be filled by company enhancement
+        parent_url: job.company_url || '', // Company website URL
+
+        // Additional fields for processing
         source: job.site || 'Unknown',
         jobId: job.job_id || job.id || '',
         datePosted: job.date_posted || job.posted_date || '',
@@ -150,7 +158,12 @@ function normalizeJobData(job, searchTerm) {
         isRemote: job.is_remote || false,
         searchTerm: searchTerm,
         scrapedAt: new Date().toISOString(),
-        apiSource: 'PR Labs Job Search API'
+        apiSource: 'PR Labs Job Search API',
+
+        // For compatibility with existing processing
+        apply_link: job.job_url || job.url || '',
+        description: job.description || job.summary || '',
+        company_domain: null // Will be extracted from company URL
     };
 }
 
