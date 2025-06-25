@@ -1,41 +1,30 @@
 {
-  "requestsFinished": 1,
-  "requestsFailed": 0,
+  "requestsFinished": 0,
+  "requestsFailed": 1,
   "requestsRetries": 1,
-  "requestsFailedPerMinute": 0,
-  "requestsFinishedPerMinute": 2,
-  "requestMinDurationMillis": 17941,
-  "requestMaxDurationMillis": 17941,
-  "requestTotalFailedDurationMillis": 0,
-  "requestTotalFinishedDurationMillis": 17941,
-  "crawlerStartedAt": "2025-06-20T20:13:25.739Z",
-  "crawlerFinishedAt": "2025-06-20T20:13:53.958Z",
-  "statsPersistedAt": "2025-06-20T20:13:53.958Z",
-  "crawlerRuntimeMillis": 28507,
-  "crawlerLastStartTimestamp": 1750450405451,
+  "requestsFailedPerMinute": 1,
+  "requestsFinishedPerMinute": 0,
+  "requestMinDurationMillis": null,
+  "requestMaxDurationMillis": 0,
+  "requestTotalFailedDurationMillis": 9704,
+  "requestTotalFinishedDurationMillis": 0,
+  "crawlerStartedAt": "2025-06-20T20:23:26.298Z",
+  "crawlerFinishedAt": "2025-06-20T20:24:21.529Z",
+  "statsPersistedAt": "2025-06-20T20:24:21.529Z",
+  "crawlerRuntimeMillis": 37998,
+  "crawlerLastStartTimestamp": 1750451023531,
   "requestRetryHistogram": [
+    null,
+    null,
     null,
     1
   ],
   "statsId": 0,
-  "requestAvgFailedDurationMillis": null,
-  "requestAvgFinishedDurationMillis": 17941,
-  "requestTotalDurationMillis": 17941,
+  "requestAvgFailedDurationMillis": 9704,
+  "requestAvgFinishedDurationMillis": null,
+  "requestTotalDurationMillis": 9704,
   "requestsTotal": 1,
-  "requestsWithStatusCode": {
-    "200": 1,
-    "403": 1
-  },
+  "requestsWithStatusCode": {},
   "errors": {},
-  "retryErrors": {
-    "/Users/ajgilbert2/Library/Mobile Documents/com~apple~CloudDocs/Biz Dev/google_jobs_api_actor/node_modules/@crawlee/basic/internals/basic-crawler.js:778:19": {
-      "missing error code": {
-        "Error": {
-          "Request blocked - received 403 status code.": {
-            "count": 1
-          }
-        }
-      }
-    }
-  }
+  "retryErrors": {}
 }

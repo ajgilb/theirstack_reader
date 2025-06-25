@@ -799,19 +799,18 @@ try {
     console.log(`💰 Minimum salary: $${salaryMin.toLocaleString()}`);
     console.log(`📄 Max pages per job type: ${maxPages}`);
 
-    // Simple approach: just scrape one job type at a time
-    console.log(`🎯 Starting simple Indeed scraping for: ${jobTypes[0]}`);
+    // Use Job Search API instead of web scraping
+    console.log(`🎯 Starting Job Search API for multiple job boards`);
 
-    // Import the simple scraper function
-    const { scrapeIndeedSimple } = await import('./indeed_scraper.js');
+    // Import the API scraper function
+    const { scrapeJobsWithAPI } = await import('./job_search_api.js');
 
-    // Scrape jobs with simple approach - just one job type, one page
-    const scrapedJobs = await scrapeIndeedSimple({
-        jobType: jobTypes[0], // Just first job type for now
+    // Scrape jobs using the Job Search API (LinkedIn, Indeed, ZipRecruiter, Glassdoor)
+    const scrapedJobs = await scrapeJobsWithAPI({
+        jobTypes,
         location,
         salaryMin,
-        useProxy,
-        headless: !visualMonitoring
+        testMode
     });
 
     console.log(`✅ Scraped ${scrapedJobs.length} jobs from Indeed`);

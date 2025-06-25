@@ -1,12 +1,8 @@
 {
-  "visualMonitoring": true,
   "testMode": true,
-  "maxPages": 1,
-  "jobTypes": ["restaurant manager"],
+  "jobTypes": ["restaurant manager", "executive chef"],
   "location": "United States",
   "salaryMin": 55000,
-  "maxConcurrency": 1,
-  "useProxy": true,
   "saveToDataset": true,
-  "pushToDatabase": false
+  "pushToDatabase": true
 }
