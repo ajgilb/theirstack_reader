@@ -5,6 +5,9 @@
 
 import fetch from 'node-fetch';
 
+// Import filtering functions from existing modules
+import { shouldExcludeCompany, isSalaryCompanyName } from './google_jobs_api.js';
+
 /**
  * Scrape jobs using the Job Search API
  * @param {Object} options - Search options
@@ -80,15 +83,49 @@ async function scrapeJobsWithAPI(options = {}) {
             // Process and normalize the job data
             const processedJobs = data.jobs.map(job => normalizeJobData(job, jobType));
 
-            // Filter jobs by salary if available
+            // Apply comprehensive filtering
+            let excludedByCompany = 0;
+            let excludedByFastFood = 0;
+            let excludedBySalary = 0;
+            let excludedBySalaryCompanyName = 0;
+
             const filteredJobs = processedJobs.filter(job => {
-                if (job.salary && job.salaryMin) {
-                    return job.salaryMin >= salaryMin;
+                // Check if company name is a salary-related word
+                if (isSalaryCompanyName(job.company)) {
+                    console.log(`🚫 Excluding job with salary-like company name: "${job.title}" at "${job.company}"`);
+                    excludedBySalaryCompanyName++;
+                    return false;
                 }
-                return true; // Include jobs without salary info
+
+                // Check if company should be excluded (fast food, chains, recruiters)
+                const exclusionCheck = shouldExcludeCompany(job.company);
+                if (exclusionCheck.isExcluded) {
+                    if (exclusionCheck.reason === 'fast_food') {
+                        console.log(`🚫 Excluding fast food job: "${job.title}" at "${job.company}" (matched: ${exclusionCheck.match})`);
+                        excludedByFastFood++;
+                    } else {
+                        console.log(`🚫 Excluding excluded company job: "${job.title}" at "${job.company}" (matched: ${exclusionCheck.match})`);
+                        excludedByCompany++;
+                    }
+                    return false;
+                }
+
+                // Filter by salary if available
+                if (job.salary && job.salaryMin && job.salaryMin < salaryMin) {
+                    console.log(`🚫 Excluding low salary job: "${job.title}" at "${job.company}" (${job.salary})`);
+                    excludedBySalary++;
+                    return false;
+                }
+
+                return true; // Include job if it passes all filters
             });
 
-            console.log(`✅ ${filteredJobs.length} jobs passed salary filter (min $${salaryMin.toLocaleString()})`);
+            console.log(`📊 Filtering results for "${jobType}":`);
+            console.log(`   - ${excludedBySalaryCompanyName} excluded for salary-like company names`);
+            console.log(`   - ${excludedByCompany} excluded for recruiter/excluded companies`);
+            console.log(`   - ${excludedByFastFood} excluded for fast food restaurants`);
+            console.log(`   - ${excludedBySalary} excluded for low salary`);
+            console.log(`   - ${filteredJobs.length} jobs passed all filters`);
 
             allJobs.push(...filteredJobs);
 
