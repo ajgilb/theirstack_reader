@@ -6,7 +6,8 @@
 import fetch from 'node-fetch';
 
 // Import filtering functions from existing modules
-import { shouldExcludeCompany, isSalaryCompanyName } from './google_jobs_api.js';
+import { shouldExcludeCompany } from './google_jobs_api.js';
+import { isSalaryCompanyName } from './bing_search_api.js';
 
 /**
  * Scrape jobs using the Job Search API
