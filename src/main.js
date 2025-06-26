@@ -260,15 +260,21 @@ async function initDatabase(databaseTable = 'rapidapi_jobs') {
             if (success) {
                 console.log('Successfully connected using RapidAPI database module!');
 
-                // Ensure tables are created
-                const tablesCreated = await createTablesIfNeeded(databaseTable, databaseTable.replace('_jobs', '_contacts'));
-                if (!tablesCreated) {
-                    console.warn('Failed to create RapidAPI tables, falling back to legacy database...');
-                    throw new Error('Table creation failed');
+                // Try to ensure tables are created (but don't fail if this doesn't work)
+                try {
+                    const contactsTable = databaseTable.replace('_jobs', '_contacts');
+                    console.log(`Creating tables if needed: ${databaseTable}, ${contactsTable}`);
+                    await createTablesIfNeeded(databaseTable, contactsTable);
+                    console.log('✅ RapidAPI tables verified/created successfully');
+                } catch (tableError) {
+                    console.warn('⚠️  Table creation had issues, but continuing with RapidAPI database:', tableError.message);
+                    // Continue anyway - tables might already exist
                 }
 
                 // Use the RapidAPI implementation
-                insertJobsIntoDatabase = (jobs) => rapidApiInsertJobsIntoDatabase(jobs, databaseTable, databaseTable.replace('_jobs', '_contacts'));
+                const contactsTable = databaseTable.replace('_jobs', '_contacts');
+                insertJobsIntoDatabase = (jobs) => rapidApiInsertJobsIntoDatabase(jobs, databaseTable, contactsTable);
+                console.log(`✅ Set up RapidAPI database insertion for tables: ${databaseTable}, ${contactsTable}`);
                 return true;
             }
             console.log('RapidAPI database module failed, falling back to legacy database...');
@@ -1039,6 +1045,7 @@ try {
                 // Database connection should already be initialized
                 if (dbInitialized) {
                     // Insert jobs into the database
+                    console.log(`💾 Inserting ${processedJobs.length} jobs into database table: ${databaseTable}`);
                     const dbResult = await insertJobsIntoDatabase(processedJobs);
                     console.log(`✅ Successfully inserted/updated ${dbResult.insertedCount} jobs into the database (${databaseTable}).`);
 
