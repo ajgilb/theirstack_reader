@@ -10,7 +10,7 @@ import { scrapeIndeedJobs } from './indeed_scraper.js';
 import { shouldExcludeCompany, isSalaryCompanyName } from './bing_search_api.js';
 import { getWebsiteUrlFromSearchAPI, getDomainFromUrl } from './search_api.js';
 import { sendCompletionEmail } from './email.js';
-import   "results_wanted": 10,{
+import {
     initDatabase as importedInitDatabase,
     insertJobsIntoDatabase as importedInsertJobsIntoDatabase,
     fetchExistingJobs
