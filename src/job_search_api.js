@@ -130,6 +130,13 @@ async function scrapeJobsWithAPI(options = {}) {
         // Now filter all the jobs for this job type
         if (jobTypeResults.length > 0) {
             try {
+            console.log(`🔍 Starting filtering for ${jobTypeResults.length} jobs for "${jobType}"`);
+
+            // Debug: Show first few company names before filtering
+            console.log(`📋 Sample company names before filtering:`);
+            jobTypeResults.slice(0, 5).forEach((job, index) => {
+                console.log(`   ${index + 1}. "${job.company}" (title: "${job.title}")`);
+            });
 
             // Apply comprehensive filtering
             let excludedByCompany = 0;
@@ -174,6 +181,14 @@ async function scrapeJobsWithAPI(options = {}) {
             console.log(`   - ${excludedByFastFood} excluded for fast food restaurants`);
             console.log(`   - ${excludedBySalary} excluded for low salary`);
             console.log(`   - ${filteredJobs.length} jobs passed all filters`);
+
+            // Debug: Show first few company names after filtering
+            if (filteredJobs.length > 0) {
+                console.log(`✅ Sample companies that passed filtering:`);
+                filteredJobs.slice(0, 5).forEach((job, index) => {
+                    console.log(`   ${index + 1}. "${job.company}" (title: "${job.title}")`);
+                });
+            }
 
             allJobs.push(...filteredJobs);
 
