@@ -14,70 +14,43 @@ let pool = null;
  */
 async function initDatabase() {
     try {
-        // Use the same connection logic as the working legacy database
-        const connectionOptions = [
-            'postgresql://google_scraper:***@34.102.106.226:5432/postgres?family=4',
-            'postgresql://google_scraper:***@3.101.124.236:6543/postgres?family=4',
-            'postgresql://google_scraper:***@db.mbaqiwhkngfxxmlkionj.supabase.co:5432/postgres?family=4'
-        ];
+        // Use the same connection approach as the legacy database that works
+        // The legacy database successfully connects to: postgresql://google_scraper.mbaqiwhkngfxxmlkionj:***@52.8.172.168:6543/postgres
 
-        // Try to get from environment first
+        // Get the database URL from environment (same as legacy)
         let databaseUrl = process.env.DATABASE_URL;
 
         if (!databaseUrl) {
-            console.log('No DATABASE_URL provided. Using default connection options.');
-            databaseUrl = connectionOptions[0]; // Use the first working option
-        } else {
-            // Fix common formatting issues
-            if (databaseUrl.includes('/postgres&')) {
-                console.log('Fixing DATABASE_URL format: replacing /postgres& with /postgres?');
-                databaseUrl = databaseUrl.replace('/postgres&', '/postgres?');
-            }
-
-            // Add IPv4 family parameter if not present
-            if (!databaseUrl.includes('family=4')) {
-                const separator = databaseUrl.includes('?') ? '&' : '?';
-                databaseUrl = `${databaseUrl}${separator}family=4`;
-                console.log('Added family=4 parameter to force IPv4 connections');
-            }
+            console.error('DATABASE_URL environment variable not found');
+            return false;
         }
 
-        // Try to connect with shorter timeout
-        for (let attempt = 0; attempt < 3; attempt++) {
-            try {
-                const currentUrl = attempt === 0 ? databaseUrl : connectionOptions[attempt % connectionOptions.length];
-                console.log(`🔄 Connection attempt ${attempt + 1} using: ${currentUrl.replace(/:[^:]*@/, ':***@')}`);
+        console.log('🔧 Using DATABASE_URL from environment (same as legacy database)');
 
-                // Create connection pool
-                pool = new Pool({
-                    connectionString: currentUrl,
-                    ssl: {
-                        rejectUnauthorized: false
-                    },
-                    max: 10,
-                    idleTimeoutMillis: 30000,
-                    connectionTimeoutMillis: 5000, // Shorter timeout
-                });
+        // Don't modify the connection string - use it exactly as the legacy database does
+        // The legacy database connects successfully without modifications
 
-                // Test the connection
-                const client = await pool.connect();
-                try {
-                    const result = await client.query('SELECT NOW()');
-                    console.log('✅ Successfully connected to RapidAPI database:', result.rows[0].now);
-                    return true;
-                } finally {
-                    client.release();
-                }
-            } catch (attemptError) {
-                console.log(`❌ Connection attempt ${attempt + 1} failed:`, attemptError.message);
-                if (pool) {
-                    await pool.end();
-                    pool = null;
-                }
-            }
+        // Create connection pool with same settings as legacy database
+        pool = new Pool({
+            connectionString: databaseUrl,
+            ssl: {
+                rejectUnauthorized: false
+            },
+            max: 10,
+            idleTimeoutMillis: 30000,
+            connectionTimeoutMillis: 10000,
+        });
+
+        // Test the connection
+        const client = await pool.connect();
+        try {
+            const result = await client.query('SELECT NOW()');
+            console.log('✅ Successfully connected to RapidAPI database:', result.rows[0].now);
+        } finally {
+            client.release();
         }
 
-        throw new Error('All connection attempts failed');
+        return true;
     } catch (error) {
         console.error('❌ Failed to connect to database:', error.message);
         return false;

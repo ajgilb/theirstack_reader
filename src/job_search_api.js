@@ -7,7 +7,39 @@ import fetch from 'node-fetch';
 
 // Import filtering functions from existing modules
 import { isSalaryCompanyName } from './bing_search_api.js';
-import { shouldExcludeCompany } from './google_jobs_api.js';
+
+// Simple exclusion function to avoid import issues
+function shouldExcludeCompany(company) {
+    if (!company || company === 'Unknown Company') return { isExcluded: false, reason: null };
+
+    const lowerCompany = company.toLowerCase();
+
+    // Fast food chains and restaurants to exclude
+    const fastFoodChains = [
+        'mcdonalds', 'burger king', 'kfc', 'taco bell', 'subway', 'pizza hut', 'dominos',
+        'wendys', 'arbys', 'dairy queen', 'sonic', 'jack in the box', 'carl\'s jr',
+        'hardees', 'popeyes', 'chick-fil-a', 'chipotle', 'panda express', 'five guys',
+        'in-n-out', 'whataburger', 'white castle', 'little caesars', 'papa johns',
+        'papa murphys', 'blaze pizza', 'mod pizza', 'qdoba', 'moes', 'del taco',
+        'el pollo loco', 'church\'s chicken', 'bojangles', 'culvers', 'shake shack',
+        'starbucks', 'dunkin', 'tim hortons', 'baskin robbins', 'cold stone',
+        'orange julius', 'auntie annes', 'cinnabon', 'jamba juice', 'smoothie king'
+    ];
+
+    // Check for fast food chains
+    for (const chain of fastFoodChains) {
+        if (lowerCompany.includes(chain)) {
+            return { isExcluded: true, reason: 'restaurant_chain', match: chain };
+        }
+    }
+
+    // Exclude companies with 'College' and 'Health Care' in the name
+    if (lowerCompany.includes('college') || lowerCompany.includes('health care')) {
+        return { isExcluded: true, reason: 'excluded_industry' };
+    }
+
+    return { isExcluded: false, reason: null };
+}
 
 /**
  * Scrape jobs using the Job Search API
