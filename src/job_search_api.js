@@ -93,6 +93,10 @@ async function scrapeJobsWithAPI(options = {}) {
                     hours_old: 168 // Jobs posted in last week (7 days * 24 hours)
                 };
 
+                console.log(`🔍 DEBUG: Request body:`, JSON.stringify(requestBody, null, 2));
+                console.log(`🔍 DEBUG: API URL: ${apiUrl}`);
+                console.log(`🔍 DEBUG: API Key: ${apiKey.substring(0, 10)}...`);
+
                 // Try different pagination parameters for subsequent batches
                 if (batch > 0) {
                     // Try offset approach (50 jobs per batch)
@@ -107,6 +111,7 @@ async function scrapeJobsWithAPI(options = {}) {
                     console.log(`   📄 Trying pagination: offset=${requestBody.offset}, page=${requestBody.page}`);
                 }
 
+                console.log(`🔍 DEBUG: Making fetch request...`);
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
@@ -117,16 +122,31 @@ async function scrapeJobsWithAPI(options = {}) {
                     body: JSON.stringify(requestBody)
                 });
 
+                console.log(`🔍 DEBUG: Response status: ${response.status} ${response.statusText}`);
+                console.log(`🔍 DEBUG: Response headers:`, Object.fromEntries(response.headers.entries()));
+
                 if (!response.ok) {
                     console.error(`❌ API request failed: ${response.status} ${response.statusText}`);
+                    // Try to get error details
+                    try {
+                        const errorText = await response.text();
+                        console.error(`❌ Error response body:`, errorText);
+                    } catch (e) {
+                        console.error(`❌ Could not read error response`);
+                    }
                     break; // Stop trying more batches for this job type
                 }
 
+                console.log(`🔍 DEBUG: Parsing JSON response...`);
                 const data = await response.json();
                 console.log(`✅ API response received for "${jobType}" batch ${batch + 1}`);
+                console.log(`🔍 DEBUG: Response data keys:`, Object.keys(data));
+                console.log(`🔍 DEBUG: Jobs array exists:`, !!data.jobs);
+                console.log(`🔍 DEBUG: Jobs array length:`, data.jobs ? data.jobs.length : 'N/A');
 
                 if (!data.jobs || !Array.isArray(data.jobs)) {
                     console.log(`⚠️  No jobs found for "${jobType}" batch ${batch + 1}`);
+                    console.log(`🔍 DEBUG: Full response data:`, JSON.stringify(data, null, 2));
                     break; // No more results available
                 }
 
