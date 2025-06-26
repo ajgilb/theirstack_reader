@@ -24,13 +24,9 @@ async function initDatabase() {
             'postgresql://postgres:Relham12%3F@db.mbaqiwhkngfxxmlkionj.supabase.co:5432/postgres'
         ];
 
-        // Try DATABASE_URL first, then fall back to Supabase connections
-        let databaseUrl = process.env.DATABASE_URL;
-
-        if (!databaseUrl) {
-            console.log('🔧 No DATABASE_URL found, using Supabase transaction pooler connection');
-            databaseUrl = supabaseConnections[0]; // Use transaction pooler (best for serverless)
-        }
+        // Force use of correct Supabase connection (ignore environment DATABASE_URL)
+        console.log('🔧 Forcing Supabase transaction pooler connection for RapidAPI tables');
+        let databaseUrl = supabaseConnections[0]; // Always use transaction pooler (best for serverless)
 
         console.log('🔧 Using Supabase connection:', databaseUrl.replace(/:[^:@]+@/, ':***@'));
 
