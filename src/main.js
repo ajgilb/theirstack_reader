@@ -705,7 +705,10 @@ try {
         'culinary director',
         'food service manager',
         'private chef',
-        'restaurant chef'
+        'restaurant chef',
+        'hotel executive chef',
+        'hotel chef',
+        'hotel executive'
     ];
 
     // Extract input parameters with defaults for Indeed scraping
