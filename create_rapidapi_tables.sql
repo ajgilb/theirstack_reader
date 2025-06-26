@@ -25,7 +25,10 @@ CREATE TABLE IF NOT EXISTS rapidapi_jobs (
     CONSTRAINT unique_job_url_rapidapi_jobs UNIQUE (url)
 );
 
--- Create rapidapi_contacts table
+-- Drop existing rapidapi_contacts table if it has wrong foreign key
+DROP TABLE IF EXISTS rapidapi_contacts CASCADE;
+
+-- Create rapidapi_contacts table with correct foreign key
 CREATE TABLE IF NOT EXISTS rapidapi_contacts (
     id SERIAL PRIMARY KEY,
     job_id INTEGER REFERENCES rapidapi_jobs(id) ON DELETE CASCADE,
@@ -34,7 +37,7 @@ CREATE TABLE IF NOT EXISTS rapidapi_contacts (
     email VARCHAR(255) NOT NULL,
     date_added TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    
+
     CONSTRAINT unique_contact_email_rapidapi_contacts UNIQUE (job_id, email)
 );
 
