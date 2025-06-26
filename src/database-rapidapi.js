@@ -249,6 +249,18 @@ async function insertJobsIntoDatabase(jobs, jobsTable = 'rapidapi_jobs', contact
                 console.log(`✅ Inserted job: "${job.title}" at "${job.company}" (ID: ${jobId})`);
             }
 
+            // Debug: Check if job has emails array
+            if (job.emails) {
+                console.log(`🔍 DEBUG: Job "${job.title}" at "${job.company}" has emails array with ${job.emails.length} contacts`);
+                console.log(`📧 Sample emails:`, job.emails.slice(0, 3).map(e => ({
+                    email: e.email,
+                    name: `${e.firstName || ''} ${e.lastName || ''}`.trim(),
+                    position: e.position || ''
+                })));
+            } else {
+                console.log(`🔍 DEBUG: Job "${job.title}" at "${job.company}" has NO emails array`);
+            }
+
             // Insert contacts if available
             if (job.emails && job.emails.length > 0) {
                 for (const emailContact of job.emails) {
