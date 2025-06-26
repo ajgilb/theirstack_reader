@@ -31,57 +31,105 @@ async function scrapeJobsWithAPI(options = {}) {
     const apiKey = '26f8494ae3msh6105ec8e9f487c4p1e4693jsndc74e2a6561c';
     const apiUrl = 'https://jobs-search-api.p.rapidapi.com/getjobs';
 
-    // Process each job type
+    // Process each job type with batch requests to get more than 20 results
     for (const jobType of jobTypes) {
         console.log(`\n🔍 Searching for "${jobType}" jobs...`);
 
-        try {
-            const requestBody = {
-                search_term: jobType,
-                location: location,
-                results_wanted: testMode ? 10 : 50, // Limit results in test mode
-                site_name: [
-                    'indeed',
-                    'linkedin', 
-                    'zip_recruiter',
-                    'glassdoor'
-                ],
-                distance: 50, // 50 mile radius
-                job_type: 'fulltime',
-                is_remote: false,
-                linkedin_fetch_description: true, // Get full descriptions
-                hours_old: 168 // Jobs posted in last week (7 days * 24 hours)
-            };
+        const jobTypeResults = [];
+        const maxBatches = testMode ? 1 : 3; // Get 3 batches (60 jobs) in normal mode, 1 batch (20 jobs) in test mode
 
-            console.log(`📡 Making API request for "${jobType}"...`);
+        // Try multiple batches to get more than 20 results
+        for (let batch = 0; batch < maxBatches; batch++) {
+            try {
+                console.log(`📡 Making API request for "${jobType}" (batch ${batch + 1}/${maxBatches})...`);
+                // Request 20 jobs per batch
+                const requestBody = {
+                    search_term: jobType,
+                    location: location,
+                    results_wanted: 20, // Request 20 per batch
+                    site_name: [
+                        'indeed',
+                        'linkedin',
+                        'zip_recruiter',
+                        'glassdoor'
+                    ],
+                    distance: 50, // 50 mile radius
+                    job_type: 'fulltime',
+                    is_remote: false,
+                    linkedin_fetch_description: true, // Get full descriptions
+                    hours_old: 168 // Jobs posted in last week (7 days * 24 hours)
+                };
 
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'x-rapidapi-key': apiKey,
-                    'x-rapidapi-host': 'jobs-search-api.p.rapidapi.com',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestBody)
-            });
+                // Try different pagination parameters for subsequent batches
+                if (batch > 0) {
+                    // Try offset approach
+                    requestBody.offset = batch * 20;
 
-            if (!response.ok) {
-                console.error(`❌ API request failed: ${response.status} ${response.statusText}`);
-                continue;
+                    // Also try page approach as backup
+                    requestBody.page = batch + 1;
+
+                    // Try start parameter as another option
+                    requestBody.start = batch * 20;
+
+                    console.log(`   📄 Trying pagination: offset=${requestBody.offset}, page=${requestBody.page}`);
+                }
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'x-rapidapi-key': apiKey,
+                        'x-rapidapi-host': 'jobs-search-api.p.rapidapi.com',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    console.error(`❌ API request failed: ${response.status} ${response.statusText}`);
+                    break; // Stop trying more batches for this job type
+                }
+
+                const data = await response.json();
+                console.log(`✅ API response received for "${jobType}" batch ${batch + 1}`);
+
+                if (!data.jobs || !Array.isArray(data.jobs)) {
+                    console.log(`⚠️  No jobs found for "${jobType}" batch ${batch + 1}`);
+                    break; // No more results available
+                }
+
+                console.log(`📊 Found ${data.jobs.length} jobs for "${jobType}" batch ${batch + 1}`);
+
+                // If we get fewer than 20 jobs, we've likely reached the end
+                if (data.jobs.length < 20) {
+                    console.log(`   📝 Received ${data.jobs.length} jobs (less than 20), likely reached end of results`);
+                }
+
+                // Process and normalize the job data
+                const processedJobs = data.jobs.map(job => normalizeJobData(job, jobType));
+                jobTypeResults.push(...processedJobs);
+
+                // If we got fewer than 20 results, stop trying more batches
+                if (data.jobs.length < 20) {
+                    break;
+                }
+
+                // Add delay between batch requests
+                if (batch < maxBatches - 1) {
+                    console.log(`   ⏱️  Waiting 2 seconds before next batch...`);
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+
+            } catch (error) {
+                console.error(`❌ Error in batch ${batch + 1} for "${jobType}":`, error.message);
+                break; // Stop trying more batches for this job type
             }
+        }
 
-            const data = await response.json();
-            console.log(`✅ API response received for "${jobType}"`);
+        console.log(`📊 Total collected for "${jobType}": ${jobTypeResults.length} jobs across batches`);
 
-            if (!data.jobs || !Array.isArray(data.jobs)) {
-                console.log(`⚠️  No jobs found for "${jobType}"`);
-                continue;
-            }
-
-            console.log(`📊 Found ${data.jobs.length} jobs for "${jobType}"`);
-
-            // Process and normalize the job data
-            const processedJobs = data.jobs.map(job => normalizeJobData(job, jobType));
+        // Now filter all the jobs for this job type
+        if (jobTypeResults.length > 0) {
+            try {
 
             // Apply comprehensive filtering
             let excludedByCompany = 0;
@@ -89,7 +137,7 @@ async function scrapeJobsWithAPI(options = {}) {
             let excludedBySalary = 0;
             let excludedBySalaryCompanyName = 0;
 
-            const filteredJobs = processedJobs.filter(job => {
+            const filteredJobs = jobTypeResults.filter(job => {
                 // Check if company name is a salary-related word
                 if (isSalaryCompanyName(job.company)) {
                     console.log(`🚫 Excluding job with salary-like company name: "${job.title}" at "${job.company}"`);
@@ -129,14 +177,17 @@ async function scrapeJobsWithAPI(options = {}) {
 
             allJobs.push(...filteredJobs);
 
-            // Add delay between requests to respect rate limits
-            if (jobTypes.indexOf(jobType) < jobTypes.length - 1) {
-                console.log(`⏱️  Waiting 2 seconds before next request...`);
-                await new Promise(resolve => setTimeout(resolve, 2000));
+            } catch (error) {
+                console.error(`❌ Error filtering jobs for "${jobType}":`, error.message);
+                // Still add unfiltered jobs if filtering fails
+                allJobs.push(...jobTypeResults);
             }
+        }
 
-        } catch (error) {
-            console.error(`❌ Error searching for "${jobType}":`, error.message);
+        // Add delay between job types to respect rate limits
+        if (jobTypes.indexOf(jobType) < jobTypes.length - 1) {
+            console.log(`⏱️  Waiting 2 seconds before next job type...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
         }
     }
 
