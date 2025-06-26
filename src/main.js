@@ -10,7 +10,7 @@ import { scrapeIndeedJobs } from './indeed_scraper.js';
 import { shouldExcludeCompany, isSalaryCompanyName } from './bing_search_api.js';
 import { getWebsiteUrlFromSearchAPI, getDomainFromUrl } from './search_api.js';
 import { sendCompletionEmail } from './email.js';
-import {
+import   "results_wanted": 10,{
     initDatabase as importedInitDatabase,
     insertJobsIntoDatabase as importedInsertJobsIntoDatabase,
     fetchExistingJobs
@@ -908,21 +908,40 @@ try {
     console.log(`💰 Minimum salary: $${salaryMin.toLocaleString()}`);
     console.log(`📄 Max pages per job type: ${maxPages}`);
 
-    // Use Job Search API instead of web scraping
-    console.log(`🎯 Starting Job Search API for multiple job boards`);
+    // Choose API method based on environment variable or default to Indeed Scraper
+    const useIndeedScraper = process.env.USE_INDEED_SCRAPER !== 'false'; // Default to true
 
-    // Import the API scraper function
-    const { scrapeJobsWithAPI } = await import('./job_search_api.js');
+    let scrapedJobs;
 
-    // Scrape jobs using the Job Search API (LinkedIn, Indeed, ZipRecruiter, Glassdoor)
-    const scrapedJobs = await scrapeJobsWithAPI({
-        jobTypes,
-        location,
-        salaryMin,
-        testMode
-    });
+    if (useIndeedScraper) {
+        console.log(`🎯 Starting Indeed Scraper API for comprehensive city-based job collection`);
 
-    console.log(`✅ Scraped ${scrapedJobs.length} jobs from Indeed`);
+        // Import the Indeed Scraper API function
+        const { scrapeJobsWithIndeedScraper } = await import('./indeed_scraper_api.js');
+
+        // Scrape jobs using Indeed Scraper API (city-based with 100-mile radius)
+        scrapedJobs = await scrapeJobsWithIndeedScraper({
+            testMode,
+            minSalary: salaryMin,
+            maxCities: testMode ? 2 : 20, // 2 cities in test mode, 20 in production
+            searchTerms: ['restaurant', 'hotel'] // Broader search terms
+        });
+    } else {
+        console.log(`🎯 Starting Job Search API for multiple job boards`);
+
+        // Import the API scraper function
+        const { scrapeJobsWithAPI } = await import('./job_search_api.js');
+
+        // Scrape jobs using the Job Search API (LinkedIn, Indeed, ZipRecruiter, Glassdoor)
+        scrapedJobs = await scrapeJobsWithAPI({
+            jobTypes,
+            location,
+            salaryMin,
+            testMode
+        });
+    }
+
+    console.log(`✅ Scraped ${scrapedJobs.length} jobs using ${useIndeedScraper ? 'Indeed Scraper API' : 'Job Search API'}`);
 
     // Filter out jobs that already exist in database
     const newJobs = [];
