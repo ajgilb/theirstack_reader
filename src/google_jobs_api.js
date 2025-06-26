@@ -307,6 +307,13 @@ function shouldExcludeCompany(company) {
     const lowerCompany = company.toLowerCase();
     const normalizedCompany = normalizeCompanyName(company);
 
+    // Check for college/university and healthcare keywords
+    if (lowerCompany.includes('college') || lowerCompany.includes('university') ||
+        lowerCompany.includes('health care') || lowerCompany.includes('healthcare') ||
+        lowerCompany.includes('hospital') || lowerCompany.includes('medical center')) {
+        return { isExcluded: true, reason: 'excluded_company', match: 'college/healthcare' };
+    }
+
     // Check excluded companies list (recruiters, etc.)
     for (const excluded of EXCLUDED_COMPANIES) {
         const normalizedExcluded = normalizeCompanyName(excluded);

@@ -6,7 +6,8 @@
 import fetch from 'node-fetch';
 
 // Import filtering functions from existing modules
-import { shouldExcludeCompany, isSalaryCompanyName } from './bing_search_api.js';
+import { isSalaryCompanyName } from './bing_search_api.js';
+import { shouldExcludeCompany } from './google_jobs_api.js';
 
 /**
  * Scrape jobs using the Job Search API
@@ -36,7 +37,7 @@ async function scrapeJobsWithAPI(options = {}) {
         console.log(`\n🔍 Searching for "${jobType}" jobs...`);
 
         const jobTypeResults = [];
-        const maxBatches = testMode ? 1 : 3; // Get 3 batches (60 jobs) in normal mode, 1 batch (20 jobs) in test mode
+        const maxBatches = testMode ? 1 : 10; // Get up to 10 batches (400+ jobs) in normal mode, 1 batch in test mode
 
         // Try multiple batches to get more than 20 results
         for (let batch = 0; batch < maxBatches; batch++) {
@@ -99,17 +100,19 @@ async function scrapeJobsWithAPI(options = {}) {
 
                 console.log(`📊 Found ${data.jobs.length} jobs for "${jobType}" batch ${batch + 1}`);
 
-                // If we get fewer than 20 jobs, we've likely reached the end
-                if (data.jobs.length < 20) {
-                    console.log(`   📝 Received ${data.jobs.length} jobs (less than 20), likely reached end of results`);
-                }
-
                 // Process and normalize the job data
                 const processedJobs = data.jobs.map(job => normalizeJobData(job, jobType));
                 jobTypeResults.push(...processedJobs);
 
-                // If we got fewer than 20 results, stop trying more batches
-                if (data.jobs.length < 20) {
+                // If we got fewer than 10 results or no results, we've likely reached the end
+                if (data.jobs.length < 10) {
+                    console.log(`   📝 Received ${data.jobs.length} jobs (less than 10), likely reached end of results`);
+                    break;
+                }
+
+                // If we got 0 results, definitely stop
+                if (data.jobs.length === 0) {
+                    console.log(`   📝 No more jobs available, stopping batch requests`);
                     break;
                 }
 
