@@ -271,10 +271,11 @@ async function initDatabase(databaseTable = 'rapidapi_jobs') {
                     // Continue anyway - tables might already exist
                 }
 
-                // Use the RapidAPI implementation
+                // Use the RapidAPI implementation for BOTH reading and writing
                 const contactsTable = databaseTable.replace('_jobs', '_contacts');
                 insertJobsIntoDatabase = (jobs) => rapidApiInsertJobsIntoDatabase(jobs, databaseTable, contactsTable);
                 console.log(`✅ Set up RapidAPI database insertion for tables: ${databaseTable}, ${contactsTable}`);
+                console.log(`🔧 FORCING RapidAPI database for both reading AND writing to ensure consistency`);
                 return true;
             }
             console.log('RapidAPI database module failed, falling back to legacy database...');
@@ -284,20 +285,26 @@ async function initDatabase(databaseTable = 'rapidapi_jobs') {
         }
     }
 
-    // Fallback to legacy database.js implementation
-    try {
-        console.log('Trying legacy database.js implementation...');
-        const success = await importedInitDatabase();
-        if (success) {
-            console.log('Successfully connected using legacy database.js!');
-            // Use the imported implementation
-            insertJobsIntoDatabase = importedInsertJobsIntoDatabase;
-            return true;
+    // Only try legacy database if we're NOT using rapidapi_jobs table
+    if (databaseTable !== 'rapidapi_jobs') {
+        // Fallback to legacy database.js implementation
+        try {
+            console.log('Trying legacy database.js implementation...');
+            const success = await importedInitDatabase();
+            if (success) {
+                console.log('Successfully connected using legacy database.js!');
+                // Use the imported implementation
+                insertJobsIntoDatabase = importedInsertJobsIntoDatabase;
+                return true;
+            }
+            console.log('Legacy database.js approach failed, falling back to REST API...');
+        } catch (error) {
+            console.error('Error with legacy database.js approach:', error.message);
+            console.log('Falling back to REST API...');
         }
-        console.log('Legacy database.js approach failed, falling back to REST API...');
-    } catch (error) {
-        console.error('Error with legacy database.js approach:', error.message);
-        console.log('Falling back to REST API...');
+    } else {
+        console.log('🚫 Skipping legacy database for rapidapi_jobs table - must use RapidAPI database module');
+        console.log('❌ RapidAPI database module failed but is required for rapidapi_jobs table');
     }
 
     // Next try the REST API approach if available
