@@ -14,21 +14,25 @@ let pool = null;
  */
 async function initDatabase() {
     try {
-        // Use the same connection approach as the legacy database that works
-        // The legacy database successfully connects to: postgresql://google_scraper.mbaqiwhkngfxxmlkionj:***@52.8.172.168:6543/postgres
+        // Use the correct Supabase connection strings from the connection info
+        const supabaseConnections = [
+            // Transaction pooler (IPv4 compatible) - best for serverless
+            'postgresql://postgres.mbaqiwhkngfxxmlkionj:Relham12%3F@aws-0-us-west-1.pooler.supabase.com:6543/postgres',
+            // Session pooler (IPv4 compatible) - alternative
+            'postgresql://postgres.mbaqiwhkngfxxmlkionj:Relham12%3F@aws-0-us-west-1.pooler.supabase.com:5432/postgres',
+            // Direct connection (IPv6) - fallback
+            'postgresql://postgres:Relham12%3F@db.mbaqiwhkngfxxmlkionj.supabase.co:5432/postgres'
+        ];
 
-        // Get the database URL from environment (same as legacy)
+        // Try DATABASE_URL first, then fall back to Supabase connections
         let databaseUrl = process.env.DATABASE_URL;
 
         if (!databaseUrl) {
-            console.error('DATABASE_URL environment variable not found');
-            return false;
+            console.log('🔧 No DATABASE_URL found, using Supabase transaction pooler connection');
+            databaseUrl = supabaseConnections[0]; // Use transaction pooler (best for serverless)
         }
 
-        console.log('🔧 Using DATABASE_URL from environment (same as legacy database)');
-
-        // Don't modify the connection string - use it exactly as the legacy database does
-        // The legacy database connects successfully without modifications
+        console.log('🔧 Using Supabase connection:', databaseUrl.replace(/:[^:@]+@/, ':***@'));
 
         // Create connection pool with same settings as legacy database
         pool = new Pool({

@@ -16,7 +16,7 @@ import {
     fetchExistingJobs
 } from './database.js';
 
-// Import RapidAPI database module for new tables
+// Import RapidAPI database module for new tables (now with correct Supabase connections)
 import {
     initDatabase as rapidApiInitDatabase,
     createTablesIfNeeded,
@@ -713,7 +713,7 @@ try {
         jobTypes = defaultJobTypes,
         location = 'United States',
         salaryMin = 55000,
-        maxPages = 5,
+        maxPages = 50, // Increased from 5 to get more comprehensive results
         saveToDataset = true,
         pushToDatabase: inputPushToDatabase = true,
         databaseUrl = process.env.DATABASE_URL ? process.env.DATABASE_URL.replace('DATABASE_URL=', '') : '',

@@ -69,17 +69,17 @@ async function scrapeJobsWithAPI(options = {}) {
         console.log(`\n🔍 Searching for "${jobType}" jobs...`);
 
         const jobTypeResults = [];
-        const maxBatches = testMode ? 1 : 10; // Get up to 10 batches (400+ jobs) in normal mode, 1 batch in test mode
+        const maxBatches = testMode ? 1 : 50; // Get up to 50 batches (2500+ jobs) in normal mode, 1 batch in test mode
 
-        // Try multiple batches to get more than 20 results
+        // Try multiple batches to get maximum results
         for (let batch = 0; batch < maxBatches; batch++) {
             try {
                 console.log(`📡 Making API request for "${jobType}" (batch ${batch + 1}/${maxBatches})...`);
-                // Request 20 jobs per batch
+                // Request 50 jobs per batch (maximum allowed by most APIs)
                 const requestBody = {
                     search_term: jobType,
                     location: location,
-                    results_wanted: 20, // Request 20 per batch
+                    results_wanted: 50, // Request 50 per batch (increased from 20)
                     site_name: [
                         'indeed',
                         'linkedin',
@@ -95,14 +95,14 @@ async function scrapeJobsWithAPI(options = {}) {
 
                 // Try different pagination parameters for subsequent batches
                 if (batch > 0) {
-                    // Try offset approach
-                    requestBody.offset = batch * 20;
+                    // Try offset approach (50 jobs per batch)
+                    requestBody.offset = batch * 50;
 
                     // Also try page approach as backup
                     requestBody.page = batch + 1;
 
                     // Try start parameter as another option
-                    requestBody.start = batch * 20;
+                    requestBody.start = batch * 50;
 
                     console.log(`   📄 Trying pagination: offset=${requestBody.offset}, page=${requestBody.page}`);
                 }
