@@ -8,9 +8,20 @@
 DELETE FROM rapidapi_contacts;
 DELETE FROM rapidapi_jobs;
 
--- Reset the sequence counters
-ALTER SEQUENCE rapidapi_jobs_id_seq RESTART WITH 1;
-ALTER SEQUENCE rapidapi_contacts_id_seq RESTART WITH 1;
+-- Reset the sequence counters (if they exist)
+-- First check what sequences exist and reset them
+DO $$
+BEGIN
+    -- Reset rapidapi_jobs sequence if it exists
+    IF EXISTS (SELECT 1 FROM pg_sequences WHERE sequencename LIKE '%rapidapi_jobs%id%seq%') THEN
+        PERFORM setval(pg_get_serial_sequence('rapidapi_jobs', 'id'), 1, false);
+    END IF;
+
+    -- Reset rapidapi_contacts sequence if it exists
+    IF EXISTS (SELECT 1 FROM pg_sequences WHERE sequencename LIKE '%rapidapi_contacts%id%seq%') THEN
+        PERFORM setval(pg_get_serial_sequence('rapidapi_contacts', 'id'), 1, false);
+    END IF;
+END $$;
 
 -- Insert sample jobs
 INSERT INTO rapidapi_jobs (
