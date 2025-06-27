@@ -736,7 +736,7 @@ try {
         useProxy = true,
         maxConcurrency = 2,
         maxPagesPerSearch = 10, // Maximum pages to fetch per search term for Job Search API
-        jobAgeDays = 5 // Number of days back to search for jobs (5 for initial run, 1 for daily runs)
+        jobAgeDays = 7 // Number of days back to search for jobs (7 for initial run, 1 for daily runs)
     } = input;
 
     // Update the global isTestMode variable

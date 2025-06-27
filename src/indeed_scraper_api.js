@@ -186,13 +186,23 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
         minSalary = 55000,
         maxCities = testMode ? 2 : MAJOR_CITIES.length,
         searchTerms = JOB_SEARCH_TERMS,
-        jobAgeDays = 5 // Default to 5 days for initial run, can be set to 1 for daily runs
+        jobAgeDays = 7 // Default to 7 days for initial run, can be set to 1 for daily runs
     } = options;
     
+    // Validate jobAgeDays - API only accepts 1, 3, 7, 14
+    const validJobAgeDays = [1, 3, 7, 14];
+    const validatedJobAgeDays = validJobAgeDays.includes(jobAgeDays) ? jobAgeDays : 7;
+
+    if (validatedJobAgeDays !== jobAgeDays) {
+        console.log(`⚠️  Invalid jobAgeDays value: ${jobAgeDays}. Using ${validatedJobAgeDays} instead.`);
+        console.log(`📋 Valid values are: ${validJobAgeDays.join(', ')}`);
+    }
+
     console.log('🚀 Starting Indeed Scraper API job collection...');
     console.log(`📋 Search terms: ${searchTerms.join(', ')}`);
     console.log(`🏙️ Cities to search: ${maxCities} (${testMode ? 'TEST MODE' : 'FULL MODE'})`);
     console.log(`💰 Minimum salary: $${minSalary.toLocaleString()}`);
+    console.log(`📅 Job age filter: ${validatedJobAgeDays} days`);
     
     const allJobs = [];
     const citiesToSearch = MAJOR_CITIES.slice(0, maxCities);
@@ -214,7 +224,7 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
                         jobType: 'fulltime',
                         radius: '100', // Maximum allowed radius
                         sort: 'date', // Sort by date to get newest jobs first
-                        fromDays: jobAgeDays.toString(), // Use configurable job age (5 for initial, 1 for daily)
+                        fromDays: validatedJobAgeDays.toString(), // Use validated job age (7 for initial, 1 for daily)
                         country: 'us'
                     }
                 };
