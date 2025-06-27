@@ -166,6 +166,9 @@ function normalizeIndeedScraperJob(job, searchTerm, city) {
         latitude: job.location?.latitude || null,
         longitude: job.location?.longitude || null,
         
+        // Company details
+        company_size: job.companyRevenue || job.companyNumEmployees || '',
+
         // Search metadata
         search_term: searchTerm,
         search_city: city,
