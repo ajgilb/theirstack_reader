@@ -6,8 +6,9 @@ import https from 'https';
  * Maps fields to match rapidapi_jobs database schema
  */
 
-// Strategic city list for maximum US coverage with minimal overlap
+// Comprehensive city list for maximum US coverage
 const MAJOR_CITIES = [
+    // Original Major Cities
     'New York, NY',        // Northeast: NY, NJ, PA, CT
     'Boston, MA',          // New England: MA, NH, CT, RI
     'Chicago, IL',         // Midwest: IL, IN, WI, MI
@@ -27,7 +28,68 @@ const MAJOR_CITIES = [
     'Portland, OR',        // Pacific Northwest: OR, WA
     'Charlotte, NC',       // Carolinas: NC, SC
     'Nashville, TN',       // Mid-South: TN, KY
-    'New Orleans, LA'      // Gulf Coast: LA, MS, AL
+    'New Orleans, LA',     // Gulf Coast: LA, MS, AL
+
+    // Midwest & Plains
+    'Kansas City, MO',     // Missouri, Kansas
+    'Omaha, NE',          // Nebraska
+    'Fargo, ND',          // North Dakota
+    'Sioux Falls, SD',    // South Dakota
+    'Des Moines, IA',     // Iowa
+    'Indianapolis, IN',   // Indiana
+    'Columbus, OH',       // Ohio
+    'Milwaukee, WI',      // Wisconsin
+
+    // Northeast & Mid-Atlantic (Additional)
+    'Providence, RI',     // Rhode Island
+    'Hartford, CT',       // Connecticut
+    'Manchester, NH',     // New Hampshire
+    'Portland, ME',       // Maine
+    'Wilmington, DE',     // Delaware
+    'Pittsburgh, PA',     // Western Pennsylvania
+    'Buffalo, NY',        // Upstate New York
+    'Newark, NJ',         // New Jersey
+
+    // Southeast & South Central (Additional)
+    'Louisville, KY',     // Kentucky
+    'Birmingham, AL',     // Alabama
+    'Jackson, MS',        // Mississippi
+    'Little Rock, AR',    // Arkansas
+    'Charleston, WV',     // West Virginia
+    'Lexington, KY',      // Central Kentucky
+
+    // West & Southwest (Additional)
+    'Salt Lake City, UT', // Utah
+    'Albuquerque, NM',    // New Mexico
+    'Boise, ID',          // Idaho
+    'Billings, MT',       // Montana
+    'Cheyenne, WY',       // Wyoming
+    'Anchorage, AK',      // Alaska
+    'Honolulu, HI',       // Hawaii
+
+    // Pacific & West Coast (Additional)
+    'San Jose, CA',       // Silicon Valley
+    'Sacramento, CA',     // California Capital Region
+    'Spokane, WA',        // Eastern Washington
+    'Eugene, OR',         // Western Oregon
+
+    // South Atlantic & Southeast (Additional)
+    'Tampa, FL',          // Gulf Coast Florida
+    'Orlando, FL',        // Central Florida
+    'Raleigh, NC',        // Research Triangle
+    'Columbia, SC',       // South Carolina Capital Region
+    'Richmond, VA',       // Central Virginia
+    'Virginia Beach, VA', // Hampton Roads
+
+    // Appalachia & Interior South
+    'Huntsville, AL',     // Northern Alabama
+    'Knoxville, TN',      // East Tennessee
+    'Chattanooga, TN',    // Southeastern Tennessee
+
+    // Texas (Additional)
+    'Austin, TX',         // Central Texas
+    'San Antonio, TX',    // South Central Texas
+    'El Paso, TX'         // West Texas
 ];
 
 // Job search terms for hospitality industry
