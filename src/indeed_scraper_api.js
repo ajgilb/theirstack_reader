@@ -209,80 +209,7 @@ function extractEmailsFromText(text) {
     return [...new Set(filteredEmails)]; // Remove duplicates
 }
 
-/**
- * Filter jobs based on salary criteria and job titles
- */
-function filterJobsBySalary(jobs, minSalary = 55000) {
-    return jobs.filter(job => {
-        // Skip hourly jobs (focus on salaried positions)
-        if (job.salary_type === 'hourly') {
-            return false;
-        }
 
-        // Filter out entry-level/hourly job titles
-        if (job.title) {
-            const titleLower = job.title.toLowerCase();
-            const excludedTitles = [
-                // Front of House
-                'server', 'waiter', 'waitress', 'host', 'hostess', 'busser', 'buser',
-                'food runner', 'runner', 'barback', 'bartender', 'cashier',
-                'counter server', 'drive-thru', 'drive thru', 'takeout specialist',
-                'takeout', 'delivery driver', 'delivery',
-
-                // Kitchen Staff
-                'line cook', 'prep cook', 'dishwasher', 'expeditor', 'expo',
-                'kitchen porter', 'pastry assistant', 'fry cook', 'pantry cook',
-                'butcher', 'commissary worker', 'cook',
-
-                // Hotel/Hospitality
-                'housekeeper', 'room attendant', 'laundry attendant', 'houseman',
-                'housekeeping aide', 'maintenance technician', 'janitor', 'custodian',
-                'steward', 'kitchen porter', 'banquet server', 'event setup',
-                'security officer', 'security guard',
-
-                // Additional exclusions
-                'assistant', 'associate', 'crew member', 'team member', 'staff'
-            ];
-
-            if (excludedTitles.some(excludedTitle => titleLower.includes(excludedTitle))) {
-                console.log(`🚫 Excluding entry-level job title: "${job.title}"`);
-                return false;
-            }
-        }
-
-        // Filter out jobs with hourly/tips-related terms in salary text
-        if (job.salary) {
-            const salaryLower = job.salary.toLowerCase();
-            const excludeTerms = [
-                'hourly', 'hour', 'per hour', 'an hour', '/hour',
-                'tips', 'tip', 'shift', 'overtime',
-                'scheduling', 'weekly pay', '/hr'
-            ];
-
-            if (excludeTerms.some(term => salaryLower.includes(term))) {
-                console.log(`🚫 Excluding job with hourly/tips salary: "${job.title}" - "${job.salary}"`);
-                return false;
-            }
-        }
-
-        // If we have salary_min, check if it meets minimum
-        if (job.salary_min && job.salary_min >= minSalary) {
-            return true;
-        }
-
-        // If we have salary_max, check if it's reasonable
-        if (job.salary_max && job.salary_max >= minSalary) {
-            return true;
-        }
-
-        // If no specific salary data but has salary text, include it (already filtered above)
-        if (job.salary && job.salary.length > 0 && job.salary_type !== 'hourly') {
-            return true;
-        }
-
-        return false;
-    });
-}
 
 /**
  * Main function to scrape jobs using Indeed Scraper API
@@ -344,16 +271,12 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
                     
                     // Normalize job data
                     const normalizedJobs = jobs.map(job => normalizeIndeedScraperJob(job, searchTerm, city));
-                    
-                    // Filter by salary criteria
-                    const filteredJobs = filterJobsBySalary(normalizedJobs, minSalary);
-                    console.log(`  💰 ${filteredJobs.length} jobs meet salary criteria (non-hourly, $${minSalary}+)`);
-                    
-                    allJobs.push(...filteredJobs);
+
+                    allJobs.push(...normalizedJobs);
                     
                     // Show sample job
-                    if (filteredJobs.length > 0) {
-                        const sampleJob = filteredJobs[0];
+                    if (normalizedJobs.length > 0) {
+                        const sampleJob = normalizedJobs[0];
                         console.log(`  📄 Sample: ${sampleJob.title} at ${sampleJob.company} - ${sampleJob.salary || 'Salary not specified'}`);
                     }
                     
