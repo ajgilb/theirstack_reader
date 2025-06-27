@@ -185,6 +185,48 @@ function getDomainFromUrl(url) {
 }
 
 /**
+ * Extract LinkedIn URL from company links
+ */
+function extractLinkedInUrl(companyLinks) {
+    if (!companyLinks || typeof companyLinks !== 'object') return '';
+
+    // Check various possible LinkedIn fields
+    const linkedinFields = [
+        'linkedin',
+        'linkedIn',
+        'LinkedIn',
+        'linkedinUrl',
+        'linkedInUrl',
+        'social_linkedin',
+        'socialLinkedIn'
+    ];
+
+    for (const field of linkedinFields) {
+        if (companyLinks[field]) {
+            const url = companyLinks[field];
+            // Validate it's actually a LinkedIn URL
+            if (typeof url === 'string' && url.includes('linkedin.com')) {
+                return url;
+            }
+        }
+    }
+
+    // Check if there's a general social links array or object
+    if (companyLinks.socialLinks && Array.isArray(companyLinks.socialLinks)) {
+        for (const link of companyLinks.socialLinks) {
+            if (typeof link === 'string' && link.includes('linkedin.com')) {
+                return link;
+            }
+            if (typeof link === 'object' && link.url && link.url.includes('linkedin.com')) {
+                return link.url;
+            }
+        }
+    }
+
+    return '';
+}
+
+/**
  * Format salary information into a readable string
  */
 function formatSalaryString(salaryData) {
@@ -227,6 +269,14 @@ function formatSalaryString(salaryData) {
  * Normalize job data from Indeed Scraper API
  */
 function normalizeIndeedScraperJob(job, searchTerm, city) {
+    // Debug: Log company links structure for first job to understand available fields
+    if (job.companyLinks) {
+        console.log(`🔗 Company links available for "${job.companyName}":`, Object.keys(job.companyLinks));
+        if (Object.keys(job.companyLinks).length > 0) {
+            console.log(`🔗 Company links data:`, JSON.stringify(job.companyLinks, null, 2));
+        }
+    }
+
     return {
         // Basic job info - keep original title, use API company name
         title: job.title || 'No title',
@@ -273,6 +323,7 @@ function normalizeIndeedScraperJob(job, searchTerm, city) {
         company_url: job.companyUrl || job.companyLinks?.corporateWebsite || '',
         company_website: job.companyLinks?.corporateWebsite || '', // Direct from API
         company_domain: job.companyLinks?.corporateWebsite ? getDomainFromUrl(job.companyLinks.corporateWebsite) : '',
+        linkedin: extractLinkedInUrl(job.companyLinks) || '', // Extract LinkedIn URL from company links
         remote: job.remote || job.isRemote || false
     };
 }
