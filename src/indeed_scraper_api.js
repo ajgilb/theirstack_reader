@@ -361,23 +361,38 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
         }
     }
     
-    // Remove duplicates based on job_id
+    // Remove duplicates based on company + title combination (more effective for overlapping city searches)
     const uniqueJobs = [];
-    const seenJobIds = new Set();
-    
+    const seenJobs = new Set();
+    let duplicateCount = 0;
+
     for (const job of allJobs) {
-        if (!seenJobIds.has(job.job_id)) {
-            seenJobIds.add(job.job_id);
+        // Create a unique key from company and title (case-insensitive, trimmed)
+        const company = (job.company || 'unknown').toLowerCase().trim();
+        const title = (job.title || 'unknown').toLowerCase().trim();
+        const jobKey = `${company}|${title}`;
+
+        if (!seenJobs.has(jobKey)) {
+            seenJobs.add(jobKey);
             uniqueJobs.push(job);
+        } else {
+            duplicateCount++;
+            // Only log first few duplicates to avoid spam
+            if (duplicateCount <= 5) {
+                console.log(`  🔄 Duplicate: "${job.title}" at "${job.company}"`);
+            }
         }
     }
     
     console.log(`\n📊 Collection Summary:`);
     console.log(`  🎯 Total jobs found: ${allJobs.length}`);
-    console.log(`  🆕 Unique jobs: ${uniqueJobs.length}`);
-    console.log(`  🔄 Duplicates removed: ${allJobs.length - uniqueJobs.length}`);
+    console.log(`  🆕 Unique jobs (by company+title): ${uniqueJobs.length}`);
+    console.log(`  🔄 Duplicates removed: ${duplicateCount}`);
     console.log(`  🏙️ Cities searched: ${citiesToSearch.length}`);
     console.log(`  📋 Search terms: ${searchTerms.length}`);
+    if (duplicateCount > 5) {
+        console.log(`  ℹ️  (${duplicateCount - 5} more duplicates not shown)`);
+    }
     
     // Show jobs with contact info
     const jobsWithEmails = uniqueJobs.filter(job => job.emails && job.emails.length > 0);
