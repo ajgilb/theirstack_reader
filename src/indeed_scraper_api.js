@@ -329,6 +329,70 @@ function normalizeIndeedScraperJob(job, searchTerm, city) {
 }
 
 /**
+ * Filter out unwanted jobs (entry-level positions and excluded companies)
+ */
+function filterUnwantedJobs(jobs) {
+    return jobs.filter(job => {
+        // Filter out entry-level/hourly job titles
+        if (job.title) {
+            const titleLower = job.title.toLowerCase();
+            const excludedTitles = [
+                // Front of House
+                'server', 'waiter', 'waitress', 'host', 'hostess', 'busser', 'buser',
+                'food runner', 'runner', 'barback', 'bartender', 'cashier',
+                'counter server', 'drive-thru', 'drive thru', 'takeout specialist',
+                'takeout', 'delivery driver', 'delivery', 'breakfast attendant',
+
+                // Kitchen Staff
+                'line cook', 'prep cook', 'dishwasher', 'expeditor', 'expo',
+                'kitchen porter', 'pastry assistant', 'fry cook', 'pantry cook',
+                'butcher', 'commissary worker', 'cook',
+
+                // Hotel/Hospitality
+                'housekeeper', 'room attendant', 'laundry attendant', 'houseman',
+                'housekeeping aide', 'maintenance technician', 'janitor', 'custodian',
+                'steward', 'kitchen porter', 'banquet server', 'event setup',
+                'security officer', 'security guard',
+
+                // Additional exclusions
+                'assistant', 'associate', 'crew member', 'team member', 'staff'
+            ];
+
+            if (excludedTitles.some(excludedTitle => titleLower.includes(excludedTitle))) {
+                console.log(`🚫 Excluding entry-level job: "${job.title}" at "${job.company}"`);
+                return false;
+            }
+        }
+
+        // Filter out fast food and excluded companies
+        if (job.company) {
+            const companyLower = job.company.toLowerCase();
+            const excludedCompanies = [
+                // Fast food chains
+                'mcdonalds', "mcdonald's", 'burger king', 'taco bell', 'kfc', 'subway',
+                'pizza hut', 'dominos', "domino's", 'papa johns', "papa john's", 'little caesars',
+                'wendys', "wendy's", 'arbys', "arby's", 'dairy queen', 'sonic drive',
+                'chipotle', 'panera bread', 'five guys', 'in-n-out', 'whataburger',
+                'chick-fil-a', 'popeyes', 'dunkin', "dunkin'", 'starbucks', 'tim hortons',
+                'white castle', 'jack in the box', 'carl jr', 'hardees', "hardee's",
+                'qdoba', 'moes southwest', 'panda express', 'orange julius',
+
+                // Chains and excluded terms
+                'college', 'health care', 'healthcare', 'hospital', 'medical center',
+                'nursing home', 'assisted living', 'retirement home'
+            ];
+
+            if (excludedCompanies.some(excluded => companyLower.includes(excluded))) {
+                console.log(`🚫 Excluding fast food/excluded company: "${job.title}" at "${job.company}"`);
+                return false;
+            }
+        }
+
+        return true; // Include job if it passes all filters
+    });
+}
+
+/**
  * Extract email addresses from job description text
  */
 function extractEmailsFromText(text) {
@@ -415,11 +479,15 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
                     // Normalize job data
                     const normalizedJobs = jobs.map(job => normalizeIndeedScraperJob(job, searchTerm, city));
 
-                    allJobs.push(...normalizedJobs);
+                    // Apply filtering to remove unwanted jobs
+                    const filteredJobs = filterUnwantedJobs(normalizedJobs);
+                    console.log(`  🧹 Filtered: ${normalizedJobs.length} → ${filteredJobs.length} jobs (removed ${normalizedJobs.length - filteredJobs.length} unwanted)`);
+
+                    allJobs.push(...filteredJobs);
                     
                     // Show sample job
-                    if (normalizedJobs.length > 0) {
-                        const sampleJob = normalizedJobs[0];
+                    if (filteredJobs.length > 0) {
+                        const sampleJob = filteredJobs[0];
                         console.log(`  📄 Sample: ${sampleJob.title} at ${sampleJob.company} - ${sampleJob.salary || 'Salary not specified'}`);
                     }
                     
