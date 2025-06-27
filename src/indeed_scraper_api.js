@@ -98,6 +98,35 @@ const JOB_SEARCH_TERMS = [
 ];
 
 /**
+ * Make API request with retry logic for rate limiting
+ */
+async function makeIndeedScraperRequestWithRetry(requestBody, city, maxRetries = 3) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const result = await makeIndeedScraperRequest(requestBody);
+
+            if (result.status === 429) {
+                const waitTime = Math.min(60 * attempt, 300); // Exponential backoff, max 5 minutes
+                console.log(`  ⚠️  Rate limit hit for ${city} (attempt ${attempt}/${maxRetries}). Waiting ${waitTime} seconds...`);
+                await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+                continue;
+            }
+
+            return result;
+
+        } catch (error) {
+            if (attempt === maxRetries) {
+                throw error;
+            }
+            console.log(`  ⚠️  Request failed for ${city} (attempt ${attempt}/${maxRetries}): ${error.message}`);
+            await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30 seconds before retry
+        }
+    }
+
+    throw new Error(`Failed after ${maxRetries} attempts`);
+}
+
+/**
  * Make API request to Indeed Scraper
  */
 function makeIndeedScraperRequest(requestBody) {
@@ -299,6 +328,7 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
     console.log(`💰 Minimum salary: $${minSalary.toLocaleString()}`);
     console.log(`📅 Job age filter: ${validatedJobAgeDays} days`);
     console.log(`🎯 Total API calls: ${maxCities} (1 comprehensive query per city)`);
+    console.log(`⏱️  Estimated time: ${Math.ceil(maxCities * 15 / 60)} minutes (15 sec between requests for rate limiting)`);
     
     const allJobs = [];
     const citiesToSearch = MAJOR_CITIES.slice(0, maxCities);
@@ -324,8 +354,8 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
                         country: 'us'
                     }
                 };
-                
-                const result = await makeIndeedScraperRequest(requestBody);
+
+                const result = await makeIndeedScraperRequestWithRetry(requestBody, city);
                 
                 if (result.status === 201 && result.data.returnvalue?.data) {
                     const jobs = result.data.returnvalue.data;
@@ -353,10 +383,10 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
                 console.log(`  ❌ Error searching "${searchTerm}" in ${city}: ${error.message}`);
             }
             
-            // Rate limiting: wait between requests
+            // Rate limiting: wait between requests (5 requests per minute = 12 seconds between requests)
             if (termIndex < searchTerms.length - 1 || cityIndex < citiesToSearch.length - 1) {
-                console.log(`  ⏱️ Waiting 3 seconds...`);
-                await new Promise(resolve => setTimeout(resolve, 3000));
+                console.log(`  ⏱️ Waiting 15 seconds (rate limit: 5 requests/minute)...`);
+                await new Promise(resolve => setTimeout(resolve, 15000)); // 15 seconds to be safe
             }
         }
     }
