@@ -107,8 +107,8 @@ function normalizeIndeedScraperJob(job, searchTerm, city) {
     // Parse the job title to extract company if present
     const parsedTitle = parseJobTitle(job.title);
 
-    // Use parsed company if available, otherwise fall back to job.company
-    const finalCompany = parsedTitle.company || job.company || 'Company not specified';
+    // Use parsed company if available, otherwise fall back to job.companyName or job.company
+    const finalCompany = parsedTitle.company || job.companyName || job.company || 'Company not specified';
 
     return {
         // Basic job info - use parsed title and company
@@ -149,9 +149,9 @@ function normalizeIndeedScraperJob(job, searchTerm, city) {
         emails: extractEmailsFromText(job.descriptionHtml || job.description || ''),
         
         // Additional fields for compatibility
-        posted_date: job.postedDate || '',
-        company_url: job.companyUrl || '',
-        remote: job.remote || false
+        posted_date: job.postedDate || job.datePublished || '',
+        company_url: job.companyUrl || job.companyLinks?.corporateWebsite || '',
+        remote: job.remote || job.isRemote || false
     };
 }
 
