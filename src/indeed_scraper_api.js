@@ -78,13 +78,42 @@ function makeIndeedScraperRequest(requestBody) {
 }
 
 /**
+ * Parse job title to separate title and company if formatted as "Title - Company"
+ */
+function parseJobTitle(rawTitle) {
+    if (!rawTitle) return { title: 'No title', company: null };
+
+    // Check if title contains " - " pattern
+    const dashIndex = rawTitle.indexOf(' - ');
+    if (dashIndex > 0 && dashIndex < rawTitle.length - 3) {
+        // Split on the first " - " occurrence
+        const title = rawTitle.substring(0, dashIndex).trim();
+        const company = rawTitle.substring(dashIndex + 3).trim();
+
+        // Only split if both parts are reasonable length
+        if (title.length >= 3 && company.length >= 3) {
+            return { title, company };
+        }
+    }
+
+    // Return original title if no valid split found
+    return { title: rawTitle.trim(), company: null };
+}
+
+/**
  * Normalize job data from Indeed Scraper API
  */
 function normalizeIndeedScraperJob(job, searchTerm, city) {
+    // Parse the job title to extract company if present
+    const parsedTitle = parseJobTitle(job.title);
+
+    // Use parsed company if available, otherwise fall back to job.company
+    const finalCompany = parsedTitle.company || job.company || 'Company not specified';
+
     return {
-        // Basic job info
-        title: job.title || 'No title',
-        company: job.company || 'Company not specified',
+        // Basic job info - use parsed title and company
+        title: parsedTitle.title,
+        company: finalCompany,
         location: job.location?.formattedAddressShort || job.location?.fullAddress || 'Location not specified',
         
         // URLs and IDs

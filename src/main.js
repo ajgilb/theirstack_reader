@@ -82,8 +82,18 @@ async function enhanceJobsWithCompanyWebsites(jobs) {
         console.log(`Processing job ${i + 1}/${jobs.length}: "${job.title}" at "${job.company}"`);
 
         try {
-            // Get company website URL using SearchAPI
-            const websiteUrl = await getWebsiteUrlFromSearchAPI(job.company);
+            // Skip URL lookup for jobs without proper company names
+            let websiteUrl = null;
+            if (job.company &&
+                job.company !== 'Company not specified' &&
+                job.company !== 'Unknown' &&
+                job.company !== 'Not specified' &&
+                job.company.length > 3) {
+                // Get company website URL using SearchAPI
+                websiteUrl = await getWebsiteUrlFromSearchAPI(job.company);
+            } else {
+                console.log(`⏭️  Skipping URL lookup for job with no company: "${job.title}"`);
+            }
 
             // Create enhanced job object with Indeed data + website data
             const enhancedJob = {
@@ -946,6 +956,9 @@ try {
     }
 
     console.log(`✅ Scraped ${scrapedJobs.length} jobs using ${useIndeedScraper ? 'Indeed Scraper API' : 'Job Search API'}`);
+
+    // Update job statistics
+    jobStats.processedCount = scrapedJobs.length;
 
     // Filter out jobs that already exist in database
     const newJobs = [];
