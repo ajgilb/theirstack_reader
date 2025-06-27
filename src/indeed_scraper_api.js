@@ -210,13 +210,44 @@ function extractEmailsFromText(text) {
 }
 
 /**
- * Filter jobs based on salary criteria
+ * Filter jobs based on salary criteria and job titles
  */
 function filterJobsBySalary(jobs, minSalary = 55000) {
     return jobs.filter(job => {
         // Skip hourly jobs (focus on salaried positions)
         if (job.salary_type === 'hourly') {
             return false;
+        }
+
+        // Filter out entry-level/hourly job titles
+        if (job.title) {
+            const titleLower = job.title.toLowerCase();
+            const excludedTitles = [
+                // Front of House
+                'server', 'waiter', 'waitress', 'host', 'hostess', 'busser', 'buser',
+                'food runner', 'runner', 'barback', 'bartender', 'cashier',
+                'counter server', 'drive-thru', 'drive thru', 'takeout specialist',
+                'takeout', 'delivery driver', 'delivery',
+
+                // Kitchen Staff
+                'line cook', 'prep cook', 'dishwasher', 'expeditor', 'expo',
+                'kitchen porter', 'pastry assistant', 'fry cook', 'pantry cook',
+                'butcher', 'commissary worker', 'cook',
+
+                // Hotel/Hospitality
+                'housekeeper', 'room attendant', 'laundry attendant', 'houseman',
+                'housekeeping aide', 'maintenance technician', 'janitor', 'custodian',
+                'steward', 'kitchen porter', 'banquet server', 'event setup',
+                'security officer', 'security guard',
+
+                // Additional exclusions
+                'assistant', 'associate', 'crew member', 'team member', 'staff'
+            ];
+
+            if (excludedTitles.some(excludedTitle => titleLower.includes(excludedTitle))) {
+                console.log(`🚫 Excluding entry-level job title: "${job.title}"`);
+                return false;
+            }
         }
 
         // Filter out jobs with hourly/tips-related terms in salary text

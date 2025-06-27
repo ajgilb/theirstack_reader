@@ -188,6 +188,37 @@ async function scrapeJobsWithAPI(options = {}) {
             let excludedBySalaryCompanyName = 0;
 
             const filteredJobs = jobTypeResults.filter(job => {
+                // Filter out entry-level/hourly job titles
+                if (job.title) {
+                    const titleLower = job.title.toLowerCase();
+                    const excludedTitles = [
+                        // Front of House
+                        'server', 'waiter', 'waitress', 'host', 'hostess', 'busser', 'buser',
+                        'food runner', 'runner', 'barback', 'bartender', 'cashier',
+                        'counter server', 'drive-thru', 'drive thru', 'takeout specialist',
+                        'takeout', 'delivery driver', 'delivery',
+
+                        // Kitchen Staff
+                        'line cook', 'prep cook', 'dishwasher', 'expeditor', 'expo',
+                        'kitchen porter', 'pastry assistant', 'fry cook', 'pantry cook',
+                        'butcher', 'commissary worker', 'cook',
+
+                        // Hotel/Hospitality
+                        'housekeeper', 'room attendant', 'laundry attendant', 'houseman',
+                        'housekeeping aide', 'maintenance technician', 'janitor', 'custodian',
+                        'steward', 'kitchen porter', 'banquet server', 'event setup',
+                        'security officer', 'security guard',
+
+                        // Additional exclusions
+                        'assistant', 'associate', 'crew member', 'team member', 'staff'
+                    ];
+
+                    if (excludedTitles.some(excludedTitle => titleLower.includes(excludedTitle))) {
+                        console.log(`🚫 Excluding entry-level job title: "${job.title}"`);
+                        return false;
+                    }
+                }
+
                 // Check if company name is a salary-related word
                 if (isSalaryCompanyName(job.company)) {
                     console.log(`🚫 Excluding job with salary-like company name: "${job.title}" at "${job.company}"`);
