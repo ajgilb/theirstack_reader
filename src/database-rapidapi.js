@@ -194,16 +194,9 @@ async function insertJobsIntoDatabase(jobs, jobsTable = 'rapidapi_jobs', contact
         try {
             await client.query('BEGIN');
 
-            // For "Company not specified" entries, make them unique by adding timestamp to avoid constraint violations
-            let finalCompany = job.company;
-            if (job.company === 'Company not specified' || job.company === 'Unknown' || job.company === 'Not specified') {
-                finalCompany = `${job.company} (${new Date().getTime()})`;
-                console.log(`🔧 Modified company name to avoid constraint: "${finalCompany}"`);
-            }
-
-            // Check if job already exists
+            // Check if job already exists (basic duplicate check)
             const checkQuery = `SELECT id FROM ${jobsTable} WHERE title = $1 AND company = $2`;
-            const checkResult = await client.query(checkQuery, [job.title, finalCompany]);
+            const checkResult = await client.query(checkQuery, [job.title, job.company]);
 
             const now = new Date().toISOString();
             const salaryStr = job.salary || '';
@@ -228,7 +221,7 @@ async function insertJobsIntoDatabase(jobs, jobsTable = 'rapidapi_jobs', contact
                     job.domain || job.company_domain, now, job.parent_url || '', jobId
                 ]);
                 updatedJobs.push(job);
-                console.log(`🔄 Updated job: "${job.title}" at "${finalCompany}"`);
+                console.log(`🔄 Updated job: "${job.title}" at "${job.company}"`);
             } else {
                 // Insert new job
                 const insertQuery = `
@@ -240,7 +233,7 @@ async function insertJobsIntoDatabase(jobs, jobsTable = 'rapidapi_jobs', contact
                     RETURNING id
                 `;
                 const insertResult = await client.query(insertQuery, [
-                    job.title, finalCompany, job.parent_company || '', job.location,
+                    job.title, job.company, job.parent_company || '', job.location,
                     salaryStr, contactName, contactTitle, email,
                     job.url || job.apply_link, job.job_details || job.description,
                     job.linkedin || '', job.domain || job.company_domain || '',
@@ -248,7 +241,7 @@ async function insertJobsIntoDatabase(jobs, jobsTable = 'rapidapi_jobs', contact
                 ]);
                 jobId = insertResult.rows[0].id;
                 newJobs.push(job);
-                console.log(`✅ Inserted job: "${job.title}" at "${finalCompany}" (ID: ${jobId})`);
+                console.log(`✅ Inserted job: "${job.title}" at "${job.company}" (ID: ${jobId})`);
             }
 
             // Debug: Check if job has emails array

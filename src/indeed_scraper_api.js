@@ -218,22 +218,37 @@ function filterJobsBySalary(jobs, minSalary = 55000) {
         if (job.salary_type === 'hourly') {
             return false;
         }
-        
+
+        // Filter out jobs with hourly/tips-related terms in salary text
+        if (job.salary) {
+            const salaryLower = job.salary.toLowerCase();
+            const excludeTerms = [
+                'hourly', 'hour', 'per hour', 'an hour', '/hour',
+                'tips', 'tip', 'shift', 'overtime',
+                'scheduling', 'weekly pay', '/hr'
+            ];
+
+            if (excludeTerms.some(term => salaryLower.includes(term))) {
+                console.log(`🚫 Excluding job with hourly/tips salary: "${job.title}" - "${job.salary}"`);
+                return false;
+            }
+        }
+
         // If we have salary_min, check if it meets minimum
         if (job.salary_min && job.salary_min >= minSalary) {
             return true;
         }
-        
+
         // If we have salary_max, check if it's reasonable
         if (job.salary_max && job.salary_max >= minSalary) {
             return true;
         }
-        
-        // If no specific salary data but has salary text, include it
+
+        // If no specific salary data but has salary text, include it (already filtered above)
         if (job.salary && job.salary.length > 0 && job.salary_type !== 'hourly') {
             return true;
         }
-        
+
         return false;
     });
 }
