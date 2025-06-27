@@ -215,7 +215,7 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
         minSalary = 55000,
         maxCities = testMode ? 2 : MAJOR_CITIES.length,
         searchTerms = JOB_SEARCH_TERMS,
-        jobAgeDays = 7 // Default to 7 days for initial run, can be set to 1 for daily runs
+        jobAgeDays = 1 // Default to 1 day for daily runs, can be set to 7 for initial runs
     } = options;
     
     // Validate jobAgeDays - API only accepts 1, 3, 7, 14
