@@ -51,7 +51,8 @@ async function scrapeJobsWithAPI(options = {}) {
         jobTypes = ['restaurant manager'],
         location = 'United States',
         salaryMin = 55000,
-        testMode = false
+        testMode = false,
+        maxPagesPerSearch = 10 // Maximum pages to fetch per search term
     } = options;
 
     console.log(`🚀 Starting Job Search API scraping...`);
@@ -61,25 +62,29 @@ async function scrapeJobsWithAPI(options = {}) {
     console.log(`🧪 Test mode: ${testMode}`);
 
     const allJobs = [];
-    const apiKey = '26f8494ae3msh6105ec8e9f487c4p1e4693jsndc74e2a6561c';
+    const apiKey = process.env.RAPIDAPI_KEY || process.env['X-RapidAPI-Key'] || '26f8494ae3msh6105ec8e9f487c4p1e4693jsndc74e2a6561c';
     const apiUrl = 'https://jobs-search-api.p.rapidapi.com/getjobs';
 
-    // Process each job type with batch requests to get more than 20 results
+    // Process each job type with pagination to get maximum results
     for (const jobType of jobTypes) {
         console.log(`\n🔍 Searching for "${jobType}" jobs...`);
 
         const jobTypeResults = [];
-        const maxBatches = testMode ? 1 : 20; // Get up to 20 batches (1000+ jobs) in normal mode, 1 batch in test mode
+        let currentPage = 0;
+        let hasMoreResults = true;
+        const maxPages = maxPagesPerSearch; // Configurable limit to prevent infinite loops
 
-        // Try multiple batches to get maximum results
-        for (let batch = 0; batch < maxBatches; batch++) {
+        // Use pagination to get more than 100 jobs per search term
+        while (hasMoreResults && currentPage < maxPages) {
+            console.log(`📡 Making API request for "${jobType}" - Page ${currentPage + 1}...`);
+
             try {
-                console.log(`📡 Making API request for "${jobType}" (batch ${batch + 1}/${maxBatches})...`);
-                // Request 50 jobs per batch (consistent, reliable size)
+                // Request with pagination offset
                 const requestBody = {
                     search_term: jobType,
                     location: location,
-                    results_wanted: 50, // Consistent 50 per batch
+                    results_wanted: 100, // API returns ~100 jobs max per request
+                    offset: currentPage * 100, // Pagination offset
                     site_name: [
                         'indeed',
                         'linkedin',
@@ -96,20 +101,6 @@ async function scrapeJobsWithAPI(options = {}) {
                 console.log(`🔍 DEBUG: Request body:`, JSON.stringify(requestBody, null, 2));
                 console.log(`🔍 DEBUG: API URL: ${apiUrl}`);
                 console.log(`🔍 DEBUG: API Key: ${apiKey.substring(0, 10)}...`);
-
-                // Try different pagination parameters for subsequent batches
-                if (batch > 0) {
-                    // Try offset approach (50 jobs per batch)
-                    requestBody.offset = batch * 50;
-
-                    // Also try page approach as backup
-                    requestBody.page = batch + 1;
-
-                    // Try start parameter as another option
-                    requestBody.start = batch * 50;
-
-                    console.log(`   📄 Trying pagination: offset=${requestBody.offset}, page=${requestBody.page}`);
-                }
 
                 console.log(`🔍 DEBUG: Making fetch request...`);
                 const response = await fetch(apiUrl, {
@@ -139,62 +130,45 @@ async function scrapeJobsWithAPI(options = {}) {
 
                 console.log(`🔍 DEBUG: Parsing JSON response...`);
                 const data = await response.json();
-                console.log(`✅ API response received for "${jobType}" batch ${batch + 1}`);
+                console.log(`✅ API response received for "${jobType}" - Page ${currentPage + 1}`);
                 console.log(`🔍 DEBUG: Response data keys:`, Object.keys(data));
                 console.log(`🔍 DEBUG: Jobs array exists:`, !!data.jobs);
                 console.log(`🔍 DEBUG: Jobs array length:`, data.jobs ? data.jobs.length : 'N/A');
 
                 if (!data.jobs || !Array.isArray(data.jobs)) {
-                    console.log(`⚠️  No jobs found for "${jobType}" batch ${batch + 1}`);
+                    console.log(`⚠️  No jobs found for "${jobType}" on page ${currentPage + 1}`);
                     console.log(`🔍 DEBUG: Full response data:`, JSON.stringify(data, null, 2));
-                    break; // No more results available
-                }
+                    hasMoreResults = false; // Stop pagination if no jobs returned
+                } else {
+                    const pageJobCount = data.jobs.length;
+                    console.log(`📊 Found ${pageJobCount} jobs for "${jobType}" on page ${currentPage + 1}`);
 
-                console.log(`📊 Found ${data.jobs.length} jobs for "${jobType}" batch ${batch + 1}`);
+                    // Process and normalize the job data
+                    const processedJobs = data.jobs.map(job => normalizeJobData(job, jobType));
+                    jobTypeResults.push(...processedJobs);
 
-                // Process and normalize the job data
-                const processedJobs = data.jobs.map(job => normalizeJobData(job, jobType));
+                    // Check if we should continue pagination
+                    if (pageJobCount < 100) {
+                        console.log(`📄 Received ${pageJobCount} jobs (less than 100), assuming last page`);
+                        hasMoreResults = false;
+                    } else {
+                        console.log(`📄 Received full page of ${pageJobCount} jobs, checking for more...`);
+                        currentPage++;
 
-                // Check for duplicates by comparing job URLs/IDs to detect if pagination is working
-                const existingUrls = new Set(jobTypeResults.map(job => job.url || job.apply_link));
-                const newJobs = processedJobs.filter(job => !existingUrls.has(job.url || job.apply_link));
-
-                console.log(`   📊 New unique jobs in this batch: ${newJobs.length} (${processedJobs.length - newJobs.length} duplicates)`);
-
-                // If we got mostly duplicates, pagination isn't working - stop
-                if (batch > 0 && newJobs.length < 5) {
-                    console.log(`   🛑 Only ${newJobs.length} new jobs found, pagination likely not working. Stopping batches.`);
-                    jobTypeResults.push(...newJobs); // Add the few new ones we found
-                    break;
-                }
-
-                jobTypeResults.push(...newJobs); // Only add new jobs
-
-                // If we got fewer than 10 results or no results, we've likely reached the end
-                if (data.jobs.length < 10) {
-                    console.log(`   📝 Received ${data.jobs.length} jobs (less than 10), likely reached end of results`);
-                    break;
-                }
-
-                // If we got 0 results, definitely stop
-                if (data.jobs.length === 0) {
-                    console.log(`   📝 No more jobs available, stopping batch requests`);
-                    break;
-                }
-
-                // Add delay between batch requests
-                if (batch < maxBatches - 1) {
-                    console.log(`   ⏱️  Waiting 2 seconds before next batch...`);
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+                        // Add delay between paginated requests
+                        console.log(`⏱️  Waiting 2 seconds before next page...`);
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    }
                 }
 
             } catch (error) {
-                console.error(`❌ Error in batch ${batch + 1} for "${jobType}":`, error.message);
-                break; // Stop trying more batches for this job type
+                console.error(`❌ Error fetching jobs for "${jobType}" on page ${currentPage + 1}:`, error.message);
+                console.error(`🔍 DEBUG: Full error:`, error);
+                hasMoreResults = false; // Stop pagination on error
             }
         }
 
-        console.log(`📊 Total collected for "${jobType}": ${jobTypeResults.length} jobs across batches`);
+        console.log(`📊 Total collected for "${jobType}": ${jobTypeResults.length} jobs across ${currentPage + 1} pages`);
 
         // Now filter all the jobs for this job type
         if (jobTypeResults.length > 0) {

@@ -734,7 +734,9 @@ try {
         excludeRecruiters = true,
         testMode = false,
         useProxy = true,
-        maxConcurrency = 2
+        maxConcurrency = 2,
+        maxPagesPerSearch = 10, // Maximum pages to fetch per search term for Job Search API
+        jobAgeDays = 5 // Number of days back to search for jobs (5 for initial run, 1 for daily runs)
     } = input;
 
     // Update the global isTestMode variable
@@ -924,7 +926,8 @@ try {
             testMode,
             minSalary: salaryMin,
             maxCities: testMode ? 2 : 20, // 2 cities in test mode, 20 in production
-            searchTerms: ['restaurant', 'hotel'] // Broader search terms
+            searchTerms: ['restaurant', 'hotel'], // Broader search terms
+            jobAgeDays
         });
     } else {
         console.log(`🎯 Starting Job Search API for multiple job boards`);
@@ -937,7 +940,8 @@ try {
             jobTypes,
             location,
             salaryMin,
-            testMode
+            testMode,
+            maxPagesPerSearch
         });
     }
 

@@ -185,7 +185,8 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
         testMode = false,
         minSalary = 55000,
         maxCities = testMode ? 2 : MAJOR_CITIES.length,
-        searchTerms = JOB_SEARCH_TERMS
+        searchTerms = JOB_SEARCH_TERMS,
+        jobAgeDays = 5 // Default to 5 days for initial run, can be set to 1 for daily runs
     } = options;
     
     console.log('🚀 Starting Indeed Scraper API job collection...');
@@ -207,13 +208,13 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
             try {
                 const requestBody = {
                     scraper: {
-                        maxRows: 100,
+                        maxRows: 100, // Maximum jobs per request
                         query: searchTerm,
                         location: city,
                         jobType: 'fulltime',
                         radius: '100', // Maximum allowed radius
-                        sort: 'relevance',
-                        fromDays: '7',
+                        sort: 'date', // Sort by date to get newest jobs first
+                        fromDays: jobAgeDays.toString(), // Use configurable job age (5 for initial, 1 for daily)
                         country: 'us'
                     }
                 };

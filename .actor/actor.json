@@ -120,6 +120,14 @@
         "type": "boolean",
         "description": "Enable headful browser mode (visible locally, better anti-detection on cloud)",
         "default": false
+      },
+      "jobAgeDays": {
+        "title": "Job Age (Days)",
+        "type": "integer",
+        "description": "Number of days back to search for jobs (5 for initial run, 1 for daily runs)",
+        "default": 5,
+        "minimum": 1,
+        "maximum": 14
       }
     },
     "required": ["jobTypes"]
@@ -131,6 +139,7 @@
   "environmentVariables": {
     "SEARCH_API_KEY": "Bq5Ymf24RJQb3iW8EQkCUN1M",
     "RESEND_API_KEY": "re_16MVG13Y_DD9Scs4cZX59X1VCPHHGbiGx",
-    "DATABASE_URL": "postgresql://google_scraper.mbaqiwhkngfxxmlkionj:Relham12?@52.8.172.168:6543/postgres"
+    "DATABASE_URL": "postgresql://google_scraper.mbaqiwhkngfxxmlkionj:Relham12?@52.8.172.168:6543/postgres",
+    "X-RapidAPI-Key": "26f8494ae3msh6105ec8e9f487c4p1e4693jsndc74e2a6561c"
   }
 }
