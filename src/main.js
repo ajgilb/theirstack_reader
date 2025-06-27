@@ -940,8 +940,8 @@ try {
         scrapedJobs = await scrapeJobsWithIndeedScraper({
             testMode,
             minSalary: salaryMin,
-            maxCities: testMode ? 2 : 20, // 2 cities in test mode, 20 in production
-            searchTerms: ['restaurant', 'hotel'], // Broader search terms
+            maxCities: testMode ? 2 : 67, // 2 cities in test mode, all 67 cities in production
+            searchTerms: ['restaurant', 'hotel'], // Note: actual search uses comprehensive OR query
             jobAgeDays
         });
     } else {
