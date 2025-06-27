@@ -6,7 +6,7 @@
 import { Resend } from 'resend';
 
 // Email configuration
-const FROM_EMAIL = 'Google Jobs Scraper <aj@chefsheet.com>';
+const FROM_EMAIL = 'Indeed RapidAPI Job Scraper <aj@chefsheet.com>';
 const RECIPIENTS = ['aj@chefsheet.com', 'martha@madison-collective.com'];
 const EMAIL_SUBJECT_PREFIX = 'BizDev Results for';
 
@@ -141,7 +141,7 @@ function generateEmailHtml(stats, testMode = false) {
     <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
         ${testMode ? '<div style="background-color: #ffffcc; padding: 10px; border: 1px solid #e6e600; margin-bottom: 15px; text-align: center;"><strong>TEST MODE</strong> - Email only sent to aj@chefsheet.com</div>' : ''}
         <p style="font-weight: bold; font-size: 24pt; color: #000000; text-align: center;">
-            Your Google Jobs scraper completed at ${completionTime}
+            Your Indeed RapidAPI Job Scraper completed at ${completionTime}
         </p>
         <p style="color: #000000;">Duration: ${durationMinutes} minutes (${durationSeconds} seconds)</p>
 
@@ -187,7 +187,7 @@ function generateEmailHtml(stats, testMode = false) {
     html += `
         <hr style="margin-top: 30px; border: 0; border-top: 1px solid #cccccc;">
         <p style="color: #666666; font-size: 12px; text-align: center;">
-            This is an automated email from the Google Jobs API Actor.
+            This is an automated email from the Indeed RapidAPI Job Scraper.
             Generated on ${dateOnly}.
         </p>
     </div>
