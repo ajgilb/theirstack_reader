@@ -82,15 +82,20 @@ async function enhanceJobsWithCompanyWebsites(jobs) {
         console.log(`Processing job ${i + 1}/${jobs.length}: "${job.title}" at "${job.company}"`);
 
         try {
-            // Skip URL lookup for jobs without proper company names
-            let websiteUrl = null;
-            if (job.company &&
+            // Check if we already have company website from API
+            let websiteUrl = job.company_website || job.company_url || null;
+
+            // Only use SearchAPI if we don't have a website and have a proper company name
+            if (!websiteUrl && job.company &&
                 job.company !== 'Company not specified' &&
                 job.company !== 'Unknown' &&
                 job.company !== 'Not specified' &&
                 job.company.length > 3) {
                 // Get company website URL using SearchAPI
                 websiteUrl = await getWebsiteUrlFromSearchAPI(job.company);
+                console.log(`🔍 SearchAPI lookup for "${job.company}": ${websiteUrl || 'not found'}`);
+            } else if (websiteUrl) {
+                console.log(`✅ Using company website from API: ${websiteUrl}`);
             } else {
                 console.log(`⏭️  Skipping URL lookup for job with no company: "${job.title}"`);
             }

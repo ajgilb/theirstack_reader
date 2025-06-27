@@ -78,6 +78,60 @@ function makeIndeedScraperRequest(requestBody) {
 }
 
 /**
+ * Extract domain from URL
+ */
+function getDomainFromUrl(url) {
+    if (!url) return '';
+    try {
+        const parsedUrl = new URL(url.startsWith('http') ? url : `http://${url}`);
+        let domain = parsedUrl.hostname;
+        if (domain.startsWith('www.')) {
+            domain = domain.substring(4);
+        }
+        return domain;
+    } catch (error) {
+        return '';
+    }
+}
+
+/**
+ * Format salary information into a readable string
+ */
+function formatSalaryString(salaryData) {
+    if (!salaryData) return '';
+
+    // If there's already a salaryText, use it
+    if (salaryData.salaryText) return salaryData.salaryText;
+
+    const { salaryMin, salaryMax, salaryType, salaryCurrency } = salaryData;
+
+    if (!salaryMin && !salaryMax) return '';
+
+    // Round off numbers to no decimals
+    const minRounded = salaryMin ? Math.round(salaryMin) : null;
+    const maxRounded = salaryMax ? Math.round(salaryMax) : null;
+
+    // Format currency (default to USD)
+    const currency = salaryCurrency === 'USD' ? '$' : salaryCurrency;
+
+    // Format type
+    const typeText = salaryType === 'yearly' ? 'a year' :
+                    salaryType === 'hourly' ? 'an hour' :
+                    salaryType === 'monthly' ? 'a month' : '';
+
+    // Build salary string
+    if (minRounded && maxRounded) {
+        return `${currency}${minRounded.toLocaleString()} - ${currency}${maxRounded.toLocaleString()}${typeText ? ' ' + typeText : ''}`;
+    } else if (minRounded) {
+        return `${currency}${minRounded.toLocaleString()}${typeText ? ' ' + typeText : ''}`;
+    } else if (maxRounded) {
+        return `Up to ${currency}${maxRounded.toLocaleString()}${typeText ? ' ' + typeText : ''}`;
+    }
+
+    return '';
+}
+
+/**
  * Parse job title to separate title and company if formatted as "Title - Company"
  */
 function parseJobTitle(rawTitle) {
@@ -121,10 +175,10 @@ function normalizeIndeedScraperJob(job, searchTerm, city) {
         apply_link: job.applyUrl || job.jobUrl || '',
         job_id: job.jobKey || '',
         
-        // Salary information
-        salary: job.salary?.salaryText || '',
-        salary_min: job.salary?.salaryMin || null,
-        salary_max: job.salary?.salaryMax || null,
+        // Salary information - format as single readable string
+        salary: formatSalaryString(job.salary),
+        salary_min: job.salary?.salaryMin ? Math.round(job.salary.salaryMin) : null,
+        salary_max: job.salary?.salaryMax ? Math.round(job.salary.salaryMax) : null,
         salary_type: job.salary?.salaryType || '',
         salary_currency: job.salary?.salaryCurrency || 'USD',
         
@@ -151,6 +205,8 @@ function normalizeIndeedScraperJob(job, searchTerm, city) {
         // Additional fields for compatibility
         posted_date: job.postedDate || job.datePublished || '',
         company_url: job.companyUrl || job.companyLinks?.corporateWebsite || '',
+        company_website: job.companyLinks?.corporateWebsite || '', // Direct from API
+        company_domain: job.companyLinks?.corporateWebsite ? getDomainFromUrl(job.companyLinks.corporateWebsite) : '',
         remote: job.remote || job.isRemote || false
     };
 }
