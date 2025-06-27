@@ -92,10 +92,9 @@ const MAJOR_CITIES = [
     'El Paso, TX'         // West Texas
 ];
 
-// Job search terms for hospitality industry
+// Comprehensive job search query targeting management and leadership positions
 const JOB_SEARCH_TERMS = [
-    'restaurant',
-    'hotel'
+    "Restaurant Manager OR General Manager OR Assistant General Manager OR Executive Chef OR Sous Chef OR Pastry Chef OR Kitchen Manager OR Food and Beverage Manager OR Culinary Director OR Director of Operations OR Restaurant Group Manager OR Banquet Manager OR Catering Manager OR Hospitality Manager OR Bar Manager OR Beverage Director OR Wine Director OR Sommelier OR Dining Room Manager OR Service Director OR Hotel General Manager OR Hotel Manager OR Resident Manager OR Front Office Manager OR Housekeeping Manager OR Concierge Manager OR Reservations Manager OR Revenue Manager OR Sales Manager OR Marketing Manager OR Event Manager OR Banquet Director OR Spa Manager OR Wellness Director OR Director of Housekeeping OR Director of Rooms OR Night Manager OR Hotel Operations Manager OR Estate Manager OR House Manager OR Private Chef OR Executive Housekeeper OR Butler OR Chauffeur OR Personal Assistant OR Nanny OR Household Manager OR Property Manager OR Private Security Manager OR Director of Residences OR Valet Manager OR Personal Concierge"
 ];
 
 /**
@@ -295,10 +294,11 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
     }
 
     console.log('🚀 Starting Indeed Scraper API job collection...');
-    console.log(`📋 Search terms: ${searchTerms.join(', ')}`);
+    console.log(`📋 Using comprehensive OR query targeting management positions`);
     console.log(`🏙️ Cities to search: ${maxCities} (${testMode ? 'TEST MODE' : 'FULL MODE'})`);
     console.log(`💰 Minimum salary: $${minSalary.toLocaleString()}`);
     console.log(`📅 Job age filter: ${validatedJobAgeDays} days`);
+    console.log(`🎯 Total API calls: ${maxCities} (1 comprehensive query per city)`);
     
     const allJobs = [];
     const citiesToSearch = MAJOR_CITIES.slice(0, maxCities);
@@ -309,7 +309,7 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
         
         for (let termIndex = 0; termIndex < searchTerms.length; termIndex++) {
             const searchTerm = searchTerms[termIndex];
-            console.log(`  🔍 Searching for "${searchTerm}" jobs...`);
+            console.log(`  🔍 Searching for management positions...`);
             
             try {
                 const requestBody = {
