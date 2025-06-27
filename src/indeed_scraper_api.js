@@ -137,19 +137,10 @@ function formatSalaryString(salaryData) {
  * Normalize job data from Indeed Scraper API
  */
 function normalizeIndeedScraperJob(job, searchTerm, city) {
-    // Debug logging for company name mapping
-    console.log(`🔍 DEBUG: Raw job data for "${job.title}"`);
-    console.log(`  - job.companyName: "${job.companyName}"`);
-    console.log(`  - job.company: "${job.company}"`);
-    console.log(`  - typeof job: ${typeof job}`);
-
-    const finalCompany = job.companyName || job.company || 'Company not specified';
-    console.log(`  - Final company: "${finalCompany}"`);
-
     return {
         // Basic job info - keep original title, use API company name
         title: job.title || 'No title',
-        company: finalCompany,
+        company: job.companyName || job.company || 'Company not specified',
         location: job.location?.formattedAddressShort || job.location?.fullAddress || 'Location not specified',
         
         // URLs and IDs

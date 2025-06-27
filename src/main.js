@@ -1038,10 +1038,10 @@ try {
             processedJobs.forEach((job, index) => {
                 console.log(`\nJob #${index + 1}:`);
                 console.log(`Title: ${job.title}`);
-                console.log(`Company: ${job.company_name}`);
+                console.log(`Company: ${job.company || job.company_name}`);
                 console.log(`Location: ${job.location}`);
-                console.log(`Posted: ${job.posted_at}`);
-                console.log(`Schedule: ${job.schedule}`);
+                console.log(`Posted: ${job.posted_at || job.scraped_at}`);
+                console.log(`Schedule: ${job.schedule || job.jobType}`);
                 console.log(`Experience Level: ${job.experience_level}`);
 
                 // Display salary information if available
