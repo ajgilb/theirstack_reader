@@ -8,93 +8,72 @@ import https from 'https';
 
 // Comprehensive city list for maximum US coverage
 const MAJOR_CITIES = [
-    // Original Major Cities
-    'New York, NY',        // Northeast: NY, NJ, PA, CT
-    'Boston, MA',          // New England: MA, NH, CT, RI
-    'Chicago, IL',         // Midwest: IL, IN, WI, MI
-    'Los Angeles, CA',     // West Coast: CA metro
-    'Dallas, TX',          // South Central: TX metro
-    'Atlanta, GA',         // Southeast: GA, AL, TN, SC
-    'Seattle, WA',         // Pacific Northwest: WA, OR
-    'Miami, FL',           // Southeast: FL metro
-    'Denver, CO',          // Mountain West: CO, WY, NM
-    'Phoenix, AZ',         // Southwest: AZ, NV
-    'Philadelphia, PA',    // Mid-Atlantic: PA, DE, NJ
-    'Houston, TX',         // Texas Gulf: TX metro
-    'Detroit, MI',         // Great Lakes: MI, OH
+    // Smallest to largest cities - so largest cities appear first in database
+    'Riverside, CA',       // Smaller CA city
+    'Henderson, NV',       // Nevada suburb
+    'Corpus Christi, TX',  // Texas coast
+    'Stockton, CA',        // Central CA
+    'Lexington, KY',       // Kentucky
+    'Anaheim, CA',         // Orange County
+    'Honolulu, HI',        // Hawaii
+    'Cleveland, OH',       // Ohio
+    'New Orleans, LA',     // Louisiana
+    'Tampa, FL',           // Florida
+    'Aurora, CO',          // Colorado suburb
+    'Arlington, TX',       // Texas suburb
+    'Wichita, KS',         // Kansas
+    'Bakersfield, CA',     // Central CA
+    'Tulsa, OK',           // Oklahoma
     'Minneapolis, MN',     // Upper Midwest: MN, WI, IA
-    'San Francisco, CA',   // Northern CA: CA Bay Area
-    'Las Vegas, NV',       // Nevada: NV, UT
-    'Portland, OR',        // Pacific Northwest: OR, WA
-    'Charlotte, NC',       // Carolinas: NC, SC
-    'Nashville, TN',       // Mid-South: TN, KY
-    'New Orleans, LA',     // Gulf Coast: LA, MS, AL
-
-    // Midwest & Plains
-    'Kansas City, MO',     // Missouri, Kansas
+    'Oakland, CA',         // Bay Area
+    'Miami, FL',           // Southeast: FL metro
+    'Virginia Beach, VA',  // Virginia coast
+    'Long Beach, CA',      // LA metro
+    'Raleigh, NC',        // Research Triangle
+    'Colorado Springs, CO', // Colorado
     'Omaha, NE',          // Nebraska
-    'Fargo, ND',          // North Dakota
-    'Sioux Falls, SD',    // South Dakota
-    'Des Moines, IA',     // Iowa
+    'Atlanta, GA',        // Southeast: GA, AL, TN, SC
+    'Mesa, AZ',           // Arizona suburb
+    'Kansas City, MO',    // Missouri, Kansas
+    'Sacramento, CA',     // California Capital Region
+    'Fresno, CA',         // Central CA
+    'Tucson, AZ',         // Arizona
+    'Albuquerque, NM',    // New Mexico
+    'Milwaukee, WI',      // Wisconsin
+    'Baltimore, MD',      // Maryland
+    'Louisville, KY',     // Kentucky
+    'Memphis, TN',        // Tennessee
+    'Detroit, MI',        // Great Lakes: MI, OH
+    'Las Vegas, NV',      // Nevada: NV, UT
+    'Portland, OR',       // Pacific Northwest: OR, WA
+    'Boston, MA',         // New England: MA, NH, CT, RI
+    'El Paso, TX',        // West Texas
+    'Oklahoma City, OK',  // Oklahoma
+    'Denver, CO',         // Mountain West: CO, WY, NM
+    'Nashville, TN',      // Mid-South: TN, KY
+    'Seattle, WA',        // Pacific Northwest: WA, OR
+    'San Francisco, CA',  // Northern CA: CA Bay Area
+    'Charlotte, NC',      // Carolinas: NC, SC
     'Indianapolis, IN',   // Indiana
     'Columbus, OH',       // Ohio
-    'Milwaukee, WI',      // Wisconsin
-
-    // Northeast & Mid-Atlantic (Additional)
-    'Providence, RI',     // Rhode Island
-    'Hartford, CT',       // Connecticut
-    'Manchester, NH',     // New Hampshire
-    'Portland, ME',       // Maine
-    'Wilmington, DE',     // Delaware
-    'Pittsburgh, PA',     // Western Pennsylvania
-    'Buffalo, NY',        // Upstate New York
-    'Newark, NJ',         // New Jersey
-
-    // Southeast & South Central (Additional)
-    'Louisville, KY',     // Kentucky
-    'Birmingham, AL',     // Alabama
-    'Jackson, MS',        // Mississippi
-    'Little Rock, AR',    // Arkansas
-    'Charleston, WV',     // West Virginia
-    'Lexington, KY',      // Central Kentucky
-
-    // West & Southwest (Additional)
-    'Salt Lake City, UT', // Utah
-    'Albuquerque, NM',    // New Mexico
-    'Boise, ID',          // Idaho
-    'Billings, MT',       // Montana
-    'Cheyenne, WY',       // Wyoming
-    'Anchorage, AK',      // Alaska
-    'Honolulu, HI',       // Hawaii
-
-    // Pacific & West Coast (Additional)
-    'San Jose, CA',       // Silicon Valley
-    'Sacramento, CA',     // California Capital Region
-    'Spokane, WA',        // Eastern Washington
-    'Eugene, OR',         // Western Oregon
-
-    // South Atlantic & Southeast (Additional)
-    'Tampa, FL',          // Gulf Coast Florida
-    'Orlando, FL',        // Central Florida
-    'Raleigh, NC',        // Research Triangle
-    'Columbia, SC',       // South Carolina Capital Region
-    'Richmond, VA',       // Central Virginia
-    'Virginia Beach, VA', // Hampton Roads
-
-    // Appalachia & Interior South
-    'Huntsville, AL',     // Northern Alabama
-    'Knoxville, TN',      // East Tennessee
-    'Chattanooga, TN',    // Southeastern Tennessee
-
-    // Texas (Additional)
+    'Fort Worth, TX',     // Texas
+    'Jacksonville, FL',   // Florida
     'Austin, TX',         // Central Texas
+    'San Jose, CA',       // Silicon Valley
+    'Dallas, TX',         // South Central: TX metro
+    'San Diego, CA',      // California
     'San Antonio, TX',    // South Central Texas
-    'El Paso, TX'         // West Texas
+    'Philadelphia, PA',   // Mid-Atlantic: PA, DE, NJ
+    'Phoenix, AZ',        // Southwest: AZ, NV
+    'Houston, TX',        // Texas Gulf: TX metro
+    'Chicago, IL',        // Midwest: IL, IN, WI, MI
+    'Los Angeles, CA',    // West Coast: CA metro
+    'New York, NY'        // Northeast: NY, NJ, PA, CT
 ];
 
 // Comprehensive job search query targeting management and leadership positions
 const JOB_SEARCH_TERMS = [
-    "Restaurant Manager OR General Manager OR Assistant General Manager OR Executive Chef OR Sous Chef OR Pastry Chef OR Kitchen Manager OR Food and Beverage Manager OR Culinary Director OR Director of Operations OR Restaurant Group Manager OR Banquet Manager OR Catering Manager OR Hospitality Manager OR Bar Manager OR Beverage Director OR Wine Director OR Sommelier OR Dining Room Manager OR Service Director OR Hotel General Manager OR Hotel Manager OR Resident Manager OR Front Office Manager OR Housekeeping Manager OR Concierge Manager OR Reservations Manager OR Revenue Manager OR Sales Manager OR Marketing Manager OR Event Manager OR Banquet Director OR Spa Manager OR Wellness Director OR Director of Housekeeping OR Director of Rooms OR Night Manager OR Hotel Operations Manager OR Estate Manager OR House Manager OR Private Chef OR Executive Housekeeper OR Butler OR Chauffeur OR Personal Assistant OR Nanny OR Household Manager OR Property Manager OR Private Security Manager OR Director of Residences OR Valet Manager OR Personal Concierge"
+    "Restaurant Manager OR General Manager OR Assistant General Manager OR Executive Chef OR Sous Chef OR Pastry Chef OR Kitchen Manager OR Food and Beverage Manager OR Culinary Director OR Director of Operations OR Restaurant Group Manager OR Banquet Manager OR Catering Manager OR Hospitality Manager OR Bar Manager OR Beverage Director OR Wine Director OR Sommelier OR Dining Room Manager OR Service Director OR Hotel General Manager OR Hotel Manager OR Resident Manager OR Front Office Manager OR Housekeeping Manager OR Concierge Manager OR Reservations Manager OR Revenue Manager OR Sales Manager OR Marketing Manager OR Event Manager OR Banquet Director OR Spa Manager OR Wellness Director OR Director of Housekeeping OR Director of Rooms OR Night Manager OR Hotel Operations Manager OR Estate Manager OR House Manager OR Private Chef OR Executive Housekeeper OR Butler OR Chauffeur OR Personal Assistant OR Nanny OR Household Manager OR Property Manager OR Private Security Manager OR Director of Residences OR Valet Manager OR Personal Concierge OR Private Club Manager OR Country Club Manager OR Club General Manager OR Golf Club Manager OR Tennis Club Manager OR Yacht Club Manager OR Athletic Club Manager OR Social Club Manager OR Membership Director OR Club Operations Manager OR Food and Beverage Director OR Golf Course Superintendent OR Pro Shop Manager OR Club Chef OR Clubhouse Manager"
 ];
 
 /**

@@ -722,18 +722,19 @@ try {
 
     // Define the top 60 largest US cities for targeted job searches
     const topCities = [
-        'New York NY', 'Los Angeles CA', 'Chicago IL', 'Houston TX', 'Phoenix AZ',
-        'Philadelphia PA', 'San Antonio TX', 'San Diego CA', 'Dallas TX', 'San Jose CA',
-        'Austin TX', 'Jacksonville FL', 'Fort Worth TX', 'Columbus OH', 'Indianapolis IN',
-        'Charlotte NC', 'San Francisco CA', 'Seattle WA', 'Nashville TN', 'Denver CO',
-        'Oklahoma City OK', 'El Paso TX', 'Boston MA', 'Portland OR', 'Las Vegas NV',
-        'Detroit MI', 'Memphis TN', 'Louisville KY', 'Baltimore MD', 'Milwaukee WI',
-        'Albuquerque NM', 'Tucson AZ', 'Fresno CA', 'Sacramento CA', 'Kansas City MO',
-        'Mesa AZ', 'Atlanta GA', 'Omaha NE', 'Colorado Springs CO', 'Raleigh NC',
-        'Long Beach CA', 'Virginia Beach VA', 'Miami FL', 'Oakland CA', 'Minneapolis MN',
-        'Tulsa OK', 'Bakersfield CA', 'Wichita KS', 'Arlington TX', 'Aurora CO',
-        'Tampa FL', 'New Orleans LA', 'Cleveland OH', 'Honolulu HI', 'Anaheim CA',
-        'Lexington KY', 'Stockton CA', 'Corpus Christi TX', 'Henderson NV', 'Riverside CA'
+        // Smallest to largest cities - so largest cities appear first in database
+        'Riverside CA', 'Henderson NV', 'Corpus Christi TX', 'Stockton CA', 'Lexington KY',
+        'Anaheim CA', 'Honolulu HI', 'Cleveland OH', 'New Orleans LA', 'Tampa FL',
+        'Aurora CO', 'Arlington TX', 'Wichita KS', 'Bakersfield CA', 'Tulsa OK',
+        'Minneapolis MN', 'Oakland CA', 'Miami FL', 'Virginia Beach VA', 'Long Beach CA',
+        'Raleigh NC', 'Colorado Springs CO', 'Omaha NE', 'Atlanta GA', 'Mesa AZ',
+        'Kansas City MO', 'Sacramento CA', 'Fresno CA', 'Tucson AZ', 'Albuquerque NM',
+        'Milwaukee WI', 'Baltimore MD', 'Louisville KY', 'Memphis TN', 'Detroit MI',
+        'Las Vegas NV', 'Portland OR', 'Boston MA', 'El Paso TX', 'Oklahoma City OK',
+        'Denver CO', 'Nashville TN', 'Seattle WA', 'San Francisco CA', 'Charlotte NC',
+        'Indianapolis IN', 'Columbus OH', 'Fort Worth TX', 'Jacksonville FL', 'Austin TX',
+        'San Jose CA', 'Dallas TX', 'San Diego CA', 'San Antonio TX', 'Philadelphia PA',
+        'Phoenix AZ', 'Houston TX', 'Chicago IL', 'Los Angeles CA', 'New York NY'
     ];
 
     // Define job types for direct Indeed scraping
@@ -748,7 +749,9 @@ try {
         'restaurant chef',
         'hotel executive chef',
         'hotel chef',
-        'hotel executive'
+        'hotel executive',
+        'private club manager',
+        'country club manager'
     ];
 
     // Extract input parameters with defaults for Indeed scraping
