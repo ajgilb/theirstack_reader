@@ -421,16 +421,52 @@ function filterUnwantedJobs(jobs) {
                 'white castle', 'jack in the box', 'carl jr', 'hardees', "hardee's",
                 'qdoba', 'moes southwest', 'panda express', 'orange julius',
 
-                // Hotel chains (excluded)
-                'embassy suites', 'embassy suites by hilton',
+                // Hotel chains (excluded) - exact matches to avoid false positives
+                'embassy suites', 'embassy suites by hilton', 'courtyard by marriott',
+                'springhill suites', 'fairfield inn & suites', 'towneplace suites',
+                'residence inn', 'moxy hotels', 'ac hotels', 'hampton by hilton',
+                'tru by hilton', 'home2 suites by hilton', 'homewood suites by hilton',
+                'hilton garden inn', 'holiday inn express', 'avid hotels',
+                'candlewood suites', 'staybridge suites', 'comfort inn', 'comfort suites',
+                'sleep inn', 'quality inn', 'clarion', 'mainstay suites',
+                'suburban studios', 'woodspring suites', 'econo lodge', 'rodeway inn',
+                'la quinta inn & suites', 'microtel inn & suites', 'days inn',
+                'super 8', 'travelodge', 'baymont inn & suites', 'howard johnson',
+                'americinn', 'best western', 'best western plus', 'surestay',
+                'surestay plus', 'surestay studio', 'executive residency',
+                'motel 6', 'studio 6', 'red roof inn', 'red roof plus+',
+                'hometowne studios by red roof', 'my place hotels', 'cobblestone inn & suites',
+                'boarders inn & suites', 'centerstone hotels', "america's best value inn",
+                'canadas best value inn', 'budget inn', 'scottish inns', 'knights inn',
+                'signature inn', 'americas best inns', 'greentree inn', 'stayable',
 
-                // Chains and excluded terms
-                'college', 'health care', 'healthcare', 'hospital', 'medical center',
+                // Senior living and healthcare
+                'brookdale senior living', 'atria senior living', 'sunrise senior living',
+                'benchmark senior living', 'holiday retirement', 'genesis healthcare',
+                'encompass health', 'amedisys', 'kindred healthcare', 'life care centers of america',
+                'trilogy health services', 'lcs', 'life care services', 'compassus',
+                'the ensign group', 'savaseniorcare', 'hcr manorcare', 'consulate health care',
+                'pruitthealth', 'avalon health care', 'covenant care', 'promedica',
+                'ascension', 'commonspirit health', 'hca healthcare', 'tenet healthcare',
+                'kaiser permanente', 'mayo clinic', 'cleveland clinic', 'mass general brigham',
+                'adventhealth', 'baylor scott & white health', 'uhs', 'universal health services',
+                'vibra healthcare', 'select medical', 'chi living communities',
+
+                // Education and institutional dining
+                'university', 'college', 'school district', 'k-12', 'elementary school',
+                'middle school', 'high school', 'public school', 'private school',
+                'charter school', 'academy', 'campus dining', 'student dining',
+                'dining services', 'faculty dining', 'education', 'higher education',
+                'cafeteria', 'resident hall', 'institutional dining', 'child nutrition',
+                'meal program', 'food service worker',
+
+                // General exclusions
+                'health care', 'healthcare', 'hospital', 'medical center',
                 'nursing home', 'assisted living', 'retirement home'
             ];
 
             if (excludedCompanies.some(excluded => companyLower.includes(excluded))) {
-                console.log(`🚫 Excluding fast food/excluded company: "${job.title}" at "${job.company}"`);
+                console.log(`🚫 Excluding excluded company: "${job.title}" at "${job.company}"`);
                 return false;
             }
         }
