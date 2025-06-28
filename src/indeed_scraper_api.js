@@ -185,12 +185,26 @@ function getDomainFromUrl(url) {
 }
 
 /**
- * Extract LinkedIn URL from company links
+ * Extract LinkedIn URL from company links or custom links
  */
-function extractLinkedInUrl(companyLinks) {
+function extractLinkedInUrl(companyLinks, customLinks) {
+    // First check customLinks array (this is where LinkedIn URLs are typically found)
+    if (customLinks && Array.isArray(customLinks)) {
+        for (const link of customLinks) {
+            if (link && link.name && link.url) {
+                const nameLower = link.name.toLowerCase();
+                if (nameLower.includes('linkedin') && link.url.includes('linkedin.com')) {
+                    console.log(`🔗 Found LinkedIn URL in customLinks: ${link.url}`);
+                    return link.url;
+                }
+            }
+        }
+    }
+
+    // Fallback to companyLinks if available
     if (!companyLinks || typeof companyLinks !== 'object') return '';
 
-    // Check various possible LinkedIn fields
+    // Check various possible LinkedIn fields in companyLinks
     const linkedinFields = [
         'linkedin',
         'linkedIn',
@@ -221,6 +235,24 @@ function extractLinkedInUrl(companyLinks) {
                 return link.url;
             }
         }
+    }
+
+    return '';
+}
+
+/**
+ * Format company size from revenue and employee count
+ */
+function formatCompanySize(companyRevenue, companyNumEmployees) {
+    const revenue = companyRevenue ? companyRevenue.trim() : '';
+    const employees = companyNumEmployees ? companyNumEmployees.trim() : '';
+
+    if (revenue && employees) {
+        return `${revenue} ${employees}`;
+    } else if (revenue) {
+        return revenue;
+    } else if (employees) {
+        return employees;
     }
 
     return '';
@@ -269,12 +301,15 @@ function formatSalaryString(salaryData) {
  * Normalize job data from Indeed Scraper API
  */
 function normalizeIndeedScraperJob(job, searchTerm, city) {
-    // Debug: Log company links structure for first job to understand available fields
+    // Debug: Log company links and custom links for first few jobs
     if (job.companyLinks) {
         console.log(`🔗 Company links available for "${job.companyName}":`, Object.keys(job.companyLinks));
-        if (Object.keys(job.companyLinks).length > 0) {
-            console.log(`🔗 Company links data:`, JSON.stringify(job.companyLinks, null, 2));
-        }
+    }
+    if (job.customLinks && Array.isArray(job.customLinks) && job.customLinks.length > 0) {
+        console.log(`🔗 Custom links for "${job.companyName}":`, job.customLinks.map(link => `${link.name}: ${link.url}`));
+    }
+    if (job.companyRevenue || job.companyNumEmployees) {
+        console.log(`🏢 Company size data for "${job.companyName}": Revenue="${job.companyRevenue}" Employees="${job.companyNumEmployees}"`);
     }
 
     return {
@@ -306,8 +341,8 @@ function normalizeIndeedScraperJob(job, searchTerm, city) {
         latitude: job.location?.latitude || null,
         longitude: job.location?.longitude || null,
         
-        // Company details
-        company_size: job.companyRevenue || job.companyNumEmployees || '',
+        // Company details - combine revenue and employee count
+        company_size: formatCompanySize(job.companyRevenue, job.companyNumEmployees),
 
         // Search metadata
         search_term: searchTerm,
@@ -323,7 +358,7 @@ function normalizeIndeedScraperJob(job, searchTerm, city) {
         company_url: job.companyUrl || job.companyLinks?.corporateWebsite || '',
         company_website: job.companyLinks?.corporateWebsite || '', // Direct from API
         company_domain: job.companyLinks?.corporateWebsite ? getDomainFromUrl(job.companyLinks.corporateWebsite) : '',
-        linkedin: extractLinkedInUrl(job.companyLinks) || '', // Extract LinkedIn URL from company links
+        linkedin: extractLinkedInUrl(job.companyLinks, job.customLinks) || '', // Extract LinkedIn URL from company/custom links
         remote: job.remote || job.isRemote || false
     };
 }
