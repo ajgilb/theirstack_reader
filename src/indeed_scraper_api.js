@@ -387,7 +387,16 @@ function filterUnwantedJobs(jobs) {
                 'housekeeper', 'room attendant', 'laundry attendant', 'houseman',
                 'housekeeping aide', 'maintenance technician', 'janitor', 'custodian',
                 'steward', 'kitchen porter', 'banquet server', 'event setup',
-                'security officer', 'security guard',
+                'security officer', 'security guard', 'housekeeping',
+
+                // Hotel Operations
+                'night auditor', 'night audit', 'front desk', 'clerk', 'room service',
+
+                // Security and Loss Prevention
+                'loss prevention',
+
+                // Healthcare/Behavioral
+                'behavioral health',
 
                 // Additional exclusions
                 'assistant', 'associate', 'crew member', 'team member', 'staff'
@@ -439,9 +448,16 @@ function filterUnwantedJobs(jobs) {
                 'boarders inn & suites', 'centerstone hotels', "america's best value inn",
                 'canadas best value inn', 'budget inn', 'scottish inns', 'knights inn',
                 'signature inn', 'americas best inns', 'greentree inn', 'stayable',
+                'renaissance hotels', 'sheraton',
 
                 // Major hotel/hospitality companies
                 'marriott international',
+
+                // Fast food/restaurant chains
+                'shake shack',
+
+                // Grocery/retail
+                "smith's food and drug",
 
                 // Senior living and healthcare
                 'brookdale senior living', 'atria senior living', 'sunrise senior living',

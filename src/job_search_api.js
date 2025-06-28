@@ -97,8 +97,15 @@ function shouldExcludeCompany(company) {
     }
 
     // Major hotel/hospitality companies to exclude
-    if (lowerCompany.includes('marriott international')) {
-        return { isExcluded: true, reason: 'excluded_major_hospitality', match: 'marriott international' };
+    const excludedMajorCompanies = [
+        'marriott international', 'renaissance hotels', 'sheraton',
+        'shake shack', "smith's food and drug"
+    ];
+
+    for (const company of excludedMajorCompanies) {
+        if (lowerCompany.includes(company)) {
+            return { isExcluded: true, reason: 'excluded_major_company', match: company };
+        }
     }
 
     // Check for senior living URLs
@@ -283,7 +290,16 @@ async function scrapeJobsWithAPI(options = {}) {
                         'housekeeper', 'room attendant', 'laundry attendant', 'houseman',
                         'housekeeping aide', 'maintenance technician', 'janitor', 'custodian',
                         'steward', 'kitchen porter', 'banquet server', 'event setup',
-                        'security officer', 'security guard',
+                        'security officer', 'security guard', 'housekeeping',
+
+                        // Hotel Operations
+                        'night auditor', 'night audit', 'front desk', 'clerk', 'room service',
+
+                        // Security and Loss Prevention
+                        'loss prevention',
+
+                        // Healthcare/Behavioral
+                        'behavioral health',
 
                         // Additional exclusions
                         'assistant', 'associate', 'crew member', 'team member', 'staff'
