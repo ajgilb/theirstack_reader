@@ -85,16 +85,33 @@ async function enhanceJobsWithCompanyWebsites(jobs) {
             // Check if we already have company website from API
             let websiteUrl = job.company_website || job.company_url || null;
 
-            // Only use SearchAPI if we don't have a website and have a proper company name
-            if (!websiteUrl && job.company &&
+            // Check if the website URL is an Indeed company page (not useful)
+            const isIndeedCompanyPage = websiteUrl && websiteUrl.includes('indeed.com/cmp/');
+
+            // Use SearchAPI if we don't have a website, have an Indeed company page, or have a proper company name
+            if ((!websiteUrl || isIndeedCompanyPage) && job.company &&
                 job.company !== 'Company not specified' &&
                 job.company !== 'Unknown' &&
                 job.company !== 'Not specified' &&
                 job.company.length > 3) {
+
+                if (isIndeedCompanyPage) {
+                    console.log(`🔄 Indeed company page detected, searching for real website: ${websiteUrl}`);
+                }
+
                 // Get company website URL using SearchAPI
-                websiteUrl = await getWebsiteUrlFromSearchAPI(job.company);
-                console.log(`🔍 SearchAPI lookup for "${job.company}": ${websiteUrl || 'not found'}`);
-            } else if (websiteUrl) {
+                const searchApiUrl = await getWebsiteUrlFromSearchAPI(job.company);
+                if (searchApiUrl) {
+                    websiteUrl = searchApiUrl;
+                    console.log(`🔍 SearchAPI found website for "${job.company}": ${websiteUrl}`);
+                } else {
+                    console.log(`🔍 SearchAPI lookup for "${job.company}": not found`);
+                    // Keep the Indeed URL if SearchAPI didn't find anything
+                    if (!isIndeedCompanyPage) {
+                        websiteUrl = null;
+                    }
+                }
+            } else if (websiteUrl && !isIndeedCompanyPage) {
                 console.log(`✅ Using company website from API: ${websiteUrl}`);
             } else {
                 console.log(`⏭️  Skipping URL lookup for job with no company: "${job.title}"`);
