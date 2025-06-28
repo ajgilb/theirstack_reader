@@ -364,6 +364,15 @@ function filterUnwantedJobs(jobs) {
             }
         }
 
+        // Filter out hourly salary positions
+        if (job.salary) {
+            const salaryLower = job.salary.toLowerCase();
+            if (salaryLower.includes('hour') || salaryLower.includes('/hr') || salaryLower.includes('an hour')) {
+                console.log(`🚫 Excluding hourly salary job: "${job.title}" at "${job.company}" - "${job.salary}"`);
+                return false;
+            }
+        }
+
         // Filter out fast food and excluded companies
         if (job.company) {
             const companyLower = job.company.toLowerCase();
@@ -376,6 +385,9 @@ function filterUnwantedJobs(jobs) {
                 'chick-fil-a', 'popeyes', 'dunkin', "dunkin'", 'starbucks', 'tim hortons',
                 'white castle', 'jack in the box', 'carl jr', 'hardees', "hardee's",
                 'qdoba', 'moes southwest', 'panda express', 'orange julius',
+
+                // Hotel chains (excluded)
+                'embassy suites', 'embassy suites by hilton',
 
                 // Chains and excluded terms
                 'college', 'health care', 'healthcare', 'hospital', 'medical center',

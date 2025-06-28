@@ -33,6 +33,17 @@ function shouldExcludeCompany(company) {
         }
     }
 
+    // Hotel chains to exclude
+    const excludedHotelChains = [
+        'embassy suites', 'embassy suites by hilton'
+    ];
+
+    for (const chain of excludedHotelChains) {
+        if (lowerCompany.includes(chain)) {
+            return { isExcluded: true, reason: 'excluded_hotel_chain', match: chain };
+        }
+    }
+
     // Exclude companies with 'College' and 'Health Care' in the name
     if (lowerCompany.includes('college') || lowerCompany.includes('health care')) {
         return { isExcluded: true, reason: 'excluded_industry' };
@@ -224,6 +235,15 @@ async function scrapeJobsWithAPI(options = {}) {
                     console.log(`🚫 Excluding job with salary-like company name: "${job.title}" at "${job.company}"`);
                     excludedBySalaryCompanyName++;
                     return false;
+                }
+
+                // Filter out hourly salary positions
+                if (job.salary) {
+                    const salaryLower = job.salary.toLowerCase();
+                    if (salaryLower.includes('hour') || salaryLower.includes('/hr') || salaryLower.includes('an hour')) {
+                        console.log(`🚫 Excluding hourly salary job: "${job.title}" at "${job.company}" - "${job.salary}"`);
+                        return false;
+                    }
                 }
 
                 // Check if company should be excluded (fast food, chains, recruiters)
