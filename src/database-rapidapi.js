@@ -228,8 +228,8 @@ async function insertJobsIntoDatabase(jobs, jobsTable = 'rapidapi_jobs', contact
                     INSERT INTO ${jobsTable} (
                         title, company, parent_company, location, salary, contact_name,
                         contact_title, email, url, job_details, linkedin, domain,
-                        company_size, date_added, last_updated, parent_url
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+                        company_size, date_added, last_updated, parent_url, job_board_date_added
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
                     RETURNING id
                 `;
                 const insertResult = await client.query(insertQuery, [
@@ -237,7 +237,8 @@ async function insertJobsIntoDatabase(jobs, jobsTable = 'rapidapi_jobs', contact
                     salaryStr, contactName, contactTitle, email,
                     job.url || job.apply_link, job.job_details || job.description,
                     job.linkedin || '', job.domain || job.company_domain || '',
-                    job.company_size || '', now, now, job.parent_url || ''
+                    job.company_size || '', now, now, job.parent_url || '',
+                    job.job_board_date_added || null
                 ]);
                 jobId = insertResult.rows[0].id;
                 newJobs.push(job);

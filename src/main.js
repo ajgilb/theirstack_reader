@@ -139,6 +139,7 @@ async function enhanceJobsWithCompanyWebsites(jobs) {
                 job_type: job.jobType || '',
                 schedule: job.schedule || '',
                 experience_level: job.experienceLevel || '',
+                job_board_date_added: job.datePublished || job.postedDate || null,
 
                 // Salary parsing (if available)
                 salary_min: null,
