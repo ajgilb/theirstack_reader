@@ -96,6 +96,19 @@ function shouldExcludeCompany(company) {
         }
     }
 
+    // Major hotel/hospitality companies to exclude
+    if (lowerCompany.includes('marriott international')) {
+        return { isExcluded: true, reason: 'excluded_major_hospitality', match: 'marriott international' };
+    }
+
+    // Check for senior living URLs
+    if (job.company_website || job.company_url || job.parent_url) {
+        const websiteUrl = (job.company_website || job.company_url || job.parent_url || '').toLowerCase();
+        if (websiteUrl.includes('seniorliving')) {
+            return { isExcluded: true, reason: 'excluded_senior_living_url', match: websiteUrl };
+        }
+    }
+
     // Exclude companies with 'College' and 'Health Care' in the name
     if (lowerCompany.includes('college') || lowerCompany.includes('health care')) {
         return { isExcluded: true, reason: 'excluded_industry' };

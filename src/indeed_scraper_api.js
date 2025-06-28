@@ -440,6 +440,9 @@ function filterUnwantedJobs(jobs) {
                 'canadas best value inn', 'budget inn', 'scottish inns', 'knights inn',
                 'signature inn', 'americas best inns', 'greentree inn', 'stayable',
 
+                // Major hotel/hospitality companies
+                'marriott international',
+
                 // Senior living and healthcare
                 'brookdale senior living', 'atria senior living', 'sunrise senior living',
                 'benchmark senior living', 'holiday retirement', 'genesis healthcare',
@@ -467,6 +470,15 @@ function filterUnwantedJobs(jobs) {
 
             if (excludedCompanies.some(excluded => companyLower.includes(excluded))) {
                 console.log(`🚫 Excluding excluded company: "${job.title}" at "${job.company}"`);
+                return false;
+            }
+        }
+
+        // Filter out jobs with senior living URLs
+        if (job.company_website || job.company_url || job.parent_url) {
+            const websiteUrl = (job.company_website || job.company_url || job.parent_url || '').toLowerCase();
+            if (websiteUrl.includes('seniorliving')) {
+                console.log(`🚫 Excluding senior living URL: "${job.title}" at "${job.company}" - URL: ${websiteUrl}`);
                 return false;
             }
         }
