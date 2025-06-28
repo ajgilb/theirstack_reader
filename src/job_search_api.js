@@ -98,8 +98,9 @@ function shouldExcludeCompany(company) {
 
     // Major hotel/hospitality companies to exclude
     const excludedMajorCompanies = [
-        'marriott international', 'renaissance hotels', 'sheraton',
-        'shake shack', "smith's food and drug"
+        'marriott international', 'renaissance hotels', 'sheraton', 'hilton',
+        'mgm resorts international', 'shake shack', "smith's food and drug",
+        'sla management', 'senior living'
     ];
 
     for (const company of excludedMajorCompanies) {
@@ -294,6 +295,13 @@ async function scrapeJobsWithAPI(options = {}) {
 
                         // Hotel Operations
                         'night auditor', 'night audit', 'front desk', 'clerk', 'room service',
+                        'front office', 'greeter', 'hilton hotel',
+
+                        // Kitchen/Food Prep
+                        'prep',
+
+                        // Sales/Customer Service
+                        'agent',
 
                         // Security and Loss Prevention
                         'loss prevention',

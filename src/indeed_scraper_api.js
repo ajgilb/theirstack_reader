@@ -391,6 +391,13 @@ function filterUnwantedJobs(jobs) {
 
                 // Hotel Operations
                 'night auditor', 'night audit', 'front desk', 'clerk', 'room service',
+                'front office', 'greeter', 'hilton hotel',
+
+                // Kitchen/Food Prep
+                'prep',
+
+                // Sales/Customer Service
+                'agent',
 
                 // Security and Loss Prevention
                 'loss prevention',
@@ -451,13 +458,19 @@ function filterUnwantedJobs(jobs) {
                 'renaissance hotels', 'sheraton',
 
                 // Major hotel/hospitality companies
-                'marriott international',
+                'marriott international', 'hilton', 'mgm resorts international',
 
                 // Fast food/restaurant chains
                 'shake shack',
 
                 // Grocery/retail
                 "smith's food and drug",
+
+                // Business services
+                'sla management',
+
+                // Senior living (partial match)
+                'senior living',
 
                 // Senior living and healthcare
                 'brookdale senior living', 'atria senior living', 'sunrise senior living',
