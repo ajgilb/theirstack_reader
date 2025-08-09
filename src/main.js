@@ -776,13 +776,11 @@ try {
         jobAgeDays: inputJobAgeDays = 14
     } = input;
     
-    // Parse and map jobAgeDays from input (string) to supported values
-    const parsedJobAgeDays = typeof inputJobAgeDays === 'string' ? parseInt(inputJobAgeDays, 10) : inputJobAgeDays;
-    const supportedJobAges = [1, 3, 7, 14];
-    const mappedJobAgeDays = supportedJobAges.reduce((prev, curr) =>
-        Math.abs(curr - parsedJobAgeDays) < Math.abs(prev - parsedJobAgeDays) ? curr : prev
-    );
-    console.log(`📅 Using job age window: ${mappedJobAgeDays} days`);
+    // EASY-TO-CHANGE DEFAULT: job age window in days for API filtering
+    // Change this single constant if you need a different default window (must be one of 1, 3, 7, 14)
+    const JOB_AGE_DAYS_DEFAULT = 1;
+    const mappedJobAgeDays = JOB_AGE_DAYS_DEFAULT;
+    console.log(`📅 Using job age window (defaulted in code): ${mappedJobAgeDays} days`);
 
     // Update the global isTestMode variable
     isTestMode = testMode;
