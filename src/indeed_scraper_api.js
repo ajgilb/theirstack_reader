@@ -602,7 +602,7 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
             try {
                 const requestBody = {
                     scraper: {
-                        maxRows: 100, // Maximum jobs per request
+                        maxRows: 50, // Adjusted to comply with Basic/Pro plan limits
                         query: searchTerm,
                         location: city,
                         jobType: 'fulltime',
