@@ -534,13 +534,15 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
     // Map jobAgeDays to API-supported values: 1, 3, 7, 14 (cap higher selections to 14)
     const validJobAgeDays = [1, 3, 7, 14];
     const mapToSupportedJobAgeDays = (value) => {
-        if (typeof value !== 'number' || Number.isNaN(value)) return 7;
-        if (value >= 14) return 14;
+        // Accept both string and number from input UI
+        const numeric = typeof value === 'string' ? parseInt(value, 10) : value;
+        if (typeof numeric !== 'number' || Number.isNaN(numeric)) return 7;
+        if (numeric >= 14) return 14;
         // Choose the nearest supported value
         let nearest = validJobAgeDays[0];
-        let smallestDiff = Math.abs(value - nearest);
+        let smallestDiff = Math.abs(numeric - nearest);
         for (const v of validJobAgeDays) {
-            const diff = Math.abs(value - v);
+            const diff = Math.abs(numeric - v);
             if (diff < smallestDiff) {
                 smallestDiff = diff;
                 nearest = v;
