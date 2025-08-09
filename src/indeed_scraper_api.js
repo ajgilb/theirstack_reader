@@ -110,14 +110,21 @@ async function makeIndeedScraperRequestWithRetry(requestBody, city, maxRetries =
  */
 function makeIndeedScraperRequest(requestBody) {
     return new Promise((resolve, reject) => {
-        // Resolve API key from multiple env var names for robustness
+        // Resolve API key from env. On Apify, require env and never fallback.
+        const isApifyEnv = !!process.env.APIFY_TOKEN || process.env.APIFY_IS_AT_HOME === '1';
         const envKeyCandidates = [
             process.env.RAPIDAPI_KEY,
             process.env['X_RAPIDAPI_KEY'],
             process.env['X_RAPIDAPI-KEY'],
             process.env['X_RAPIDAPI_Key']
         ].filter(Boolean);
-        const resolvedApiKey = envKeyCandidates[0] || '26f8494ae3msh6105ec8e9f487c4p1e4693jsndc74e2a6561c';
+        const resolvedApiKey = isApifyEnv
+            ? (envKeyCandidates[0] || '')
+            : (envKeyCandidates[0] || '26f8494ae3msh6105ec8e9f487c4p1e4693jsndc74e2a6561c');
+        if (isApifyEnv && !resolvedApiKey) {
+            console.error('❌ RAPIDAPI_KEY not set in Apify environment. Please set env var RAPIDAPI_KEY (or X_RAPIDAPI_KEY).');
+            return reject(new Error('Missing RAPIDAPI_KEY in Apify environment'));
+        }
         try {
             const masked = resolvedApiKey.length > 8
                 ? `${resolvedApiKey.slice(0, 4)}…${resolvedApiKey.slice(-4)}`
