@@ -771,12 +771,17 @@ try {
         testMode = false,
         useProxy = true,
         maxConcurrency = 2,
-        maxPagesPerSearch = 10 // Maximum pages to fetch per search term for Job Search API
+        maxPagesPerSearch = 10, // Maximum pages to fetch per search term for Job Search API
+        jobAgeDays: inputJobAgeDays = '14'
     } = input;
-
-    // Force jobAgeDays to 14 (API maximum window used here)
-    const forcedJobAgeDays = 14;
-    console.log(`📅 Forcing job age window to ${forcedJobAgeDays} days due to UI restriction`);
+    
+    // Parse and map jobAgeDays from input (string) to supported values
+    const parsedJobAgeDays = parseInt(inputJobAgeDays, 10);
+    const supportedJobAges = [1, 3, 7, 14];
+    const mappedJobAgeDays = supportedJobAges.reduce((prev, curr) =>
+        Math.abs(curr - parsedJobAgeDays) < Math.abs(prev - parsedJobAgeDays) ? curr : prev
+    );
+    console.log(`📅 Using job age window: ${mappedJobAgeDays} days`);
 
     // Update the global isTestMode variable
     isTestMode = testMode;
@@ -966,7 +971,7 @@ try {
             minSalary: salaryMin,
             maxCities: testMode ? 2 : 67, // 2 cities in test mode, all 67 cities in production
             searchTerms: ['restaurant', 'hotel'], // Note: actual search uses comprehensive OR query
-            jobAgeDays: forcedJobAgeDays
+            jobAgeDays: mappedJobAgeDays
         });
     } else {
         console.log(`🎯 Starting Job Search API for multiple job boards`);
