@@ -772,11 +772,11 @@ try {
         useProxy = true,
         maxConcurrency = 2,
         maxPagesPerSearch = 10, // Maximum pages to fetch per search term for Job Search API
-        jobAgeDays: inputJobAgeDays = '14'
+        jobAgeDays: inputJobAgeDays = 14
     } = input;
     
     // Parse and map jobAgeDays from input (string) to supported values
-    const parsedJobAgeDays = parseInt(inputJobAgeDays, 10);
+    const parsedJobAgeDays = typeof inputJobAgeDays === 'string' ? parseInt(inputJobAgeDays, 10) : inputJobAgeDays;
     const supportedJobAges = [1, 3, 7, 14];
     const mappedJobAgeDays = supportedJobAges.reduce((prev, curr) =>
         Math.abs(curr - parsedJobAgeDays) < Math.abs(prev - parsedJobAgeDays) ? curr : prev
