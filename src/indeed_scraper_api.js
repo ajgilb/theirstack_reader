@@ -110,13 +110,29 @@ async function makeIndeedScraperRequestWithRetry(requestBody, city, maxRetries =
  */
 function makeIndeedScraperRequest(requestBody) {
     return new Promise((resolve, reject) => {
+        // Resolve API key from multiple env var names for robustness
+        const envKeyCandidates = [
+            process.env.RAPIDAPI_KEY,
+            process.env['X_RAPIDAPI_KEY'],
+            process.env['X_RAPIDAPI-KEY'],
+            process.env['X_RAPIDAPI_Key']
+        ].filter(Boolean);
+        const resolvedApiKey = envKeyCandidates[0] || '26f8494ae3msh6105ec8e9f487c4p1e4693jsndc74e2a6561c';
+        try {
+            const masked = resolvedApiKey.length > 8
+                ? `${resolvedApiKey.slice(0, 4)}…${resolvedApiKey.slice(-4)}`
+                : 'SHORT_KEY';
+            console.log(`🔑 Using RapidAPI key: ${masked}`);
+        } catch (_) {
+            // non-fatal
+        }
         const options = {
             method: 'POST',
             hostname: 'indeed-scraper-api.p.rapidapi.com',
             port: null,
             path: '/api/job',
             headers: {
-                'x-rapidapi-key': process.env.RAPIDAPI_KEY || '26f8494ae3msh6105ec8e9f487c4p1e4693jsndc74e2a6561c',
+                'x-rapidapi-key': resolvedApiKey,
                 'x-rapidapi-host': 'indeed-scraper-api.p.rapidapi.com',
                 'Content-Type': 'application/json'
             }
@@ -135,6 +151,7 @@ function makeIndeedScraperRequest(requestBody) {
                     const data = JSON.parse(responseBody.toString());
                     resolve({ status: res.statusCode, data });
                 } catch (error) {
+                    // Return plain text body when not JSON
                     resolve({ status: res.statusCode, data: responseBody.toString() });
                 }
             });
