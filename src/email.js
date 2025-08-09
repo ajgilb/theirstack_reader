@@ -129,7 +129,8 @@ function generateEmailHtml(stats, testMode = false) {
         newJobs,
         skippedDuplicateJobs,
         skippedExcludedJobs,
-        queries
+        queries,
+        errors = []
     } = stats;
 
     // Format completion time
@@ -144,6 +145,16 @@ function generateEmailHtml(stats, testMode = false) {
             Your Indeed RapidAPI Job Scraper completed at ${completionTime}
         </p>
         <p style="color: #000000;">Duration: ${durationMinutes} minutes (${durationSeconds} seconds)</p>
+
+        ${errors.length > 0 ? `
+        <div style="background-color: #ffe6e6; padding: 12px; border: 1px solid #cc0000; margin: 15px 0;">
+            <h2 style="margin: 0 0 8px 0; color: #cc0000;">Critical Errors to Report (${errors.length})</h2>
+            <ul style="color: #000000; margin: 0;">
+                ${errors.slice(0, 10).map(e => `<li>[${e.status}] ${e.message || 'Unknown error'}${e.city ? ` — ${e.city}` : ''}${e.searchTerm ? ` — ${e.searchTerm}` : ''}</li>`).join('')}
+            </ul>
+            ${errors.length > 10 ? `<p style="margin-top:8px;"><i>...and ${errors.length - 10} more</i></p>` : ''}
+        </div>
+        ` : ''}
 
         <h2>Summary</h2>
         <ul style="color: #000000;">
@@ -217,7 +228,8 @@ async function sendCompletionEmail(stats, testMode = false) {
 
     // Format date for subject
     const today = formatDatePST(new Date()).split(',')[0];
-    const subject = `${EMAIL_SUBJECT_PREFIX} ${today}${testMode ? ' [TEST MODE]' : ''}`;
+    const hasCritical = Array.isArray(stats.errors) && stats.errors.length > 0;
+    const subject = `${hasCritical ? 'CRITICAL: ' : ''}${EMAIL_SUBJECT_PREFIX} ${today}${testMode ? ' [TEST MODE]' : ''}`;
     console.log(`Email subject: "${subject}"`);
 
     // Generate email content

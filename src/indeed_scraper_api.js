@@ -589,6 +589,7 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
     console.log(`⏱️  Estimated time: ${Math.ceil(maxCities * 15 / 60)} minutes (15 sec between requests for rate limiting)`);
     
     const allJobs = [];
+    const collectedErrors = [];
     const citiesToSearch = MAJOR_CITIES.slice(0, maxCities);
     
     for (let cityIndex = 0; cityIndex < citiesToSearch.length; cityIndex++) {
@@ -636,13 +637,17 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
                     
                 } else {
                     console.log(`  ❌ Request failed: ${result.status}`);
-                    if (result.data?.message) {
-                        console.log(`  📄 Error: ${result.data.message}`);
+                    const message = result?.data?.message || (typeof result?.data === 'string' ? result.data : 'Unknown error');
+                    if (message) {
+                        console.log(`  📄 Error: ${message}`);
                     }
+                    // Collect fatal/important errors for email reporting
+                    collectedErrors.push({ city, searchTerm, status: result.status, message });
                 }
                 
             } catch (error) {
                 console.log(`  ❌ Error searching "${searchTerm}" in ${city}: ${error.message}`);
+                collectedErrors.push({ city, searchTerm, status: 'error', message: error.message });
             }
             
             // Rate limiting: wait between requests (5 requests per minute = 12 seconds between requests)
@@ -690,7 +695,7 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
     const jobsWithEmails = uniqueJobs.filter(job => job.emails && job.emails.length > 0);
     console.log(`  📧 Jobs with email contacts: ${jobsWithEmails.length}`);
     
-    return uniqueJobs;
+    return { jobs: uniqueJobs, errors: collectedErrors };
 }
 
 export default {

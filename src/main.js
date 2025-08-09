@@ -697,7 +697,7 @@ let isTestMode = false;
 // Initialize the Apify Actor
 await Actor.init();
 
-// Track job statistics for email reporting
+    // Track job statistics for email reporting
 const jobStats = {
     startTime: new Date(),
     endTime: null,
@@ -707,7 +707,8 @@ const jobStats = {
     newJobs: [],
     skippedDuplicateJobs: [],
     skippedExcludedJobs: [],
-    queries: []
+        queries: [],
+        errors: []
 };
 
 try {
@@ -966,13 +967,16 @@ try {
         const { scrapeJobsWithIndeedScraper } = await import('./indeed_scraper_api.js');
 
         // Scrape jobs using Indeed Scraper API (city-based with 100-mile radius)
-        scrapedJobs = await scrapeJobsWithIndeedScraper({
+        const scrapeResult = await scrapeJobsWithIndeedScraper({
             testMode,
             minSalary: salaryMin,
             maxCities: testMode ? 2 : 67, // 2 cities in test mode, all 67 cities in production
             searchTerms: ['restaurant', 'hotel'], // Note: actual search uses comprehensive OR query
             jobAgeDays: mappedJobAgeDays
         });
+        scrapedJobs = scrapeResult.jobs;
+        // Attach errors to jobStats for email reporting
+        jobStats.errors = scrapeResult.errors || [];
     } else {
         console.log(`🎯 Starting Job Search API for multiple job boards`);
 
