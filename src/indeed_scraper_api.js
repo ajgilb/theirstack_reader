@@ -531,13 +531,27 @@ export async function scrapeJobsWithIndeedScraper(options = {}) {
         jobAgeDays = 1 // Default to 1 day for daily runs, can be set to 7 for initial runs
     } = options;
     
-    // Validate jobAgeDays - API only accepts 1, 3, 7, 14
+    // Map jobAgeDays to API-supported values: 1, 3, 7, 14 (cap higher selections to 14)
     const validJobAgeDays = [1, 3, 7, 14];
-    const validatedJobAgeDays = validJobAgeDays.includes(jobAgeDays) ? jobAgeDays : 7;
-
+    const mapToSupportedJobAgeDays = (value) => {
+        if (typeof value !== 'number' || Number.isNaN(value)) return 7;
+        if (value >= 14) return 14;
+        // Choose the nearest supported value
+        let nearest = validJobAgeDays[0];
+        let smallestDiff = Math.abs(value - nearest);
+        for (const v of validJobAgeDays) {
+            const diff = Math.abs(value - v);
+            if (diff < smallestDiff) {
+                smallestDiff = diff;
+                nearest = v;
+            }
+        }
+        return nearest;
+    };
+    const validatedJobAgeDays = mapToSupportedJobAgeDays(jobAgeDays);
     if (validatedJobAgeDays !== jobAgeDays) {
-        console.log(`⚠️  Invalid jobAgeDays value: ${jobAgeDays}. Using ${validatedJobAgeDays} instead.`);
-        console.log(`📋 Valid values are: ${validJobAgeDays.join(', ')}`);
+        console.log(`⚠️  Mapping jobAgeDays ${jobAgeDays} → ${validatedJobAgeDays} due to API limits.`);
+        console.log(`📋 Supported values: ${validJobAgeDays.join(', ')}`);
     }
 
     console.log('🚀 Starting Indeed Scraper API job collection...');
