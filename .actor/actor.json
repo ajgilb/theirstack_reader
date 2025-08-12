@@ -1,145 +1,17 @@
 {
   "actorSpecification": 1,
-  "name": "indeed-job-scraper",
-  "title": "Indeed Direct Job Scraper",
-  "description": "Direct Indeed scraper that bypasses APIs to scrape jobs directly from Indeed.com, then enhances with company website data via SearchAPI",
+  "name": "their-stack-reader",
+  "title": "TheirStack Job Reader",
+  "description": "Fetch jobs from TheirStack API with advanced filtering and push to Supabase; optional engines available for backward compatibility.",
   "version": "0.2",
   "buildTag": "latest",
   "username": "madhosp",
   "input": {
-    "title": "Input schema for Indeed Direct Job Scraper",
-    "type": "object",
-    "schemaVersion": 1,
-    "properties": {
-      "jobTypes": {
-        "title": "Job Types",
-        "type": "array",
-        "description": "List of job types to search for on Indeed",
-        "editor": "stringList",
-        "default": [
-          "restaurant manager",
-          "executive chef",
-          "sous chef",
-          "kitchen manager",
-          "culinary director",
-          "food service manager",
-          "private chef",
-          "restaurant chef"
-        ]
-      },
-      "location": {
-        "title": "Location",
-        "type": "string",
-        "description": "Location to search for jobs (e.g., 'United States', 'New York')",
-        "editor": "textfield",
-        "default": "United States"
-      },
-      "salaryMin": {
-        "title": "Minimum Salary",
-        "type": "integer",
-        "description": "Minimum salary filter for job searches",
-        "default": 55000,
-        "minimum": 30000,
-        "maximum": 200000
-      },
-      "maxPages": {
-        "title": "Max Pages Per Job Type",
-        "type": "integer",
-        "description": "Maximum number of pages to scrape per job type",
-        "default": 5,
-        "minimum": 1,
-        "maximum": 10
-      },
-      "maxConcurrency": {
-        "title": "Max Concurrency",
-        "type": "integer",
-        "description": "Maximum number of concurrent requests (keep low to avoid blocking)",
-        "default": 2,
-        "minimum": 1,
-        "maximum": 5
-      },
-      "useProxy": {
-        "title": "Use Proxy",
-        "type": "boolean",
-        "description": "Whether to use residential proxies for anti-bot protection",
-        "default": true
-      },
-      "saveToDataset": {
-        "title": "Save to Dataset",
-        "type": "boolean",
-        "description": "Whether to save results to Apify dataset",
-        "default": true
-      },
-      "pushToDatabase": {
-        "title": "Push to Database",
-        "type": "boolean",
-        "description": "Whether to push results to external database",
-        "default": false
-      },
-      "databaseUrl": {
-        "title": "Database URL",
-        "type": "string",
-        "description": "URL of the external database (if pushing to database)",
-        "default": "",
-        "editor": "textfield"
-      },
-      "databaseTable": {
-        "title": "Database Table",
-        "type": "string",
-        "description": "Name of the database table to insert jobs into",
-        "editor": "textfield",
-        "default": "rapidapi_jobs"
-      },
-      "deduplicateJobs": {
-        "title": "Deduplicate Jobs",
-        "type": "boolean",
-        "description": "Whether to check for and skip duplicate jobs when pushing to database",
-        "default": true
-      },
-
-      "excludeFastFood": {
-        "title": "Exclude Fast Food",
-        "type": "boolean",
-        "description": "Whether to exclude fast food restaurants",
-        "default": true
-      },
-      "excludeRecruiters": {
-        "title": "Exclude Recruiters",
-        "type": "boolean",
-        "description": "Whether to exclude recruiting agencies",
-        "default": true
-      },
-      "testMode": {
-        "title": "Test Mode",
-        "type": "boolean",
-        "description": "Run in test mode (process fewer jobs and only send email to primary recipient)",
-        "default": false
-      },
-      "visualMonitoring": {
-        "title": "Visual Monitoring",
-        "type": "boolean",
-        "description": "Enable headful browser mode (visible locally, better anti-detection on cloud)",
-        "default": false
-      },
-      "jobAgeDays": {
-        "title": "Job Age (Days)",
-        "type": "integer",
-        "description": "Maximum age of job postings to include (enter 1–30; internally mapped to supported values).",
-        "default": 14,
-        "minimum": 1,
-        "maximum": 30
-      }
-    },
-    "required": ["jobTypes"]
+    "useStandaloneInputSchema": true
   },
   "defaultRunOptions": {
     "memoryMbytes": 2048,
     "timeoutSecs": 7200
   },
-  "environmentVariables": {
-    "SEARCH_API_KEY": "Bq5Ymf24RJQb3iW8EQkCUN1M",
-    "RESEND_API_KEY": "re_16MVG13Y_DD9Scs4cZX59X1VCPHHGbiGx",
-    "DATABASE_URL": "postgresql://google_scraper.mbaqiwhkngfxxmlkionj:Relham12?@52.8.172.168:6543/postgres",
-    "X-RapidAPI-Key": "26f8494ae3msh6105ec8e9f487c4p1e4693jsndc74e2a6561c"
-  }
+  "environmentVariables": {}
 }

@@ -3,6 +3,14 @@
   "type": "object",
   "schemaVersion": 1,
   "properties": {
+    "searchEngine": {
+      "title": "Search Engine",
+      "type": "string",
+      "description": "Select data source: TheirStack API (default), Indeed Scraper, or Job Search API",
+      "default": "theirstack",
+      "editor": "select",
+      "enum": ["theirstack", "indeed_scraper", "job_search"]
+    },
     "jobTypes": {
       "title": "Job Types",
       "type": "array",

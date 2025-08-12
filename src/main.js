@@ -63,7 +63,7 @@ async function fetchExistingJobsFromTable(tableName) {
 }
 
 // Log startup message
-console.log('🚀 Indeed Direct Scraper starting up...');
+console.log('🚀 TheirStack Job Reader starting up...');
 
 /**
  * Enhance Indeed jobs with company website URLs using SearchAPI
@@ -712,7 +712,7 @@ const jobStats = {
 };
 
 try {
-    console.log('Starting Indeed Job Scraper...');
+    console.log('Starting Job Reader...');
 
     // Get input from the user
     const input = await Actor.getInput() || {};
@@ -800,7 +800,7 @@ try {
     // Number of jobs to process in test mode (only used when testMode is true)
     const testModeLimit = 5;
 
-    console.log('Indeed Direct Scraper configuration:');
+    console.log('Job Reader configuration:');
     console.log(`- Job Types: ${jobTypes.join(', ')}`);
     console.log(`- Location: ${location}`);
     console.log(`- Minimum Salary: $${salaryMin.toLocaleString()}`);
@@ -948,40 +948,42 @@ try {
     // Direct Indeed scraping for job types
     let jobs = [];
 
-    console.log(`🚀 Starting Indeed direct scraping for job types: ${jobTypes.join(', ')}`);
+    console.log(`🚀 Starting job collection for job types: ${jobTypes.join(', ')}`);
     console.log(`📍 Location: ${location}`);
     console.log(`💰 Minimum salary: $${salaryMin.toLocaleString()}`);
     console.log(`📄 Max pages per job type: ${maxPages}`);
 
-    // Choose API method based on environment variable or default to Indeed Scraper
-    const useIndeedScraper = process.env.USE_INDEED_SCRAPER !== 'false'; // Default to true
-
+    // Choose engine: theirstack | indeed_scraper | job_search
+    const searchEngine = (input.searchEngine || process.env.SEARCH_ENGINE || 'theirstack').toLowerCase();
     let scrapedJobs;
 
-    if (useIndeedScraper) {
+    if (searchEngine === 'theirstack') {
+        console.log('🎯 Using TheirStack API');
+        const { searchTheirStackJobs } = await import('./theirstack_api.js');
+        scrapedJobs = await searchTheirStackJobs({
+            jobTypes: jobTypes,
+            location,
+            jobAgeDays: mappedJobAgeDays,
+            minSalary: salaryMin,
+            maxPages,
+            testMode,
+            excludeFastFood
+        });
+    } else if (searchEngine === 'indeed_scraper') {
         console.log(`🎯 Starting Indeed Scraper API for comprehensive city-based job collection`);
-
-        // Import the Indeed Scraper API function
         const { scrapeJobsWithIndeedScraper } = await import('./indeed_scraper_api.js');
-
-        // Scrape jobs using Indeed Scraper API (city-based with 100-mile radius)
         const scrapeResult = await scrapeJobsWithIndeedScraper({
             testMode,
             minSalary: salaryMin,
-            maxCities: testMode ? 2 : 67, // 2 cities in test mode, all 67 cities in production
-            searchTerms: ['restaurant', 'hotel'], // Note: actual search uses comprehensive OR query
+            maxCities: testMode ? 2 : 67,
+            searchTerms: ['restaurant', 'hotel'],
             jobAgeDays: mappedJobAgeDays
         });
         scrapedJobs = scrapeResult.jobs;
-        // Attach errors to jobStats for email reporting
         jobStats.errors = scrapeResult.errors || [];
     } else {
         console.log(`🎯 Starting Job Search API for multiple job boards`);
-
-        // Import the API scraper function
         const { scrapeJobsWithAPI } = await import('./job_search_api.js');
-
-        // Scrape jobs using the Job Search API (LinkedIn, Indeed, ZipRecruiter, Glassdoor)
         scrapedJobs = await scrapeJobsWithAPI({
             jobTypes,
             location,
@@ -991,7 +993,7 @@ try {
         });
     }
 
-    console.log(`✅ Scraped ${scrapedJobs.length} jobs using ${useIndeedScraper ? 'Indeed Scraper API' : 'Job Search API'}`);
+    console.log(`✅ Scraped ${scrapedJobs.length} jobs using ${searchEngine}`);
 
     // Update job statistics
     jobStats.processedCount = scrapedJobs.length;
@@ -1017,7 +1019,7 @@ try {
         console.log(`No new jobs found after filtering`);
         console.log(`Indeed Direct Scraper completed with no new jobs.`);
     } else {
-        console.log(`📝 Processing ${jobs.length} new jobs from Indeed...`);
+        console.log(`📝 Processing ${jobs.length} new jobs...`);
         totalJobsFound += jobs.length;
 
         // In test mode, only process a limited number of jobs
@@ -1062,7 +1064,7 @@ try {
             }
 
             // Display job data in logs
-            console.log(`\n=== Job Data from Indeed Direct Scraping ===`);
+            console.log(`\n=== Job Data from Reader ===`);
             console.log(`Found ${processedJobs.length} jobs after filtering and enhancement`);
 
             // Display a summary of each job
@@ -1118,7 +1120,7 @@ try {
                 console.log(`Description: ${shortDescription}`);
             });
 
-            console.log(`\n=== End of Job Data from Indeed Direct Scraping ===`);
+            console.log(`\n=== End of Job Data from Reader ===`);
 
             // Database integration - always enabled
             if (forcePushToDatabase) {
@@ -1143,11 +1145,11 @@ try {
             }
         }
 
-    console.log(`🎉 Indeed Direct Scraper completed successfully!`);
+    console.log(`🎉 Reader completed successfully!`);
     console.log(`📊 Summary: Found ${totalJobsFound} jobs, processed ${totalJobsProcessed} jobs, saved ${totalJobsSaved} jobs.`);
 
 } catch (error) {
-    console.error(`Error in Indeed Direct Scraper: ${error.message}`);
+    console.error(`Error in Reader: ${error.message}`);
     throw error;
 } finally {
     // Calculate end time and duration
