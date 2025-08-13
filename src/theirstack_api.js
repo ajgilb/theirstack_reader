@@ -106,9 +106,9 @@ async function fetchExistingJobUrls() {
       // Query all job tables for URLs from last 15 days
       const queries = [
         // RapidAPI jobs table
-        `SELECT apply_link as url FROM rapidapi_jobs 
-         WHERE apply_link IS NOT NULL AND apply_link != '' 
-         AND scraped_at >= NOW() - INTERVAL '15 days'`,
+        `SELECT url FROM rapidapi_jobs 
+         WHERE url IS NOT NULL AND url != '' 
+         AND date_added >= NOW() - INTERVAL '15 days'`,
         
         // Google jobs table  
         `SELECT url FROM culinary_jobs_google 
@@ -345,7 +345,8 @@ async function fetchJobsPage({
     job_country_code_or: Array.isArray(countryCodes) && countryCodes.length > 0 ? countryCodes : undefined,
     job_location_pattern_or: (location && location !== 'United States') ? [location] : [],
     posted_at_max_age_days: Number.isFinite(postedDays) ? postedDays : undefined,
-    min_salary_usd: Number.isFinite(minSalary) ? minSalary : undefined,
+    // Don't filter by salary server-side to include jobs with no salary data
+    // min_salary_usd: Number.isFinite(minSalary) ? minSalary : undefined,
     company_type: 'direct_employer',
     company_name_partial_match_not: excludedCompanies.length > 0 ? excludedCompanies : undefined
   };
@@ -433,6 +434,8 @@ export async function searchTheirStackJobs(options = {}) {
       postedDays: jobAgeDays,
       minSalary,
       countryCodes: ['US'],
+      excludedTitles,
+      excludedCompanies,
       page,
       limit: perPage
     });
