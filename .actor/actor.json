@@ -6,7 +6,7 @@
   "version": "0.2",
   "buildTag": "latest",
   "username": "madhosp",
-  "input": ".actor/INPUT_SCHEMA.json",
+  "input": "./INPUT_SCHEMA.json",
   "defaultRunOptions": {
     "memoryMbytes": 2048,
     "timeoutSecs": 7200
