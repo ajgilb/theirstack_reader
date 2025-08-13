@@ -54,6 +54,81 @@ async function fetchExcludedCompanies() {
   }
 }
 
+// Cache for existing job URLs
+let existingJobUrlsCache = null;
+let urlCacheLastUpdated = null;
+
+/**
+ * Fetch existing job URLs from all job tables (15 days lookback)
+ * This helps avoid processing duplicate jobs and saves processing time
+ */
+async function fetchExistingJobUrls() {
+  // Check cache first (5-minute TTL)
+  if (existingJobUrlsCache && urlCacheLastUpdated && 
+      (Date.now() - urlCacheLastUpdated) < CACHE_DURATION_MS) {
+    return existingJobUrlsCache;
+  }
+
+  try {
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    const client = await pool.connect();
+    try {
+      // Query all job tables for URLs from last 15 days
+      const queries = [
+        // RapidAPI jobs table
+        `SELECT apply_link as url FROM rapidapi_jobs 
+         WHERE apply_link IS NOT NULL AND apply_link != '' 
+         AND scraped_at >= NOW() - INTERVAL '15 days'`,
+        
+        // Google jobs table  
+        `SELECT url FROM culinary_jobs_google 
+         WHERE url IS NOT NULL AND url != ''
+         AND date_added >= NOW() - INTERVAL '15 days'`,
+         
+        // Main culinary jobs table
+        `SELECT url FROM culinary_jobs 
+         WHERE url IS NOT NULL AND url != ''
+         AND date_added >= NOW() - INTERVAL '15 days'`
+      ];
+      
+      const urlSet = new Set();
+      let totalUrls = 0;
+      
+      for (const query of queries) {
+        try {
+          const result = await client.query(query);
+          result.rows.forEach(row => {
+            if (row.url) {
+              urlSet.add(row.url.trim());
+              totalUrls++;
+            }
+          });
+        } catch (tableError) {
+          // Table might not exist, continue with other tables
+          console.warn(`[TheirStack] Could not query table: ${tableError.message}`);
+        }
+      }
+      
+      // Update cache
+      existingJobUrlsCache = urlSet;
+      urlCacheLastUpdated = Date.now();
+      
+      console.log(`[TheirStack] Loaded ${urlSet.size} unique job URLs from ${totalUrls} total records (15-day lookback)`);
+      return urlSet;
+    } finally {
+      client.release();
+      await pool.end();
+    }
+  } catch (error) {
+    console.warn(`[TheirStack] Failed to load existing job URLs: ${error.message}`);
+    return new Set();
+  }
+}
+
 /**
  * Build company exclusion filters for TheirStack API
  */
@@ -317,7 +392,8 @@ export async function searchTheirStackJobs(options = {}) {
   ];
   
   const excludedCompanies = await buildCompanyExclusions();
-  console.log(`[TheirStack] Using ${excludedTitles.length} excluded titles and ${excludedCompanies.length} excluded companies for server-side filtering`);
+  const existingUrls = await fetchExistingJobUrls();
+  console.log(`[TheirStack] Using ${excludedTitles.length} excluded titles, ${excludedCompanies.length} excluded companies, and ${existingUrls.size} existing URLs for filtering`);
 
   const perPage = testMode ? 25 : 100;
   const pagesToFetch = testMode ? Math.min(1, maxPages) : maxPages;
@@ -347,10 +423,21 @@ export async function searchTheirStackJobs(options = {}) {
 
   const normalized = all.map(normalizeTheirStackJob);
 
+  // Filter out jobs with URLs we already have (duplicate detection)
+  const beforeUrlFilter = normalized.length;
+  let excludedDuplicateUrls = 0;
+  const urlFiltered = normalized.filter(job => {
+    if (job.apply_link && existingUrls.has(job.apply_link.trim())) {
+      excludedDuplicateUrls++;
+      return false;
+    }
+    return true;
+  });
+
   // Minimal client-side filtering (most filtering now done server-side)
-  const beforeFilter = normalized.length;
+  const beforeFilter = urlFiltered.length;
   let excludedHourly = 0, excludedSalary = 0;
-  const filtered = normalized.filter(job => {
+  const filtered = urlFiltered.filter(job => {
     if (job.salary && isHourlySalaryText(job.salary)) { excludedHourly++; return false; }
     if (minSalary && job.salary_min && job.salary_min < minSalary) { excludedSalary++; return false; }
     return true;
@@ -367,8 +454,8 @@ export async function searchTheirStackJobs(options = {}) {
     }
   }
 
-  console.log(`[TheirStack] Collected=${all.length} normalized=${beforeFilter} filtered=${filtered.length} unique=${unique.length} ` +
-              `(client-side excluded: hourly=${excludedHourly}, salary=${excludedSalary})`);
+  console.log(`[TheirStack] Collected=${all.length} normalized=${beforeUrlFilter} duplicateUrls=${excludedDuplicateUrls} filtered=${filtered.length} unique=${unique.length} ` +
+              `(excluded: duplicateUrls=${excludedDuplicateUrls}, hourly=${excludedHourly}, salary=${excludedSalary})`);
 
   return unique;
 }
