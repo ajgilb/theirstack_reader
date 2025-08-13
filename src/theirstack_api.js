@@ -121,6 +121,8 @@ async function fetchJobsPage({
   jobTitles,
   location,
   postedDays,
+  minSalary,
+  countryCodes = ['US'],
   page,
   limit
 }) {
@@ -132,8 +134,10 @@ async function fetchJobsPage({
     include_total_results: false,
     // Common job filters supported by TheirStack
     job_title_or: jobTitles,
-    job_location_pattern_or: location ? [location] : [],
-    posted_at_gte: postedDays ? daysAgoIsoDate(postedDays) : undefined,
+    job_country_code_or: Array.isArray(countryCodes) && countryCodes.length > 0 ? countryCodes : undefined,
+    job_location_pattern_or: (location && location !== 'United States') ? [location] : [],
+    posted_at_max_age_days: Number.isFinite(postedDays) ? postedDays : undefined,
+    min_salary_usd: Number.isFinite(minSalary) ? minSalary : undefined,
     company_type: 'direct_employer'
   };
 
@@ -150,7 +154,7 @@ async function fetchJobsPage({
   };
 
   // Structured request log
-  console.log(`[TheirStack] Request page=${page} limit=${limit} location="${location}" titles=${Array.isArray(jobTitles) ? jobTitles.length : 0} postedDays=${postedDays}`);
+  console.log(`[TheirStack] Request page=${page} limit=${limit} countries=${(countryCodes||[]).join(',')} location="${location}" titles=${Array.isArray(jobTitles) ? jobTitles.length : 0} postedDays=${postedDays} minSalary=${minSalary}`);
   const resp = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
   const text = await resp.text();
   let json;
@@ -197,6 +201,8 @@ export async function searchTheirStackJobs(options = {}) {
       jobTitles: jobTypes,
       location,
       postedDays: jobAgeDays,
+      minSalary,
+      countryCodes: ['US'],
       page,
       limit: perPage
     });
