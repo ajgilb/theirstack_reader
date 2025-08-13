@@ -180,6 +180,16 @@ function normalizeTheirStackJob(raw) {
   const description = raw.description || raw.job_description || raw.summary || '';
   const postedAt = raw.posted_at || raw.date_posted || raw.published_at || null;
   const companyUrl = raw.company_url || raw.company_website || raw.company_domain || '';
+  
+  // Extract LinkedIn URL from company_object or direct field
+  let linkedinUrl = '';
+  if (raw.company_object && raw.company_object.linkedin_url) {
+    linkedinUrl = raw.company_object.linkedin_url;
+  } else if (raw.linkedin_url) {
+    linkedinUrl = raw.linkedin_url;
+  } else if (raw.company_linkedin_url) {
+    linkedinUrl = raw.company_linkedin_url;
+  }
 
   // Salary handling (TheirStack often returns annual USD min/max fields)
   const salaryMin = raw.compensation_annual_min_usd || raw.salary_min_usd || null;
@@ -202,6 +212,7 @@ function normalizeTheirStackJob(raw) {
     scraped_at: new Date().toISOString(),
     company_website: companyUrl || '',
     company_domain: extractDomainFromUrl(companyUrl),
+    linkedin: linkedinUrl || '',
     schedule: raw.job_type || raw.schedule || '',
     experience_level: raw.seniority || raw.experience_level || '',
     posted_at: postedAt,
