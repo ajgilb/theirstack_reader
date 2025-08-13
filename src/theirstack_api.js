@@ -19,9 +19,22 @@ async function fetchExcludedCompanies() {
   }
 
   try {
+    // Use the same connection string as the working RapidAPI database module
+    const supabaseConnections = [
+      // Transaction pooler (IPv4 compatible) - best for serverless
+      'postgresql://postgres.mbaqiwhkngfxxmlkionj:Relham12%3F@aws-0-us-west-1.pooler.supabase.com:6543/postgres',
+      // Session pooler (IPv4 compatible) - alternative  
+      'postgresql://postgres.mbaqiwhkngfxxmlkionj:Relham12%3F@aws-0-us-west-1.pooler.supabase.com:5432/postgres'
+    ];
+    
+    console.log(`[TheirStack] Attempting excluded companies connection using same config as main app`)
+
     const pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false }
+      connectionString: supabaseConnections[0], // Use transaction pooler like main app
+      ssl: { rejectUnauthorized: false },
+      max: 5,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000
     });
 
     const client = await pool.connect();
@@ -70,9 +83,22 @@ async function fetchExistingJobUrls() {
   }
 
   try {
+    // Use the same connection string as the working RapidAPI database module
+    const supabaseConnections = [
+      // Transaction pooler (IPv4 compatible) - best for serverless
+      'postgresql://postgres.mbaqiwhkngfxxmlkionj:Relham12%3F@aws-0-us-west-1.pooler.supabase.com:6543/postgres',
+      // Session pooler (IPv4 compatible) - alternative  
+      'postgresql://postgres.mbaqiwhkngfxxmlkionj:Relham12%3F@aws-0-us-west-1.pooler.supabase.com:5432/postgres'
+    ];
+    
+    console.log(`[TheirStack] Attempting URL fetch connection using same config as main app`)
+
     const pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false }
+      connectionString: supabaseConnections[0], // Use transaction pooler like main app
+      ssl: { rejectUnauthorized: false },
+      max: 5,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000
     });
 
     const client = await pool.connect();
