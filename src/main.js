@@ -803,7 +803,7 @@ try {
     console.log('Job Reader configuration:');
     console.log(`- Job Types: ${jobTypes.join(', ')}`);
     console.log(`- Location: ${location}`);
-    console.log(`- Minimum Salary: $${salaryMin.toLocaleString()}`);
+    console.log(`- Salary Filtering: Client-side only (includes jobs without salary data)`);
     console.log(`- Max pages per job type: ${maxPages}`);
     console.log(`- Max concurrency: ${maxConcurrency}`);
     console.log(`- Use proxy: ${useProxy}`);
