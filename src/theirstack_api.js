@@ -149,6 +149,8 @@ async function fetchJobsPage({
     'Content-Type': 'application/json'
   };
 
+  // Structured request log
+  console.log(`[TheirStack] Request page=${page} limit=${limit} location="${location}" titles=${Array.isArray(jobTitles) ? jobTitles.length : 0} postedDays=${postedDays}`);
   const resp = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
   const text = await resp.text();
   let json;
@@ -159,9 +161,11 @@ async function fetchJobsPage({
   }
   if (!resp.ok) {
     const message = json?.detail || json?.message || resp.statusText;
+    console.error(`[TheirStack] Error ${resp.status}: ${message}`);
     throw new Error(`TheirStack API ${resp.status}: ${message}`);
   }
   const items = Array.isArray(json?.data) ? json.data : (Array.isArray(json?.jobs) ? json.jobs : []);
+  console.log(`[TheirStack] Response page=${page}: items=${items.length}`);
   return items;
 }
 
@@ -210,11 +214,13 @@ export async function searchTheirStackJobs(options = {}) {
   const normalized = all.map(normalizeTheirStackJob);
 
   // Client-side filtering to match existing behavior
+  const beforeFilter = normalized.length;
+  let excludedTitle = 0, excludedCompany = 0, excludedHourly = 0, excludedSalary = 0;
   const filtered = normalized.filter(job => {
     if (isExcludedByTitle(job.title)) return false;
-    if (excludeFastFood && isExcludedByCompany(job.company)) return false;
-    if (job.salary && isHourlySalaryText(job.salary)) return false;
-    if (minSalary && job.salary_min && job.salary_min < minSalary) return false;
+    if (excludeFastFood && isExcludedByCompany(job.company)) { excludedCompany++; return false; }
+    if (job.salary && isHourlySalaryText(job.salary)) { excludedHourly++; return false; }
+    if (minSalary && job.salary_min && job.salary_min < minSalary) { excludedSalary++; return false; }
     return true;
   });
 
@@ -228,6 +234,9 @@ export async function searchTheirStackJobs(options = {}) {
       unique.push(job);
     }
   }
+
+  console.log(`[TheirStack] Collected=${all.length} normalized=${beforeFilter} filtered=${filtered.length} unique=${unique.length} ` +
+              `(excluded: company=${excludedCompany}, hourly=${excludedHourly}, salary=${excludedSalary})`);
 
   return unique;
 }

@@ -953,45 +953,22 @@ try {
     console.log(`💰 Minimum salary: $${salaryMin.toLocaleString()}`);
     console.log(`📄 Max pages per job type: ${maxPages}`);
 
-    // Choose engine: theirstack | indeed_scraper | job_search
-    const searchEngine = (input.searchEngine || process.env.SEARCH_ENGINE || 'theirstack').toLowerCase();
+    // Force TheirStack as the only engine
+    const searchEngine = 'theirstack';
     let scrapedJobs;
 
-    if (searchEngine === 'theirstack') {
-        console.log('🎯 Using TheirStack API');
-        const { searchTheirStackJobs } = await import('./theirstack_api.js');
-        scrapedJobs = await searchTheirStackJobs({
-            jobTypes: jobTypes,
-            location,
-            jobAgeDays: mappedJobAgeDays,
-            minSalary: salaryMin,
-            maxPages,
-            testMode,
-            excludeFastFood
-        });
-    } else if (searchEngine === 'indeed_scraper') {
-        console.log(`🎯 Starting Indeed Scraper API for comprehensive city-based job collection`);
-        const { scrapeJobsWithIndeedScraper } = await import('./indeed_scraper_api.js');
-        const scrapeResult = await scrapeJobsWithIndeedScraper({
-            testMode,
-            minSalary: salaryMin,
-            maxCities: testMode ? 2 : 67,
-            searchTerms: ['restaurant', 'hotel'],
-            jobAgeDays: mappedJobAgeDays
-        });
-        scrapedJobs = scrapeResult.jobs;
-        jobStats.errors = scrapeResult.errors || [];
-    } else {
-        console.log(`🎯 Starting Job Search API for multiple job boards`);
-        const { scrapeJobsWithAPI } = await import('./job_search_api.js');
-        scrapedJobs = await scrapeJobsWithAPI({
-            jobTypes,
-            location,
-            salaryMin,
-            testMode,
-            maxPagesPerSearch
-        });
-    }
+    // TheirStack-only mode
+    console.log('🎯 Using TheirStack API');
+    const { searchTheirStackJobs } = await import('./theirstack_api.js');
+    scrapedJobs = await searchTheirStackJobs({
+        jobTypes: jobTypes,
+        location,
+        jobAgeDays: mappedJobAgeDays,
+        minSalary: salaryMin,
+        maxPages,
+        testMode,
+        excludeFastFood
+    });
 
     console.log(`✅ Scraped ${scrapedJobs.length} jobs using ${searchEngine}`);
 
@@ -1017,7 +994,7 @@ try {
 
     if (jobs.length === 0) {
         console.log(`No new jobs found after filtering`);
-        console.log(`Indeed Direct Scraper completed with no new jobs.`);
+        console.log(`Job Reader completed with no new jobs.`);
     } else {
         console.log(`📝 Processing ${jobs.length} new jobs...`);
         totalJobsFound += jobs.length;
