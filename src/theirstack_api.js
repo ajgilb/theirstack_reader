@@ -1,9 +1,102 @@
 import fetch from 'node-fetch';
+// Import pg for database access
+import pg from 'pg';
+const { Pool } = pg;
+
+// Cache for excluded companies from database
+let excludedCompaniesCache = null;
+let cacheLastUpdated = null;
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Fetch excluded companies from the database
+ */
+async function fetchExcludedCompanies() {
+  // Check cache first
+  if (excludedCompaniesCache && cacheLastUpdated && 
+      (Date.now() - cacheLastUpdated) < CACHE_DURATION_MS) {
+    return excludedCompaniesCache;
+  }
+
+  try {
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        SELECT company_name, parent_company, domain 
+        FROM excluded_companies 
+        WHERE is_active = true
+      `);
+      
+      const companies = result.rows.map(row => ({
+        name: row.company_name,
+        parent: row.parent_company,
+        domain: row.domain
+      }));
+      
+      // Update cache
+      excludedCompaniesCache = companies;
+      cacheLastUpdated = Date.now();
+      
+      console.log(`[TheirStack] Loaded ${companies.length} excluded companies from database`);
+      return companies;
+    } finally {
+      client.release();
+      await pool.end();
+    }
+  } catch (error) {
+    console.warn(`[TheirStack] Failed to load excluded companies from database: ${error.message}`);
+    return [];
+  }
+}
+
+/**
+ * Build company exclusion filters for TheirStack API
+ */
+async function buildCompanyExclusions() {
+  const dbExcluded = await fetchExcludedCompanies();
+  
+  // Static fast food and budget hotel exclusions
+  const staticExclusions = [
+    // Fast food chains
+    'mcdonald', 'burger king', 'kfc', 'taco bell', 'subway', 'pizza hut', 'domino',
+    'papa john', 'little caesars', 'wendy', 'arby', 'dairy queen', 'sonic',
+    'chipotle', 'panera bread', 'five guys', 'in-n-out', 'whataburger',
+    'chick-fil-a', 'popeyes', 'dunkin', 'starbucks', 'tim hortons', 'white castle',
+    'jack in the box', 'carl jr', 'hardee', 'qdoba', 'moes', 'panda express', 'shake shack',
+    // Budget hotels
+    'embassy suites', 'courtyard by marriott', 'springhill suites', 'fairfield inn',
+    'towneplace suites', 'residence inn', 'moxy hotels', 'ac hotels', 'hampton', 'tru by hilton',
+    'home2 suites', 'homewood suites', 'hilton garden inn', 'holiday inn express', 'avid hotels',
+    'candlewood suites', 'staybridge suites', 'comfort inn', 'comfort suites', 'sleep inn',
+    'quality inn', 'clarion', 'mainstay suites', 'suburban studios', 'woodspring suites',
+    'econo lodge', 'rodeway inn', 'la quinta', 'microtel', 'days inn', 'super 8', 'travelodge',
+    'baymont inn', 'howard johnson', 'americinn', 'best western', 'surestay', 'motel 6', 'studio 6',
+    'red roof', 'hometowne studios', 'my place hotels', 'cobblestone inn', 'boarders inn',
+    // Healthcare/senior living
+    'senior living', 'brookdale senior living', 'atria senior living', 'sunrise senior living',
+    'benchmark senior living', 'holiday retirement', 'genesis healthcare', 'encompass health',
+    'kindred healthcare', 'life care', 'assisted living', 'nursing home'
+  ];
+  
+  // Combine database and static exclusions
+  const allExclusions = [
+    ...staticExclusions,
+    ...dbExcluded.map(c => c.name.toLowerCase()),
+    ...dbExcluded.filter(c => c.parent).map(c => c.parent.toLowerCase())
+  ];
+  
+  return [...new Set(allExclusions)]; // Remove duplicates
+}
 
 /**
  * TheirStack Jobs API integration
  * - Paginates through /v1/jobs/search
- * - Applies client-side filtering to mirror existing logic (exclude fast food, hourly, recruiters)
+ * - Applies server-side filtering via API parameters (exclude fast food, low-level titles, recruiters)
  * - Normalizes to the schema expected by database insertion (culinary_jobs_google)
  */
 
@@ -123,6 +216,8 @@ async function fetchJobsPage({
   postedDays,
   minSalary,
   countryCodes = ['US'],
+  excludedTitles = [],
+  excludedCompanies = [],
   page,
   limit
 }) {
@@ -134,11 +229,13 @@ async function fetchJobsPage({
     include_total_results: false,
     // Common job filters supported by TheirStack
     job_title_or: jobTitles,
+    job_title_not: excludedTitles.length > 0 ? excludedTitles : undefined,
     job_country_code_or: Array.isArray(countryCodes) && countryCodes.length > 0 ? countryCodes : undefined,
     job_location_pattern_or: (location && location !== 'United States') ? [location] : [],
     posted_at_max_age_days: Number.isFinite(postedDays) ? postedDays : undefined,
     min_salary_usd: Number.isFinite(minSalary) ? minSalary : undefined,
-    company_type: 'direct_employer'
+    company_type: 'direct_employer',
+    company_name_partial_match_not: excludedCompanies.length > 0 ? excludedCompanies : undefined
   };
 
   // Remove undefined/empty arrays to avoid 422s
@@ -154,7 +251,7 @@ async function fetchJobsPage({
   };
 
   // Structured request log
-  console.log(`[TheirStack] Request page=${page} limit=${limit} countries=${(countryCodes||[]).join(',')} location="${location}" titles=${Array.isArray(jobTitles) ? jobTitles.length : 0} postedDays=${postedDays} minSalary=${minSalary}`);
+  console.log(`[TheirStack] Request page=${page} limit=${limit} countries=${(countryCodes||[]).join(',')} location="${location}" titles=${Array.isArray(jobTitles) ? jobTitles.length : 0} excludedTitles=${excludedTitles.length} excludedCompanies=${excludedCompanies.length} postedDays=${postedDays} minSalary=${minSalary}`);
   const resp = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
   const text = await resp.text();
   let json;
@@ -191,6 +288,26 @@ export async function searchTheirStackJobs(options = {}) {
     throw new Error('Missing TheirStack API key. Set THEIRSTACK_API_KEY in environment.');
   }
 
+  // Build exclusion lists
+  const excludedTitles = [
+    'server', 'waiter', 'waitress', 'host', 'hostess', 'busser', 'buser',
+    'food runner', 'runner', 'barback', 'bartender', 'cashier',
+    'counter server', 'drive-thru', 'drive thru', 'takeout specialist',
+    'takeout', 'delivery driver', 'delivery', 'breakfast attendant',
+    'line cook', 'prep cook', 'dishwasher', 'expeditor', 'expo',
+    'kitchen porter', 'pastry assistant', 'fry cook', 'pantry cook',
+    'butcher', 'commissary worker', 'cook',
+    'housekeeper', 'room attendant', 'laundry attendant', 'houseman',
+    'housekeeping aide', 'maintenance technician', 'janitor', 'custodian',
+    'steward', 'banquet server', 'event setup', 'security officer', 'security guard',
+    'night auditor', 'front desk', 'clerk', 'room service', 'front office', 'greeter',
+    'prep', 'agent', 'loss prevention', 'behavioral health',
+    'assistant', 'associate', 'crew member', 'team member', 'staff'
+  ];
+  
+  const excludedCompanies = await buildCompanyExclusions();
+  console.log(`[TheirStack] Using ${excludedTitles.length} excluded titles and ${excludedCompanies.length} excluded companies for server-side filtering`);
+
   const perPage = testMode ? 25 : 100;
   const pagesToFetch = testMode ? Math.min(1, maxPages) : maxPages;
 
@@ -219,12 +336,10 @@ export async function searchTheirStackJobs(options = {}) {
 
   const normalized = all.map(normalizeTheirStackJob);
 
-  // Client-side filtering to match existing behavior
+  // Minimal client-side filtering (most filtering now done server-side)
   const beforeFilter = normalized.length;
-  let excludedTitle = 0, excludedCompany = 0, excludedHourly = 0, excludedSalary = 0;
+  let excludedHourly = 0, excludedSalary = 0;
   const filtered = normalized.filter(job => {
-    if (isExcludedByTitle(job.title)) return false;
-    if (excludeFastFood && isExcludedByCompany(job.company)) { excludedCompany++; return false; }
     if (job.salary && isHourlySalaryText(job.salary)) { excludedHourly++; return false; }
     if (minSalary && job.salary_min && job.salary_min < minSalary) { excludedSalary++; return false; }
     return true;
@@ -242,7 +357,7 @@ export async function searchTheirStackJobs(options = {}) {
   }
 
   console.log(`[TheirStack] Collected=${all.length} normalized=${beforeFilter} filtered=${filtered.length} unique=${unique.length} ` +
-              `(excluded: company=${excludedCompany}, hourly=${excludedHourly}, salary=${excludedSalary})`);
+              `(client-side excluded: hourly=${excludedHourly}, salary=${excludedSalary})`);
 
   return unique;
 }
