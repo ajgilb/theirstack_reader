@@ -778,7 +778,7 @@ try {
     
     // EASY-TO-CHANGE DEFAULT: job age window in days for API filtering
     // Change this single constant if you need a different default window (must be one of 1, 3, 7, 14)
-    const JOB_AGE_DAYS_DEFAULT = 1;
+    const JOB_AGE_DAYS_DEFAULT = 3;
     const mappedJobAgeDays = JOB_AGE_DAYS_DEFAULT;
     console.log(`📅 Using job age window (defaulted in code): ${mappedJobAgeDays} days`);
 
