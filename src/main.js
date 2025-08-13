@@ -950,7 +950,7 @@ try {
 
     console.log(`🚀 Starting job collection for job types: ${jobTypes.join(', ')}`);
     console.log(`📍 Location: ${location}`);
-    console.log(`💰 Minimum salary: $${salaryMin.toLocaleString()}`);
+    console.log(`💰 Salary filtering: Client-side only (includes jobs without salary data)`);
     console.log(`📄 Max pages per job type: ${maxPages}`);
 
     // Force TheirStack as the only engine
@@ -964,7 +964,7 @@ try {
         jobTypes: jobTypes,
         location,
         jobAgeDays: mappedJobAgeDays,
-        minSalary: salaryMin,
+        // minSalary: salaryMin, // Removed to capture all jobs including those without salary data
         maxPages,
         testMode,
         excludeFastFood

@@ -326,7 +326,6 @@ async function fetchJobsPage({
   jobTitles,
   location,
   postedDays,
-  minSalary,
   countryCodes = ['US'],
   excludedTitles = [],
   excludedCompanies = [],
@@ -364,7 +363,7 @@ async function fetchJobsPage({
   };
 
   // Structured request log
-  console.log(`[TheirStack] Request page=${page} limit=${limit} countries=${(countryCodes||[]).join(',')} location="${location}" titles=${Array.isArray(jobTitles) ? jobTitles.length : 0} excludedTitles=${excludedTitles.length} excludedCompanies=${excludedCompanies.length} postedDays=${postedDays} minSalary=${minSalary}`);
+  console.log(`[TheirStack] Request page=${page} limit=${limit} countries=${(countryCodes||[]).join(',')} location="${location}" titles=${Array.isArray(jobTitles) ? jobTitles.length : 0} excludedTitles=${excludedTitles.length} excludedCompanies=${excludedCompanies.length} postedDays=${postedDays}`);
   const resp = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
   const text = await resp.text();
   let json;
@@ -432,7 +431,7 @@ export async function searchTheirStackJobs(options = {}) {
       jobTitles: jobTypes,
       location,
       postedDays: jobAgeDays,
-      minSalary,
+      // minSalary: removed to capture all jobs
       countryCodes: ['US'],
       excludedTitles,
       excludedCompanies,
