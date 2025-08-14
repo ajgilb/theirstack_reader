@@ -3,15 +3,19 @@
 # Make sure src directory exists
 mkdir -p src
 
-# Check if email.js exists and copy it to the src directory
+#!/bin/bash
+
+# Make sure src directory exists
+mkdir -p src
+
+# If src/email.js exists, do not overwrite; otherwise, generate from template below
 if [ -f "src/email.js" ]; then
-    echo "src/email.js exists, making a backup"
-    cp src/email.js src/email.js.bak
-else
-    echo "src/email.js does not exist, creating it"
+    echo "src/email.js exists, leaving it unchanged"
+    exit 0
 fi
 
-# Create or overwrite email.js with the content
+echo "Creating src/email.js from embedded template"
+
 cat > src/email.js << 'EOL'
 /**
  * Email module for sending completion emails
@@ -21,9 +25,9 @@ cat > src/email.js << 'EOL'
 import { Resend } from 'resend';
 
 // Email configuration
-const FROM_EMAIL = 'Google Jobs Scraper <aj@chefsheet.com>';
+const FROM_EMAIL = 'Their Stack Job Board <aj@chefsheet.com>';
 const RECIPIENTS = ['aj@chefsheet.com', 'martha@madison-collective.com'];
-const EMAIL_SUBJECT_PREFIX = 'BizDev Results for';
+const EMAIL_SUBJECT_PREFIX = 'Their Stack Job Board Results for';
 
 // Initialize Resend client
 let resend = null;
@@ -156,16 +160,14 @@ function generateEmailHtml(stats, testMode = false) {
     <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
         ${testMode ? '<div style="background-color: #ffffcc; padding: 10px; border: 1px solid #e6e600; margin-bottom: 15px; text-align: center;"><strong>TEST MODE</strong> - Email only sent to aj@chefsheet.com</div>' : ''}
         <p style="font-weight: bold; font-size: 24pt; color: #000000; text-align: center;">
-            Your Google Jobs scraper completed at ${completionTime}
+            Their Stack Job Board run completed at ${completionTime}
         </p>
         <p style="color: #000000;">Duration: ${durationMinutes} minutes (${durationSeconds} seconds)</p>
 
         <h2>Summary</h2>
         <ul style="color: #000000;">
-            <li><b>${processedCount}</b> listings were successfully processed.</li>
-            <li><b>${newJobs.length}</b> new listings were added to the database.</li>
-            <li><b>${skippedDuplicateJobs.length}</b> listings were skipped (already in DB).</li>
-            <li><b>${skippedExcludedJobs.length}</b> listings were skipped (excluded companies).</li>
+            <li><b>${newJobs.length}</b> jobs added to the database.</li>
+            <li><b>${(skippedDuplicateJobs.length + skippedExcludedJobs.length)}</b> jobs rejected (<b>${skippedDuplicateJobs.length}</b> duplicates, <b>${skippedExcludedJobs.length}</b> excluded).</li>
         </ul>
 
         <h2>Queries Used</h2>
@@ -174,27 +176,23 @@ function generateEmailHtml(stats, testMode = false) {
         </ul>
     `;
 
-    // Add new jobs section if there are any
+    // Add new jobs section (limited to first 15)
     if (newJobs.length > 0) {
         html += `
-        <h2>New Jobs Added (${newJobs.length})</h2>
-        ${formatJobsAsHtml(newJobs, 20)}
+        <h2>Added Jobs (${newJobs.length})</h2>
+        ${formatJobsAsHtml(newJobs, 15)}
         `;
     }
 
-    // Add skipped duplicates section if there are any
-    if (skippedDuplicateJobs.length > 0) {
+    // Combine duplicates and exclusions into a single rejected list (limited to first 15)
+    const rejectedJobs = [
+        ...skippedDuplicateJobs.map(j => ({ ...j, _reason: 'duplicate' })),
+        ...skippedExcludedJobs.map(j => ({ ...j, _reason: j._exclusionReason || 'excluded' }))
+    ];
+    if (rejectedJobs.length > 0) {
         html += `
-        <h2>Skipped Duplicates (${skippedDuplicateJobs.length})</h2>
-        ${formatJobsAsHtml(skippedDuplicateJobs, 10)}
-        `;
-    }
-
-    // Add skipped exclusions section if there are any
-    if (skippedExcludedJobs.length > 0) {
-        html += `
-        <h2>Skipped Exclusions (${skippedExcludedJobs.length})</h2>
-        ${formatJobsAsHtml(skippedExcludedJobs, 10)}
+        <h2>Rejected Jobs (${rejectedJobs.length})</h2>
+        ${formatRejectedJobsAsHtml(rejectedJobs, 15)}
         `;
     }
 
@@ -202,7 +200,7 @@ function generateEmailHtml(stats, testMode = false) {
     html += `
         <hr style="margin-top: 30px; border: 0; border-top: 1px solid #cccccc;">
         <p style="color: #666666; font-size: 12px; text-align: center;">
-            This is an automated email from the Google Jobs API Actor.
+            This is an automated email from the Their Stack Job Board.
             Generated on ${dateOnly}.
         </p>
     </div>
@@ -293,9 +291,4 @@ export {
 };
 EOL
 
-echo "email.js file created/updated successfully"
-
-# Make the script executable
-chmod +x build.sh
-
-echo "Build script completed successfully"
+echo "email.js file created successfully"

@@ -972,9 +972,6 @@ try {
 
     console.log(`✅ Scraped ${scrapedJobs.length} jobs using ${searchEngine}`);
 
-    // Update job statistics
-    jobStats.processedCount = scrapedJobs.length;
-
     // Filter out jobs that already exist in database
     const newJobs = [];
     let skippedExisting = 0;
@@ -1031,7 +1028,7 @@ try {
 
             // Update job processing count
             totalJobsProcessed += processedJobs.length;
-            jobStats.processedCount += processedJobs.length;
+            jobStats.processedCount = processedJobs.length;
 
             // Save to Apify dataset if requested
             if (saveToDataset) {
