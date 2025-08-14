@@ -6,9 +6,9 @@
 import { Resend } from 'resend';
 
 // Email configuration
-const FROM_EMAIL = 'Their Stack Job Board <aj@chefsheet.com>';
+const FROM_EMAIL = 'Indeed RapidAPI Job Scraper <aj@chefsheet.com>';
 const RECIPIENTS = ['aj@chefsheet.com', 'martha@madison-collective.com'];
-const EMAIL_SUBJECT_PREFIX = 'Their Stack Job Board Results for';
+const EMAIL_SUBJECT_PREFIX = 'BizDev Results for';
 
 // Initialize Resend client
 let resend = null;
@@ -114,32 +114,6 @@ function formatJobsAsHtml(jobs, limit = 10) {
 }
 
 /**
- * Format a list of rejected jobs (duplicates or excluded) as HTML
- * @param {Array} jobs - Array of job objects; each may have _reason or _exclusionReason
- * @param {number} limit - Maximum number of jobs to include
- * @returns {string} - HTML formatted job list with reasons
- */
-function formatRejectedJobsAsHtml(jobs, limit = 15) {
-    if (!jobs || jobs.length === 0) {
-        return '<p>No rejected jobs.</p>';
-    }
-
-    const jobsToShow = jobs.slice(0, limit);
-    const hasMore = jobs.length > limit;
-
-    let html = '<ul style="color: #000000;">';
-    for (const job of jobsToShow) {
-        const reason = job._reason || job._exclusionReason || 'rejected';
-        html += `<li><b>${job.title}</b> at <b>${job.company}</b> — <span style="color: #990000;">${reason}</span></li>`;
-    }
-    if (hasMore) {
-        html += `<li><i>...and ${jobs.length - limit} more</i></li>`;
-    }
-    html += '</ul>';
-    return html;
-}
-
-/**
  * Generate HTML email content
  * @param {Object} stats - Job statistics object
  * @param {boolean} testMode - Whether running in test mode
@@ -168,7 +142,7 @@ function generateEmailHtml(stats, testMode = false) {
     <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
         ${testMode ? '<div style="background-color: #ffffcc; padding: 10px; border: 1px solid #e6e600; margin-bottom: 15px; text-align: center;"><strong>TEST MODE</strong> - Email only sent to aj@chefsheet.com</div>' : ''}
         <p style="font-weight: bold; font-size: 24pt; color: #000000; text-align: center;">
-            Their Stack Job Board run completed at ${completionTime}
+            Your Indeed RapidAPI Job Scraper completed at ${completionTime}
         </p>
         <p style="color: #000000;">Duration: ${durationMinutes} minutes (${durationSeconds} seconds)</p>
 
@@ -184,8 +158,10 @@ function generateEmailHtml(stats, testMode = false) {
 
         <h2>Summary</h2>
         <ul style="color: #000000;">
-            <li><b>${newJobs.length}</b> jobs added to the database.</li>
-            <li><b>${(skippedDuplicateJobs.length + skippedExcludedJobs.length)}</b> jobs rejected (<b>${skippedDuplicateJobs.length}</b> duplicates, <b>${skippedExcludedJobs.length}</b> excluded).</li>
+            <li><b>${processedCount}</b> listings were successfully processed.</li>
+            <li><b>${newJobs.length}</b> new listings were added to the database.</li>
+            <li><b>${skippedDuplicateJobs.length}</b> listings were skipped (already in DB).</li>
+            <li><b>${skippedExcludedJobs.length}</b> listings were skipped (excluded companies).</li>
         </ul>
 
         <h2>Queries Used</h2>
@@ -194,23 +170,27 @@ function generateEmailHtml(stats, testMode = false) {
         </ul>
     `;
 
-    // Add new jobs section (limited to first 15)
+    // Add new jobs section if there are any
     if (newJobs.length > 0) {
         html += `
-        <h2>Added Jobs (${newJobs.length})</h2>
-        ${formatJobsAsHtml(newJobs, 15)}
+        <h2>New Jobs Added (${newJobs.length})</h2>
+        ${formatJobsAsHtml(newJobs, 20)}
         `;
     }
 
-    // Combine duplicates and exclusions into a single rejected list (limited to first 15)
-    const rejectedJobs = [
-        ...skippedDuplicateJobs.map(j => ({ ...j, _reason: 'duplicate' })),
-        ...skippedExcludedJobs.map(j => ({ ...j, _reason: j._exclusionReason || 'excluded' }))
-    ];
-    if (rejectedJobs.length > 0) {
+    // Add skipped duplicates section if there are any
+    if (skippedDuplicateJobs.length > 0) {
         html += `
-        <h2>Rejected Jobs (${rejectedJobs.length})</h2>
-        ${formatRejectedJobsAsHtml(rejectedJobs, 15)}
+        <h2>Skipped Duplicates (${skippedDuplicateJobs.length})</h2>
+        ${formatJobsAsHtml(skippedDuplicateJobs, 10)}
+        `;
+    }
+
+    // Add skipped exclusions section if there are any
+    if (skippedExcludedJobs.length > 0) {
+        html += `
+        <h2>Skipped Exclusions (${skippedExcludedJobs.length})</h2>
+        ${formatJobsAsHtml(skippedExcludedJobs, 10)}
         `;
     }
 
@@ -218,7 +198,7 @@ function generateEmailHtml(stats, testMode = false) {
     html += `
         <hr style="margin-top: 30px; border: 0; border-top: 1px solid #cccccc;">
         <p style="color: #666666; font-size: 12px; text-align: center;">
-            This is an automated email from the Their Stack Job Board.
+            This is an automated email from the Indeed RapidAPI Job Scraper.
             Generated on ${dateOnly}.
         </p>
     </div>
