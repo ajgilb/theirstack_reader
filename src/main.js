@@ -776,11 +776,28 @@ try {
         jobAgeDays: inputJobAgeDays = 14
     } = input;
     
-    // EASY-TO-CHANGE DEFAULT: job age window in days for API filtering
-    // Change this single constant if you need a different default window (must be one of 1, 3, 7, 14)
-    const JOB_AGE_DAYS_DEFAULT = 3;
-    const mappedJobAgeDays = JOB_AGE_DAYS_DEFAULT;
-    console.log(`📅 Using job age window (defaulted in code): ${mappedJobAgeDays} days`);
+    // Determine dynamic job age window: days since last run (Mon-Wed-Fri cadence → typically 2 or 3 days)
+    let mappedJobAgeDays = 3; // fallback if we can't read last run
+    try {
+        const now = new Date();
+        const lastRunIso = await Actor.getValue('lastRunAt');
+        if (lastRunIso) {
+            const lastRun = new Date(String(lastRunIso));
+            if (!isNaN(lastRun.getTime())) {
+                const diffMs = now.getTime() - lastRun.getTime();
+                const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                // Ensure at least 1 day, and cap at 14 as an upper bound safety
+                mappedJobAgeDays = Math.min(Math.max(diffDays, 1), 14);
+                console.log(`📅 Using dynamic job age window based on last run (${lastRun.toISOString()}): ${mappedJobAgeDays} days`);
+            } else {
+                console.log('📅 Last run timestamp invalid, using default 3 days');
+            }
+        } else {
+            console.log('📅 No last run timestamp found, using default 3 days');
+        }
+    } catch (ageErr) {
+        console.log(`📅 Could not compute dynamic job age window (${ageErr?.message || ageErr}). Using default 3 days.`);
+    }
 
     // Update the global isTestMode variable
     isTestMode = testMode;
@@ -1129,6 +1146,13 @@ try {
     console.error(`Error in Reader: ${error.message}`);
     throw error;
 } finally {
+    // Persist current run timestamp for next dynamic window calculation
+    try {
+        await Actor.setValue('lastRunAt', new Date().toISOString());
+        console.log('🕒 Saved lastRunAt for next run window calculation');
+    } catch (tsErr) {
+        console.log(`⚠️  Could not save lastRunAt: ${tsErr?.message || tsErr}`);
+    }
     // Calculate end time and duration
     jobStats.endTime = new Date();
     const durationMs = jobStats.endTime - jobStats.startTime;
